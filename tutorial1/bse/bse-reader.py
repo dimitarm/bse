@@ -59,6 +59,6 @@ for equity in lines:
     file_trades.close()
     count = count + 1
     todo = len(lines) - count
-    print str(todo) + " to do \n" 
+    print str(todo) + " to do...\n" 
     
 
