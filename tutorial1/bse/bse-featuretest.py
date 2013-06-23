@@ -210,4 +210,3 @@ if __name__ == '__main__':
     t2 = datetime.now()
     tdelta = t2 - t1
     print "findBestFeaturesSetAmongAllCombinations(dData, lfcAllFeatures, featTrend, lkRange = range(31, 32, 1)) " + str(tdelta) + " seconds"
-    print "1"
