@@ -29,6 +29,7 @@ import qstkfeat.featutil as ftu
 import utils.dateutil as bsedateutil
 
 import myknn as myknn
+from utils.features import *
 from datetime import datetime
 from datetime import timedelta
 
@@ -82,10 +83,17 @@ def testLearner( naTrain, naTest, bClassification, lkRange=range(1,101,10), bPlo
         plt.show()
     return result[0], result[1]
     
+def calculateFeatures(dData, lfcFeatures, ldArgs):
+    ldfRet = dict()
+    for i, fcFeature in enumerate(lfcFeatures):
+        ldfRet[fcFeature] = fcFeature( dData, **ldArgs[i] )
+    return ldfRet
 
 def testFeatures(dData, lfcFeatures, ldArgs, lkRange):
+    
+    ldfDictFeaturesData = calculateFeatures( dData, lfcFeatures, ldArgs )
     ''' Generate a list of DataFrames, one for each feature, with the same index/column structure as price data '''
-    ldfFeatures = ftu.applyFeatures( dData, lfcFeatures, ldArgs )
+    #ldfFeatures = ftu.applyFeatures( dData, lfcFeatures, ldArgs )
     
     bPlot = False
     if bPlot:
@@ -205,8 +213,8 @@ if __name__ == '__main__':
     tdelta = t2 - t1
     print "findBestFeaturesSet(dData, lfcAllFeatures, featTrend, lkRange = range(31, 32, 1)) " + str(tdelta) + " seconds"
     
-    t1 = datetime.now()
-    featList, k, successRate = findBestFeaturesSetAmongAllCombinations(dData, lfcAllFeatures, featTrend, lkRange = range(31, 32, 1))
-    t2 = datetime.now()
-    tdelta = t2 - t1
-    print "findBestFeaturesSetAmongAllCombinations(dData, lfcAllFeatures, featTrend, lkRange = range(31, 32, 1)) " + str(tdelta) + " seconds"
+#    t1 = datetime.now()
+#    featList, k, successRate = findBestFeaturesSetAmongAllCombinations(dData, lfcAllFeatures, featTrend, lkRange = range(31, 32, 1))
+#    t2 = datetime.now()
+#    tdelta = t2 - t1
+#    print "findBestFeaturesSetAmongAllCombinations(dData, lfcAllFeatures, featTrend, lkRange = range(31, 32, 1)) " + str(tdelta) + " seconds"
