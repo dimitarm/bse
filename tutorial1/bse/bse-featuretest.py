@@ -12,6 +12,7 @@ Created on Nov 7, 2011
 '''
 
 ''' Python imports '''
+import math
 import datetime as dt
 
 ''' 3rd party imports '''
@@ -83,17 +84,73 @@ def testLearner( naTrain, naTest, bClassification, lkRange=range(1,101,10), bPlo
         plt.show()
     return result[0], result[1]
     
-def calculateFeatures(dData, lfcFeatures, ldArgs):
+def calculateFeatures(dData, dLeadDataColumn, lfcFeatures, ldArgs):
     ldfRet = dict()
     for i, fcFeature in enumerate(lfcFeatures):
-        ldfRet[fcFeature] = fcFeature( dData, **ldArgs[i] )
+        ldFeatureData = fcFeature( dData, **ldArgs[i] )
+        diff = dData[dLeadDataColumn].values.shape[0] - ldFeatureData.values.shape[0]
+        
+        trds = np.empty((diff, 1))
+        trds[0:diff,:] = np.nan
+    
+        trds2 = np.vstack((ldFeatureData.values, trds))
+    
+        ldfRet[fcFeature] = trds2 
     return ldfRet
 
-def testFeatures(dData, lfcFeatures, ldArgs, lkRange):
+def testFeatures(dData, dLeadDataColumn, lfcFeatures, ldArgs, lkRange):
+    ldFeaturesDict = calculateFeatures(dData, dLeadDataColumn, lfcFeatures, ldArgs)
     
-    ldfDictFeaturesData = calculateFeatures( dData, lfcFeatures, ldArgs )
+    bPlot = False
+    if bPlot:
+        ''' Plot feature for XOM '''
+        for i, fcFunc in enumerate(lfcFeatures[:]):
+            plt.clf()
+            plt.subplot(211)
+            plt.title( fcFunc.__name__ )
+            timestamps = dData[dLeadDataColumn].index
+            datavalues = dData[dLeadDataColumn].values
+            plt.plot( timestamps, datavalues, 'r-' )
+            plt.subplot(212)
+            plt.plot( timestamps, ldFeaturesDict[fcFunc], 'g-' )
+            plt.show()
+     
+    ''' Pick Test and Training Points '''
+    lSplit = int(dData[dLeadDataColumn].shape[0] * 0.7)
+     
+    ''' Stack all information into one Numpy array '''
+    naFeatTrain = np.empty((lSplit, 0))
+    naFeatTest =  np.empty((dData[dLeadDataColumn].shape[0] - lSplit, 0))
+    for i, fcFunc in enumerate(lfcFeatures[:]):
+        dFeatData = ldFeaturesDict[fcFunc];
+        dTrainData = dFeatData[0: lSplit,:]
+        dTestData = dFeatData[lSplit:,:]
+        naFeatTrain = np.hstack((naFeatTrain, dTrainData))
+        naFeatTest = np.hstack((naFeatTest, dTestData))
+        
+    naFeatTrain = removeNans(naFeatTrain)     
+    naFeatTest = removeNans(naFeatTest)
+    ''' Normalize features, use same normalization factors for testing data as training data '''
+    ltWeights = ftu.normFeatures( naFeatTrain, -1.0, 1.0, False )
+    ''' Normalize query points with same weights that come from test data '''
+    ftu.normQuery( naFeatTest[:,:-1], ltWeights )
+
+    return testLearner( naFeatTrain, naFeatTest, bClassification = True, lkRange = lkRange )
+
+def removeNans(naData, sDelNan='ALL', bShowRemoved=False):
+    llValidRows = list()
+    for i in range(naData.shape[0]):
+        if 'ALL' == sDelNan and not math.isnan( np.sum(naData[i,:]) ) or\
+              'FEAT' == sDelNan and not math.isnan( np.sum(naData[i,:-1]) ):
+            llValidRows.append(i)
+        elif  bShowRemoved:
+            print 'Removed ', naData[i,:]
+    naData = naData[llValidRows,:]
+    return naData
+
+def testFeatures_(dData, dummy, lfcFeatures, ldArgs, lkRange):
     ''' Generate a list of DataFrames, one for each feature, with the same index/column structure as price data '''
-    #ldfFeatures = ftu.applyFeatures( dData, lfcFeatures, ldArgs )
+    ldfFeatures = ftu.applyFeatures( dData, lfcFeatures, ldArgs )
     
     bPlot = False
     if bPlot:
@@ -146,7 +203,7 @@ def findBestFeaturesSetAmongAllCombinations (dData, lfcAllFeatures, lfcClassFeat
             
         lfcFeaturesList.append(lfcClassFeature)
         ldArgs = [{}] * len(lfcFeaturesList)
-        k, success = testFeatures(dData, lfcFeaturesList, ldArgs, lkRange = lkRange)
+        k, success = testFeatures(dData, 'close', lfcFeaturesList, ldArgs, lkRange = lkRange)
         if success > maxSuccess:
             maxSuccess = success
             maxK = k
@@ -170,7 +227,7 @@ def findBestFeaturesSet (dData, lfcAllFeatures, lfcClassFeature, lkRange):
             ''' Default Arguments '''
             ldArgs = [{}] * len(lfcFeatures2Test) 
             
-            k, success = testFeatures(dData, lfcFeatures2Test, ldArgs, lkRange = lkRange)
+            k, success = testFeatures_(dData, 'close', lfcFeatures2Test, ldArgs, lkRange = lkRange)
             if success > maxSuccess:
                 maxSuccess = success
                 maxK = k
@@ -178,7 +235,7 @@ def findBestFeaturesSet (dData, lfcAllFeatures, lfcClassFeature, lkRange):
         
         lfcMaxFeaturesList.insert(0, maxFeat)
         lfcAllFeatures.remove(maxFeat)
-        k, success = testFeatures(dData, lfcMaxFeaturesList, ldArgs, lkRange = lkRange)
+        k, success = testFeatures_(dData, 'close', lfcMaxFeaturesList, ldArgs, lkRange = lkRange)
         if success < maxSSuccess or success == maxSSuccess:
             lfcMaxFeaturesList.remove(maxFeat)
         elif success > maxSSuccess:
