@@ -127,7 +127,8 @@ def testFeatures(dData, dLeadDataColumn, lfcFeatures, ldArgs, lkRange):
         dTestData = dFeatData[lSplit:,:]
         naFeatTrain = np.hstack((naFeatTrain, dTrainData))
         naFeatTest = np.hstack((naFeatTest, dTestData))
-        
+    
+    
     naFeatTrain = removeNans(naFeatTrain)     
     naFeatTest = removeNans(naFeatTest)
     ''' Normalize features, use same normalization factors for testing data as training data '''
@@ -137,6 +138,11 @@ def testFeatures(dData, dLeadDataColumn, lfcFeatures, ldArgs, lkRange):
 
     return testLearner( naFeatTrain, naFeatTest, bClassification = True, lkRange = lkRange )
 
+def printNa(naData):
+    for i in range(naData.shape[0]):
+        print naData[i,:]
+    print ''
+    
 def removeNans(naData, sDelNan='ALL', bShowRemoved=False):
     llValidRows = list()
     for i in range(naData.shape[0]):
@@ -169,14 +175,13 @@ def testFeatures_(dData, dummy, lfcFeatures, ldArgs, lkRange):
     ''' Pick Test and Training Points '''
     lSplit = int(len(ldtTimestamps) * 0.7)
     dtStartTrain = ldtTimestamps[0]
-    dtEndTrain = ldtTimestamps[lSplit]
-    dtStartTest = ldtTimestamps[lSplit+1]
+    dtEndTrain = ldtTimestamps[lSplit-1]
+    dtStartTest = ldtTimestamps[lSplit]
     dtEndTest = ldtTimestamps[-1]
      
     ''' Stack all information into one Numpy array ''' 
     naFeatTrain = ftu.stackSyms( ldfFeatures, dtStartTrain, dtEndTrain )
     naFeatTest = ftu.stackSyms( ldfFeatures, dtStartTest, dtEndTest )
-    
     ''' Normalize features, use same normalization factors for testing data as training data '''
     ltWeights = ftu.normFeatures( naFeatTrain, -1.0, 1.0, False )
     ''' Normalize query points with same weights that come from test data '''
@@ -203,7 +208,7 @@ def findBestFeaturesSetAmongAllCombinations (dData, lfcAllFeatures, lfcClassFeat
             
         lfcFeaturesList.append(lfcClassFeature)
         ldArgs = [{}] * len(lfcFeaturesList)
-        k, success = testFeatures(dData, 'close', lfcFeaturesList, ldArgs, lkRange = lkRange)
+        k, success = testFeatures_(dData, 'close', lfcFeaturesList, ldArgs, lkRange = lkRange)
         if success > maxSuccess:
             maxSuccess = success
             maxK = k
@@ -250,7 +255,7 @@ if __name__ == '__main__':
     lsSym = np.array(['SOFIX'])
     
     ''' Get data for 2009-2010 '''
-    dtStart = dt.datetime(2012,5,31)
+    dtStart = dt.datetime(2013,1,1)
     dtEnd = dt.datetime(2013,5,30)
     
     dataobj = da.DataAccess('Investor')      
@@ -270,8 +275,8 @@ if __name__ == '__main__':
     tdelta = t2 - t1
     print "findBestFeaturesSet(dData, lfcAllFeatures, featTrend, lkRange = range(31, 32, 1)) " + str(tdelta) + " seconds"
     
-#    t1 = datetime.now()
-#    featList, k, successRate = findBestFeaturesSetAmongAllCombinations(dData, lfcAllFeatures, featTrend, lkRange = range(31, 32, 1))
-#    t2 = datetime.now()
-#    tdelta = t2 - t1
-#    print "findBestFeaturesSetAmongAllCombinations(dData, lfcAllFeatures, featTrend, lkRange = range(31, 32, 1)) " + str(tdelta) + " seconds"
+    t1 = datetime.now()
+    featList, k, successRate = findBestFeaturesSetAmongAllCombinations(dData, lfcAllFeatures, featTrend, lkRange = range(31, 32, 1))
+    t2 = datetime.now()
+    tdelta = t2 - t1
+    print "findBestFeaturesSetAmongAllCombinations(dData, lfcAllFeatures, featTrend, lkRange = range(31, 32, 1)) " + str(tdelta) + " seconds"
