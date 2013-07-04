@@ -4,6 +4,8 @@ Created on Jun 28, 2013
 @author: I028663
 '''
 import unittest
+import math
+import numpy as np
 
 def getAllFeaturesCombinationsList(l_items):
     ll_retItems = list()
@@ -19,7 +21,27 @@ def getAllFeaturesCombinationsList(l_items):
         ll_retItems.append(l_curListItems)
     return ll_retItems
 
+def removeNans(naData, sDelNan='ALL', bShowRemoved=False):
+    llValidRows = list()
+    for i in range(naData.shape[0]):
+        if 'ALL' == sDelNan and not math.isnan( np.sum(naData[i,:]) ) or\
+              'FEAT' == sDelNan and not math.isnan( np.sum(naData[i,:-1]) ):
+            llValidRows.append(i)
+        elif  bShowRemoved:
+            print 'Removed ', naData[i,:]
+    naData = naData[llValidRows,:]
+    return naData
 
+def removeNansInDict(naData, sDelNan='ALL', bShowRemoved=False):
+    llValidRows = list()
+    for i in range(naData.shape[0]):
+        if 'ALL' == sDelNan and not math.isnan( np.sum(naData[i,:]) ) or\
+              'FEAT' == sDelNan and not math.isnan( np.sum(naData[i,:-1]) ):
+            llValidRows.append(i)
+        elif  bShowRemoved:
+            print 'Removed ', naData[i,:]
+    naData = naData[llValidRows,:]
+    return naData
 
 class TestIt(unittest.TestCase):
 

@@ -56,7 +56,6 @@ def executeQuery( naTrain, naTest, bClassification, lkRange=range(1,101,10), bPl
         cLearn.addEvidence( naTrain )
 
         fError = 0.0
-
         naResult = cLearn.query( naTest[:,:-1] )
         if bClassification:
             i_precision = 0
@@ -64,19 +63,22 @@ def executeQuery( naTrain, naTest, bClassification, lkRange=range(1,101,10), bPl
             i_TruePositives = 0
             i_FakePositives = 0
             i_FakeNegatives = 0
+            i_TrueNegatives = 0
             for i,res in enumerate(naResult):
-                if naResult[i] == 1.0 and naTest[i,-1] == 1.0:
+                if naResult[i] == 1 and naTest[i,-1] == naResult[i]:
                     i_TruePositives += 1
-                if naResult[i] == 1.0 and naTest[i,-1] == 0.0:
+                elif naResult[i] == 1 and naTest[i,-1] != naResult[i]:
                     i_FakePositives += 1
-                if naResult[i] == 0.0 and naTest[i,-1] == 1.0:
+                elif naResult[i] == -1 and naTest[i,-1] != naResult[i]:
                     i_FakeNegatives += 1
+                elif naResult[i] == -1 and naTest[i,-1] == naResult[i]:
+                    i_TrueNegatives += 1
             delta = naResult - naTest[:,-1]
             zeros_count = 0
             for dd in delta:
                 if dd == 0: zeros_count += 1
             lError = float(zeros_count / float(naTest.shape[0]))
-            lfRes.append((lK, lError, i_TruePositives, i_FakePositives, i_FakeNegatives))
+            lfRes.append((lK, lError, i_TruePositives, i_FakePositives, i_FakeNegatives, i_TrueNegatives))
         else:
             naError = abs( naResult - naTest[:,-1] )
             lfRes.append( (lK, np.average(naError)) )
@@ -95,12 +97,12 @@ def executeQuery( naTrain, naTest, bClassification, lkRange=range(1,101,10), bPl
             plt.ylabel('Error')
         plt.xlabel('K value')
         plt.show()
-    return result[0], result[1], result[2], result[3], result[4]
+    return result[0], result[1], result[2], result[3], result[4], result[5]
     
 def calculateFeatures(dData, dLeadDataColumn, lfcFeatures, d_FeatureParameters):
     ldfRet = dict()
     for i, fcFeature in enumerate(lfcFeatures):
-        ldFeatureData = fcFeature( dData, **d_FeatureParameters[fcFeature] )  #**ldArgs[i]
+        ldFeatureData = fcFeature( dData, **d_FeatureParameters[fcFeature] )
         diff = dData[dLeadDataColumn].values.shape[0] - ldFeatureData.values.shape[0]
         
         trds = np.empty((diff, 1))
@@ -108,7 +110,7 @@ def calculateFeatures(dData, dLeadDataColumn, lfcFeatures, d_FeatureParameters):
     
         trds2 = np.vstack((ldFeatureData.values, trds))
     
-        ldfRet[fcFeature] = trds2 
+        ldfRet[fcFeature] = bsetools.removeNans(trds2)  
     return ldfRet
 
 def testFeaturesSet(ldFeaturesDict, dLeadDataColumn, lfcFeatures, lkRange):
@@ -140,8 +142,6 @@ def testFeaturesSet(ldFeaturesDict, dLeadDataColumn, lfcFeatures, lkRange):
             plt.plot( timestamps, ldFeaturesDict[fcFunc], 'g-' )
             plt.show()
     
-    naFeatTrain = removeNans(naFeatTrain)     
-    naFeatTest = removeNans(naFeatTest)
     ''' Normalize features, use same normalization factors for testing data as training data '''
     ltWeights = ftu.normFeatures( naFeatTrain, -1.0, 1.0, False )
     ''' Normalize query points with same weights that come from test data '''
@@ -149,23 +149,9 @@ def testFeaturesSet(ldFeaturesDict, dLeadDataColumn, lfcFeatures, lkRange):
 
     return executeQuery( naFeatTrain, naFeatTest, bClassification = True, lkRange = lkRange )
 
-def printNa(naData):
-    for i in range(naData.shape[0]):
-        print naData[i,:]
-    print ''
-    
-def removeNans(naData, sDelNan='ALL', bShowRemoved=False):
-    llValidRows = list()
-    for i in range(naData.shape[0]):
-        if 'ALL' == sDelNan and not math.isnan( np.sum(naData[i,:]) ) or\
-              'FEAT' == sDelNan and not math.isnan( np.sum(naData[i,:-1]) ):
-            llValidRows.append(i)
-        elif  bShowRemoved:
-            print 'Removed ', naData[i,:]
-    naData = naData[llValidRows,:]
-    return naData
 
-def findBestFeaturesSetAmongAllCombinations (dData, lfc_TestFeatures, lfcClassFeature, d_FeatureParameters, lkRange):
+
+def findBestFeaturesSetAmongAllCombinations (dData, lfc_TestFeatures, lfcClassificationFeature, d_FeatureParameters, lkRange):
     featCombinationsList = bsetools.getAllFeaturesCombinationsList(lfc_TestFeatures)
     maxSuccess = -1
     maxK = 0
@@ -173,17 +159,26 @@ def findBestFeaturesSetAmongAllCombinations (dData, lfc_TestFeatures, lfcClassFe
     combinations = 0
 
     lfc_TestFeatures = list(lfc_TestFeatures)
-    lfc_TestFeatures.append(lfcClassFeature)
+    lfc_TestFeatures.append(lfcClassificationFeature)
     d_featuresData = calculateFeatures(dData, 'close', lfc_TestFeatures, d_FeatureParameters)
+    np_dataHistogram = np.histogram(d_featuresData[lfcClassificationFeature], 3)
+    print "np_dataHistogram: " + str(np_dataHistogram) 
     for featCombination in featCombinationsList:
         featCombination = list(featCombination)
-        featCombination.append(lfcClassFeature)
-        k, success, i_TruePositives, i_FakePositives, i_FakeNegatives = testFeaturesSet(d_featuresData, 'close', featCombination, lkRange = lkRange)
+        featCombination.append(lfcClassificationFeature)
+        k, success, i_TruePositives, i_FakePositives, i_FakeNegatives, i_TrueNegatives = testFeaturesSet(d_featuresData, 'close', featCombination, lkRange = lkRange)
         if success > maxSuccess:
             maxSuccess = success
             maxK = k
             maxFeat = featCombination
-            print "best combination so far: " + str(maxFeat) + " k: " + str(k) + " success: " + str(success) + " truePositives: " + str(i_TruePositives) + " fakePositives: " + str(i_FakePositives) + " fakeNegatives: " + str(i_FakeNegatives)
+            i_precision = i_TruePositives/(i_TruePositives+i_FakePositives)
+            i_recall = i_TruePositives/(i_TruePositives+i_FakeNegatives)
+            i_f1score = 2*i_precision*i_recall/(i_precision + i_recall)
+            print "best combination so far: " + str(maxFeat) + \
+                " k: " + str(k) + " success: " + str(success) + \
+                " precision: " + str(i_precision) + \
+                " recall: " + str(i_recall) + \
+                " f1score: " + str(i_f1score)
         combinations += 1
     print str(combinations) + " tested"
     return maxFeat, maxK, maxSuccess
@@ -241,8 +236,8 @@ if __name__ == '__main__':
 
     ldArgs = list()
     #, featBeta, featCorrelation
-    lfc_TestFeatures = [featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featBollinger]
-    #lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featVolumeDelta, featStochastic, featVolume, featBollinger)
+    #lfc_TestFeatures = [featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featBollinger]
+    lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featVolumeDelta, featStochastic, featVolume, featBollinger)
     #default parameters
     d_FeatureParameters = {}
     for feat in lfc_TestFeatures:
