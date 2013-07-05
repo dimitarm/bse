@@ -3,7 +3,6 @@ Created on Jun 28, 2013
 
 @author: I028663
 '''
-import unittest
 import math
 import numpy as np
 
@@ -32,47 +31,7 @@ def removeNans(naData, sDelNan='ALL', bShowRemoved=False):
     naData = naData[llValidRows,:]
     return naData
 
-def removeNansInDict(naData, sDelNan='ALL', bShowRemoved=False):
-    llValidRows = list()
-    for i in range(naData.shape[0]):
-        if 'ALL' == sDelNan and not math.isnan( np.sum(naData[i,:]) ) or\
-              'FEAT' == sDelNan and not math.isnan( np.sum(naData[i,:-1]) ):
-            llValidRows.append(i)
-        elif  bShowRemoved:
-            print 'Removed ', naData[i,:]
-    naData = naData[llValidRows,:]
-    return naData
+def removeNansInDict(d_Data, sDelNan='ALL', bShowRemoved=False):
+    pass
 
-class TestIt(unittest.TestCase):
-
-    def setUp(self):
-        pass
-        #self.seq = range(10)
-
-    def testAllFeaturesCombinationsList(self):
-        i_valueSeed = 1345
-        i_rang = 10
-        l_values = list()
-        li_valuesPositions = list()
-        for i in range(1, i_rang + 1):
-            l_values.append(i_valueSeed)
-            i_valueSeed += 1
-        
-        l_combinations = getAllFeaturesCombinationsList(l_values)
-        self.assertGreater(len(l_combinations), 0)
-        for combination in l_combinations:
-            i_valuePos = 0
-            for value in combination:
-                self.assertEqual(combination.count(value), 1, 'value: ' + str(value) + " appears: " + str(combination.count(value)) + ' times' + ' combination: ' + str(combination))
-                i_valuePos += 2 ** l_values.index(value)
-            li_valuesPositions.append(i_valuePos)
-        li_valuesPositions.sort()
-        i_prevPos = -1
-        for i in li_valuesPositions:
-            if i_prevPos == -1:
-                self.assertEqual(i, 1, 'Start index is not one')
-            else:
-                self.assertEqual(i, i_prevPos + 1, 'Not sequential indexes: ' + str(i) + ' ' + str(i_prevPos))
-            i_prevPos = i
-                
         
