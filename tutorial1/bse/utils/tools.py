@@ -32,6 +32,7 @@ def removeNans(naData, sDelNan='ALL', bShowRemoved=False):
     return naData
 
 def removeNansInDict(d_Data, sDelNan='ALL', bShowRemoved=False):
+<<<<<<< HEAD
     i_linesWithNan = list()
     for arr in d_Data.itervalues():
         for y in range(0, arr.shape[0]):
@@ -49,3 +50,8 @@ def removeNansInDict(d_Data, sDelNan='ALL', bShowRemoved=False):
         
         
         
+=======
+    pass
+
+        
+>>>>>>> branch 'master' of https://github.com/dimitarm/bse.git
