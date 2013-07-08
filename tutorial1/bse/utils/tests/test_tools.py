@@ -46,7 +46,7 @@ class TestTools(unittest.TestCase):
         l_positionsNaN = list()
         for d in range(0, 5):
             na_arr = np.random.random_sample((100, 100))
-            for i in range(0, 5):
+            for ii in range(0, 5):
                 x = np.random.randint(0, 100)
                 y = np.random.randint(0, 100)
                 na_arr[x][y] = np.nan
