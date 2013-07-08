@@ -12,7 +12,9 @@ Created on Nov 7, 2011
 '''
 
 ''' Python imports '''
+import math
 import datetime as dt
+import itertools
 
 ''' 3rd party imports '''
 import numpy as np
@@ -29,10 +31,12 @@ import qstkfeat.featutil as ftu
 import utils.dateutil as bsedateutil
 
 import myknn as myknn
+from utils.features import *
+import utils.tools as bsetools
 from datetime import datetime
 from datetime import timedelta
 
-def testLearner( naTrain, naTest, bClassification, lkRange=range(1,101,10), bPlot=False ):
+def executeQuery( naTrain, naTest, bClassification, lkRange=range(1,101,10), bPlot=False ):
     ''' 
     @summary: Takes testing and training data and computes average error over the test set
               This is compared to a baseline guess which is just the average of the training set
@@ -52,22 +56,35 @@ def testLearner( naTrain, naTest, bClassification, lkRange=range(1,101,10), bPlo
         cLearn.addEvidence( naTrain )
 
         fError = 0.0
-
         naResult = cLearn.query( naTest[:,:-1] )
         if bClassification:
+            i_precision = 0
+            i_recall = 0
+            i_TruePositives = 0
+            i_FakePositives = 0
+            i_FakeNegatives = 0
+            i_TrueNegatives = 0
+            for i,res in enumerate(naResult):
+                if naResult[i] == 1 and naTest[i,-1] == naResult[i]:
+                    i_TruePositives += 1
+                elif naResult[i] == 1 and naTest[i,-1] != naResult[i]:
+                    i_FakePositives += 1
+                elif naResult[i] == -1 and naTest[i,-1] != naResult[i]:
+                    i_FakeNegatives += 1
+                elif naResult[i] == -1 and naTest[i,-1] == naResult[i]:
+                    i_TrueNegatives += 1
             delta = naResult - naTest[:,-1]
             zeros_count = 0
             for dd in delta:
                 if dd == 0: zeros_count += 1
             lError = float(zeros_count / float(naTest.shape[0]))
-            lfRes.append((lK, lError))
+            lfRes.append((lK, lError, i_TruePositives, i_FakePositives, i_FakeNegatives, i_TrueNegatives))
         else:
             naError = abs( naResult - naTest[:,-1] )
             lfRes.append( (lK, np.average(naError)) )
         
     res_arr = np.array(lfRes)
     result = res_arr[np.argmax(res_arr[:,1])]
-    #print str(result[0]) + " " + str(result[1])
     
     if bPlot:
         plt.clf()
@@ -80,12 +97,36 @@ def testLearner( naTrain, naTest, bClassification, lkRange=range(1,101,10), bPlo
             plt.ylabel('Error')
         plt.xlabel('K value')
         plt.show()
-    return result[0], result[1]
+    return result[0], result[1], result[2], result[3], result[4], result[5]
     
+def calculateFeatures(dData, dLeadDataColumn, lfcFeatures, d_FeatureParameters):
+    ldfRet = dict()
+    for i, fcFeature in enumerate(lfcFeatures):
+        ldFeatureData = fcFeature( dData, **d_FeatureParameters[fcFeature] )
+        diff = dData[dLeadDataColumn].values.shape[0] - ldFeatureData.values.shape[0]
+        
+        trds = np.empty((diff, 1))
+        trds[0:diff,:] = np.nan
+    
+        trds2 = np.vstack((ldFeatureData.values, trds))
+    
+        ldfRet[fcFeature] = bsetools.removeNans(trds2)  
+    return ldfRet
 
-def testFeatures(dData, lfcFeatures, ldArgs, lkRange):
-    ''' Generate a list of DataFrames, one for each feature, with the same index/column structure as price data '''
-    ldfFeatures = ftu.applyFeatures( dData, lfcFeatures, ldArgs )
+def testFeaturesSet(ldFeaturesDict, dLeadDataColumn, lfcFeatures, lkRange):
+    ''' Pick Test and Training Points '''
+    lDataLength = ldFeaturesDict[lfcFeatures[0]].shape[0] 
+    lSplit = int(lDataLength * 0.7)
+     
+    ''' Stack all information into one Numpy array '''
+    naFeatTrain = np.empty((lSplit, 0))
+    naFeatTest =  np.empty((lDataLength - lSplit, 0))
+    for i, fcFunc in enumerate(lfcFeatures):
+        dFeatData = ldFeaturesDict[fcFunc];
+        dTrainData = dFeatData[0: lSplit,:]
+        dTestData = dFeatData[lSplit:,:]
+        naFeatTrain = np.hstack((naFeatTrain, dTrainData))
+        naFeatTest = np.hstack((naFeatTest, dTestData))
     
     bPlot = False
     if bPlot:
@@ -94,83 +135,81 @@ def testFeatures(dData, lfcFeatures, ldArgs, lkRange):
             plt.clf()
             plt.subplot(211)
             plt.title( fcFunc.__name__ )
-            timestamps = ldfData.index
-            datavalues = ldfData['SOFIX'].values
+            timestamps = ldFeaturesDict[dLeadDataColumn].index
+            datavalues = ldFeaturesDict[dLeadDataColumn].values
             plt.plot( timestamps, datavalues, 'r-' )
             plt.subplot(212)
-            plt.plot( ldfData.index, ldfFeatures[i]['SOFIX'].values, 'g-' )
+            plt.plot( timestamps, ldFeaturesDict[fcFunc], 'g-' )
             plt.show()
-     
-    ''' Pick Test and Training Points '''
-    lSplit = int(len(ldtTimestamps) * 0.7)
-    dtStartTrain = ldtTimestamps[0]
-    dtEndTrain = ldtTimestamps[lSplit]
-    dtStartTest = ldtTimestamps[lSplit+1]
-    dtEndTest = ldtTimestamps[-1]
-     
-    ''' Stack all information into one Numpy array ''' 
-    naFeatTrain = ftu.stackSyms( ldfFeatures, dtStartTrain, dtEndTrain )
-    naFeatTest = ftu.stackSyms( ldfFeatures, dtStartTest, dtEndTest )
     
     ''' Normalize features, use same normalization factors for testing data as training data '''
     ltWeights = ftu.normFeatures( naFeatTrain, -1.0, 1.0, False )
     ''' Normalize query points with same weights that come from test data '''
     ftu.normQuery( naFeatTest[:,:-1], ltWeights )
 
-    return testLearner( naFeatTrain, naFeatTest, bClassification = True, lkRange = lkRange )
+    return executeQuery( naFeatTrain, naFeatTest, bClassification = True, lkRange = lkRange )
 
-def findBestFeaturesSetAmongAllCombinations (dData, lfcAllFeatures, lfcClassFeature, lkRange):
-    featCombinationsList = range(1,2 ** len(lfcAllFeatures),1)
+
+
+def findBestFeaturesSetAmongAllCombinations (dData, lfc_TestFeatures, lfcClassificationFeature, d_FeatureParameters, lkRange):
+    featCombinationsList = bsetools.getAllFeaturesCombinationsList(lfc_TestFeatures)
     maxSuccess = -1
     maxK = 0
     maxFeat = 0
+    combinations = 0
 
+    lfc_TestFeatures = list(lfc_TestFeatures)
+    lfc_TestFeatures.append(lfcClassificationFeature)
+    d_featuresData = calculateFeatures(dData, 'close', lfc_TestFeatures, d_FeatureParameters)
+    np_dataHistogram = np.histogram(d_featuresData[lfcClassificationFeature], 3)
+    print "np_dataHistogram: " + str(np_dataHistogram) 
     for featCombination in featCombinationsList:
-        lfcFeaturesList = list()
-        featFlag =  2 ** len(lfcAllFeatures) >> 1
-        featPos = len(lfcAllFeatures)
-        #add features
-        while featFlag > 0:
-            if featCombination & featFlag:
-               lfcFeaturesList.append(lfcAllFeatures[featPos-1]) 
-            featPos-=1
-            featFlag = featFlag >> 1
-            
-        lfcFeaturesList.append(lfcClassFeature)
-        ldArgs = [{}] * len(lfcFeaturesList)
-        k, success = testFeatures(dData, lfcFeaturesList, ldArgs, lkRange = lkRange)
+        featCombination = list(featCombination)
+        featCombination.append(lfcClassificationFeature)
+        k, success, i_TruePositives, i_FakePositives, i_FakeNegatives, i_TrueNegatives = testFeaturesSet(d_featuresData, 'close', featCombination, lkRange = lkRange)
         if success > maxSuccess:
             maxSuccess = success
             maxK = k
-            maxFeat = lfcFeaturesList
-            print "best combination so far: " + str(maxFeat) + " k: " + str(k) + " success: " + str(success)
+            maxFeat = featCombination
+            i_precision = i_TruePositives/(i_TruePositives+i_FakePositives)
+            i_recall = i_TruePositives/(i_TruePositives+i_FakeNegatives)
+            i_f1score = 2*i_precision*i_recall/(i_precision + i_recall)
+            print "best combination so far: " + str(maxFeat) + \
+                " k: " + str(k) + " success: " + str(success) + \
+                " precision: " + str(i_precision) + \
+                " recall: " + str(i_recall) + \
+                " f1score: " + str(i_f1score)
+        combinations += 1
+    print str(combinations) + " tested"
     return maxFeat, maxK, maxSuccess
     
     
-def findBestFeaturesSet (dData, lfcAllFeatures, lfcClassFeature, lkRange):
+def findBestFeaturesSetByIteration (dData, lfc_TestFeatures, lfcClassFeature, ldArgs, lkRange):
     lfcMaxFeaturesList = list()
     maxKK = 0
     maxSSuccess = -1
     lfcMaxFeaturesList.append(lfcClassFeature)
+    ldFeaturesDict = calculateFeatures(dData, 'close', lfc_TestFeatures, ldArgs)
     ''' Imported functions from qstkfeat.features, NOTE: last function is classification '''
-    while len(lfcAllFeatures) > 0:
+    while len(lfc_TestFeatures) > 1:
         maxSuccess = -1
         maxK = 0
-        for lfcCurrentFeat in lfcAllFeatures:
+        for lfcCurrentFeat in lfc_TestFeatures:
+            if lfcCurrentFeat == lfcClassFeature: continue
             lfcFeatures2Test = list(lfcMaxFeaturesList)
             lfcFeatures2Test.insert(0, lfcCurrentFeat)
             ''' Default Arguments '''
             ldArgs = [{}] * len(lfcFeatures2Test) 
             
-            k, success = testFeatures(dData, lfcFeatures2Test, ldArgs, lkRange = lkRange)
+            k, success = testFeaturesSet(ldFeaturesDict, 'close', lfcFeatures2Test, lkRange = lkRange)
             if success > maxSuccess:
                 maxSuccess = success
                 maxK = k
                 maxFeat = lfcCurrentFeat
         
         lfcMaxFeaturesList.insert(0, maxFeat)
-        lfcAllFeatures.remove(maxFeat)
-        k, success = testFeatures(dData, lfcMaxFeaturesList, ldArgs, lkRange = lkRange)
+        lfc_TestFeatures.remove(maxFeat)
+        k, success = testFeaturesSet(ldFeaturesDict, 'close', lfcMaxFeaturesList, lkRange = lkRange)
         if success < maxSSuccess or success == maxSSuccess:
             lfcMaxFeaturesList.remove(maxFeat)
         elif success > maxSSuccess:
@@ -181,11 +220,10 @@ def findBestFeaturesSet (dData, lfcAllFeatures, lfcClassFeature, lkRange):
     return lfcMaxFeaturesList, maxK, maxSSuccess
     
 if __name__ == '__main__':
-    
     lsSym = np.array(['SOFIX'])
     
     ''' Get data for 2009-2010 '''
-    dtStart = dt.datetime(2012,5,31)
+    dtStart = dt.datetime(2012,6,1)
     dtEnd = dt.datetime(2013,5,30)
     
     dataobj = da.DataAccess('Investor')      
@@ -196,17 +234,27 @@ if __name__ == '__main__':
     
     dData = dict(zip(lsKeys, ldfData))
 
+    ldArgs = list()
     #, featBeta, featCorrelation
-    #lfcAllFeatures = [featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featBollinger]
-    lfcAllFeatures = [featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featVolumeDelta, featStochastic, featVolume, featBollinger]
-    t1 = datetime.now()
-    featList, k, successRate = findBestFeaturesSet(dData, list(lfcAllFeatures), featTrend, lkRange = range(31, 32, 1))
-    t2 = datetime.now()
-    tdelta = t2 - t1
-    print "findBestFeaturesSet(dData, lfcAllFeatures, featTrend, lkRange = range(31, 32, 1)) " + str(tdelta) + " seconds"
+    #lfc_TestFeatures = [featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featBollinger]
+    lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featVolumeDelta, featStochastic, featVolume, featBollinger)
+    #default parameters
+    d_FeatureParameters = {}
+    for feat in lfc_TestFeatures:
+        d_FeatureParameters[feat] = {}
+    d_FeatureParameters[featTrend] = {'lForwardlook':2}
+#    ldArgs = [ {'lLookback':30, 'bRel':True},\
+#               {},\
+#               {}]             
+         
+#    t1 = datetime.now()
+#    featList, k, successRate = findBestFeaturesSetByIteration(dData, list(lfc_TestFeatures), featTrend, d_FeatureParameters, lkRange = range(31, 32, 1))
+#    t2 = datetime.now()
+#    tdelta = t2 - t1
+#    print "findBestFeaturesSetByIteration " + str(tdelta) + " seconds"
     
     t1 = datetime.now()
-    featList, k, successRate = findBestFeaturesSetAmongAllCombinations(dData, lfcAllFeatures, featTrend, lkRange = range(31, 32, 1))
+    featList, k, successRate = findBestFeaturesSetAmongAllCombinations(dData, lfc_TestFeatures, featTrend, d_FeatureParameters, lkRange = range(31, 32, 1))
     t2 = datetime.now()
     tdelta = t2 - t1
-    print "findBestFeaturesSetAmongAllCombinations(dData, lfcAllFeatures, featTrend, lkRange = range(31, 32, 1)) " + str(tdelta) + " seconds"
+    print "findBestFeaturesSetAmongAllCombinations " + str(tdelta) + " seconds"
