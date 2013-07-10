@@ -4,7 +4,6 @@
 <pydev_project>
 <pydev_property name="org.python.pydev.PYTHON_PROJECT_VERSION">python 2.7</pydev_property>
 <pydev_property name="org.python.pydev.PYTHON_PROJECT_INTERPRETER">Default</pydev_property>
-<<<<<<< HEAD
 <pydev_pathproperty name="org.python.pydev.PROJECT_EXTERNAL_SOURCE_PATH">
 <path>/home/dimitar/QSTK</path>
 <path>/home/dimitar/QSTK/Bin</path>
@@ -12,6 +11,4 @@
 <pydev_pathproperty name="org.python.pydev.PROJECT_SOURCE_PATH">
 <path>/tutorial1/bse</path>
 </pydev_pathproperty>
-=======
->>>>>>> 778217e6550ee7221468253a2e0a310399e87b7b
 </pydev_project>
