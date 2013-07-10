@@ -33,16 +33,19 @@ def removeNans(naData, sDelNan='ALL', bShowRemoved=False):
 
 def removeNansInDict(d_Data, sDelNan='ALL', bShowRemoved=False):
     i_linesWithNan = list()
+    d_resultData = dict()
     for arr in d_Data.itervalues():
-        for y in range(0, arr.shape[0]):
+        for y in range(arr.shape[0]):
             if np.any(np.isnan(arr[y])):
                 i_linesWithNan.append(y)
-    np_linesWithNan = np.array(i_linesWithNan)
-    np_sortIndexes = np.argsort(np_linesWithNan) 
-    i_removedLines = 0
-    for idx in np_sortIndexes:
-        for arr in d_Data.itervalues():
-            np_arrWithoutNan = np.delete(arr, np_linesWithNan[idx] + i_removedLines, 0)
-            arr =  np_arrWithoutNan
-        i_removedLines += 1
-        
+    i_linesWithNan = list(set(i_linesWithNan))
+    i_linesWithNan.sort() 
+    for key,arr in d_Data.iteritems():
+        i_removedLines = 0
+        for idx in i_linesWithNan:
+            arr = np.delete(arr, idx - i_removedLines, 0)
+            i_removedLines += 1
+        d_resultData[key] = arr
+    for key, arr in d_resultData.iteritems():
+        d_Data[key] = arr
+    
