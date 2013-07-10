@@ -43,6 +43,6 @@ def removeNansInDict(d_Data, sDelNan='ALL', bShowRemoved=False):
     for idx in np_sortIndexes:
         for arr in d_Data.itervalues():
             np_arrWithoutNan = np.delete(arr, np_linesWithNan[idx] + i_removedLines, 0)
-            arr = np_arrWithoutNan
+            arr =  np_arrWithoutNan
         i_removedLines += 1
         
