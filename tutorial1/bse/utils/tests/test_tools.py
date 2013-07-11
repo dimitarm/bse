@@ -3,9 +3,9 @@ Created on Jul 5, 2013
 
 @author: I028663
 '''
-import utils.tools
 import unittest
 import numpy as np
+import utils.tools
 
 class TestTools(unittest.TestCase):
 
@@ -40,12 +40,12 @@ class TestTools(unittest.TestCase):
             i_prevPos = i
                 
     def testRemoveNansInDict(self):
-        np.random.seed(0)
+        #np.random.seed(0)
         d_data = dict()
         d_changedData = dict()
         l_positionsNaN = list()
         for d in range(0, 2):
-            na_arr = np.random.random_sample((10, 5))
+            na_arr = np.random.random_sample((1000, 50))
             for ii in range(0, na_arr.shape[0]/5):
                 x = np.random.randint(0, na_arr.shape[1])
                 y = np.random.randint(0, na_arr.shape[0])
@@ -61,14 +61,16 @@ class TestTools(unittest.TestCase):
         #insert nan rows for removed rows
         l_positionsNaN = list(set(l_positionsNaN))
         l_positionsNaN.sort() 
-        for key,arr in d_changedData.iteritems():
+        for key, arr in d_changedData.iteritems():
             for i in l_positionsNaN:
-                d_changedData[key] = np.insert(arr, i, np.nan, axis=0)
+                arr = np.insert(arr, i, np.nan, axis=0)
+            d_changedData[key] = arr
         #check if shapes are equal
         for key, arr in d_changedData.iteritems():
             self.assertEqual(arr.shape, d_data[key].shape, 'Not equal shapes')
+            sh_shape = d_data[key].shape
             
-        for y in range(0, sh_arrShape[0]):
+        for y in range(0, sh_shape[0]):
             if l_positionsNaN.count(y) > 0:
                 continue
             for key in d_data.iterkeys():
@@ -83,7 +85,8 @@ class TestTools(unittest.TestCase):
                 
                 
                 
-                
+if __name__ == '__main__':
+    pass                
                 
                 
                 
