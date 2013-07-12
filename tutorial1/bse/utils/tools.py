@@ -46,6 +46,5 @@ def removeNansInDict(d_Data, sDelNan='ALL', bShowRemoved=False):
             arr = np.delete(arr, idx - i_removedLines, 0)
             i_removedLines += 1
         d_resultData[key] = arr
-    for key, arr in d_resultData.iteritems():
-        d_Data[key] = arr
+    return d_resultData
     
