@@ -3,9 +3,13 @@ Created on Jul 5, 2013
 
 @author: I028663
 '''
+
+import sys
+print sys.path
+
 import unittest
 import numpy as np
-import utils.tools
+import bse.utils.tools
 
 class TestTools(unittest.TestCase):
 
@@ -22,7 +26,7 @@ class TestTools(unittest.TestCase):
             l_values.append(i_valueSeed)
             i_valueSeed += 1
         
-        l_combinations = utils.tools.getAllFeaturesCombinationsList(l_values)
+        l_combinations = tools.getAllFeaturesCombinationsList(l_values)
         self.assertGreater(len(l_combinations), 0)
         for combination in l_combinations:
             i_valuePos = 0
@@ -53,7 +57,7 @@ class TestTools(unittest.TestCase):
                 l_positionsNaN.append(y)
             d_data[d] = na_arr
             d_changedData[d] = np.copy(na_arr)
-        utils.tools.removeNansInDict(d_changedData)
+        tools.removeNansInDict(d_changedData)
         #check if there are no nans
         for arr in d_changedData.itervalues():
             for y in range(arr.shape[0]):

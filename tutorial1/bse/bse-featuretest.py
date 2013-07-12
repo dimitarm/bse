@@ -20,6 +20,8 @@ import itertools
 import numpy as np
 import pandas as pand
 import matplotlib.pyplot as plt
+from datetime import datetime
+from datetime import timedelta
 
 ''' QSTK imports '''
 from qstkutil import DataAccess as da
@@ -30,11 +32,8 @@ import qstkfeat.featutil as ftu
 
 import utils.dateutil as bsedateutil
 
-import myknn as myknn
 from utils.features import *
 import utils.tools as bsetools
-from datetime import datetime
-from datetime import timedelta
 
 def executeQuery( naTrain, naTest, bClassification, lkRange=range(1,101,10), bPlot=False ):
     ''' 
@@ -110,8 +109,9 @@ def calculateFeatures(dData, dLeadDataColumn, lfcFeatures, d_FeatureParameters):
     
         trds2 = np.vstack((ldFeatureData.values, trds))
     
-        ldfRet[fcFeature] = bsetools.removeNans(trds2)  
-    return ldfRet
+        ldfRet[fcFeature] = trds2
+    d_dataWithoutNans = bsetools.removeNansInDict(ldfRet)
+    return d_dataWithoutNans
 
 def testFeaturesSet(ldFeaturesDict, dLeadDataColumn, lfcFeatures, lkRange):
     ''' Pick Test and Training Points '''
@@ -236,8 +236,8 @@ if __name__ == '__main__':
 
     ldArgs = list()
     #, featBeta, featCorrelation
-    #lfc_TestFeatures = [featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featBollinger]
-    lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featVolumeDelta, featStochastic, featVolume, featBollinger)
+    lfc_TestFeatures = [featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featBollinger]
+    #lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featVolumeDelta, featStochastic, featVolume, featBollinger)
     #default parameters
     d_FeatureParameters = {}
     for feat in lfc_TestFeatures:
