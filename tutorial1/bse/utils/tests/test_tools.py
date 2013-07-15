@@ -9,7 +9,7 @@ print sys.path
 
 import unittest
 import numpy as np
-import bse.utils.tools
+from bse.utils import tools
 
 class TestTools(unittest.TestCase):
 
