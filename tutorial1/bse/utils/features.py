@@ -13,7 +13,7 @@ import datetime as dt
 import qstkutil.tsutil as tsu
 
 
-def featReturn(dData, b_human=False):
+def featReturn0(dData, b_human=False):
     dfPrice = dData['close'].copy()
     
     # Calculate Returns
@@ -42,27 +42,3 @@ def trends(ret):
         return 0
     else:
         return -1
-
-def featMomentum(dData, lLookback=20, b_human=False ):
-    '''
-    @summary: N day cumulative return (based on 1) indicator
-    @param dData: Dictionary of data to use
-    @param lLookback: Number of days to look in the past
-    @param b_human: if true return dataframe to plot
-    @return: DataFrame array containing values
-    '''
-    if b_human:
-        for sym in dData['close']:
-            x=1000/dData['close'][sym][0]
-            dData['close'][sym]=dData['close'][sym]*x
-        return dData['close']
-    dfPrice = dData['close'].copy()
-    
-    #Calculate Returns
-    tsu.returnize0(dfPrice.values)
-    
-    #Calculate rolling sum
-    dfRet = pand.rolling_sum(dfPrice, lLookback)
-    
-    
-    return dfRet

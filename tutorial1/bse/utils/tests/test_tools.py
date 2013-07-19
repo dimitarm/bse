@@ -4,9 +4,6 @@ Created on Jul 5, 2013
 @author: I028663
 '''
 
-import sys
-print sys.path
-
 import unittest
 import numpy as np
 from bse.utils import tools
@@ -46,7 +43,6 @@ class TestTools(unittest.TestCase):
     def testRemoveNansInDict(self):
         #np.random.seed(0)
         d_data = dict()
-        d_changedData = dict()
         l_positionsNaN = list()
         for d in range(0, 2):
             na_arr = np.random.random_sample((1000, 50))
@@ -56,8 +52,7 @@ class TestTools(unittest.TestCase):
                 na_arr[y][x] = np.nan
                 l_positionsNaN.append(y)
             d_data[d] = na_arr
-            d_changedData[d] = np.copy(na_arr)
-        tools.removeNansInDict(d_changedData)
+        d_changedData = tools.removeNansInDict(d_data)
         #check if there are no nans
         for arr in d_changedData.itervalues():
             for y in range(arr.shape[0]):

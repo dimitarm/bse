@@ -34,6 +34,7 @@ import utils.dateutil as bsedateutil
 
 from utils.features import *
 import utils.tools as bsetools
+import bse.myknn as myknn
 
 def executeQuery( naTrain, naTest, bClassification, lkRange=range(1,101,10), bPlot=False ):
     ''' 
@@ -98,13 +99,13 @@ def executeQuery( naTrain, naTest, bClassification, lkRange=range(1,101,10), bPl
         plt.show()
     return result[0], result[1], result[2], result[3], result[4], result[5]
     
-def calculateFeatures(dData, dLeadDataColumn, lfcFeatures, d_FeatureParameters):
+def calculateFeatures(d_dfData, dLeadDataColumn, lfcFeatures, d_FeatureParameters):
     ldfRet = dict()
     for i, fcFeature in enumerate(lfcFeatures):
-        ldFeatureData = fcFeature( dData, **d_FeatureParameters[fcFeature] )
+        ldFeatureData = fcFeature( d_dfData, **d_FeatureParameters[fcFeature] )
         diff = dData[dLeadDataColumn].values.shape[0] - ldFeatureData.values.shape[0]
         
-        trds = np.empty((diff, 1))
+        trds = np.empty((diff, dData[dLeadDataColumn].values.shape[1]))
         trds[0:diff,:] = np.nan
     
         trds2 = np.vstack((ldFeatureData.values, trds))
@@ -151,7 +152,7 @@ def testFeaturesSet(ldFeaturesDict, dLeadDataColumn, lfcFeatures, lkRange):
 
 
 
-def findBestFeaturesSetAmongAllCombinations (dData, lfc_TestFeatures, lfcClassificationFeature, d_FeatureParameters, lkRange):
+def findBestFeaturesSetAmongAllCombinations (d_dfData, lfc_TestFeatures, lfcClassificationFeature, d_FeatureParameters, lkRange):
     featCombinationsList = bsetools.getAllFeaturesCombinationsList(lfc_TestFeatures)
     maxSuccess = -1
     maxK = 0
@@ -160,7 +161,7 @@ def findBestFeaturesSetAmongAllCombinations (dData, lfc_TestFeatures, lfcClassif
 
     lfc_TestFeatures = list(lfc_TestFeatures)
     lfc_TestFeatures.append(lfcClassificationFeature)
-    d_featuresData = calculateFeatures(dData, 'close', lfc_TestFeatures, d_FeatureParameters)
+    d_featuresData = calculateFeatures(d_dfData, 'close', lfc_TestFeatures, d_FeatureParameters)
     np_dataHistogram = np.histogram(d_featuresData[lfcClassificationFeature], 3)
     print "np_dataHistogram: " + str(np_dataHistogram) 
     for featCombination in featCombinationsList:
@@ -220,7 +221,7 @@ def findBestFeaturesSetByIteration (dData, lfc_TestFeatures, lfcClassFeature, ld
     return lfcMaxFeaturesList, maxK, maxSSuccess
     
 if __name__ == '__main__':
-    lsSym = np.array(['SOFIX'])
+    lsSym = np.array(['SOFIX', '3JR'])
     
     ''' Get data for 2009-2010 '''
     dtStart = dt.datetime(2012,6,1)
