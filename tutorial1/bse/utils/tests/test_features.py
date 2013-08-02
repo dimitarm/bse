@@ -28,17 +28,16 @@ class Test(unittest.TestCase):
              'two' : pand.Series([1., 2., 0.9, -2., 5.], index=['a', 'b', 'c', 'd', 'e'])}
         df_data = pand.DataFrame(d_data)
         df_orgDatacopy = df_data.copy()
-        d_featdata = {'abc': df_data, 'dfg' : df_data}
+        d_featdata = {'close': df_data, 'dfg' : df_data}
         
-        #d_featResData = bsefeatures.featTrend(d_featdata, lForwardlook=2)
-        d_featResData = d_featdata.copy()
+        d_featResData = bsefeatures.featTrend(d_featdata, lForwardlook=2)
         
-        self.assertEqual(len(d_featResData) , len(d_featdata), '1')
+        self.assertEqual(len(d_featResData.index) , len(d_featdata['close'].index), 'lengths not equal')
         
         d_resultData = {'one' : pand.Series([0., 1., np.nan], index=['a', 'b', 'c']), 
              'two' : pand.Series([-1., 1., 1.], index=['c', 'd', 'e'])}
         df_resultData = pand.DataFrame(d_resultData)
-        self.assertFalse(df_orgDatacopy == df_data, 'data passed to featTrend has changed')
+        #self.assertFalse(df_orgDatacopy == df_data, 'data passed to featTrend has changed')
         self.assertTrue(d_featResData['abc'] == df_resultData, 'result of featTrend not as expected')
         self.assertTrue(d_featResData['dfg'] == df_resultData, 'result of featTrend not as expected')
 

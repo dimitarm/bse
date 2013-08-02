@@ -36,9 +36,12 @@ def featTrend(dData, lForwardlook=2, b_human=False):
     return dfRet
 
 def trends(ret):
-    if ret > 0:
-        return 1
-    elif ret == 0:
-        return 0
-    else:
-        return -1
+    na_res = np.array(ret)
+    for pos, value in enumerate(na_res):
+        if value > 0:
+            na_res[pos] = 1
+        elif value == 0:
+            pass #na_res[pos] = 0
+        else:
+            na_res[pos] = -1
+    return na_res
