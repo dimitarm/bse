@@ -99,18 +99,12 @@ def executeQuery( naTrain, naTest, bClassification, lkRange=range(1,101,10), bPl
         plt.show()
     return result[0], result[1], result[2], result[3], result[4], result[5]
     
-def calculateFeatures(d_dfData, dLeadDataColumn, lfcFeatures, d_FeatureParameters):
+def calculateFeatures(d_dfData, s_symbol, lfcFeatures, d_FeatureParameters):
     ldfRet = dict()
     for i, fcFeature in enumerate(lfcFeatures):
         ldFeatureData = fcFeature( d_dfData, **d_FeatureParameters[fcFeature] )
-        diff = dData[dLeadDataColumn].values.shape[0] - ldFeatureData.values.shape[0]
-        
-        trds = np.empty((diff, dData[dLeadDataColumn].values.shape[1]))
-        trds[0:diff,:] = np.nan
     
-        trds2 = np.vstack((ldFeatureData.values, trds))
-    
-        ldfRet[fcFeature] = trds2
+        ldfRet[fcFeature] = ldFeatureData[s_symbol].values
     d_dataWithoutNans = bsetools.removeNansInDict(ldfRet)
     return d_dataWithoutNans
 
@@ -124,8 +118,10 @@ def testFeaturesSet(ldFeaturesDict, dLeadDataColumn, lfcFeatures, lkRange):
     naFeatTest =  np.empty((lDataLength - lSplit, 0))
     for i, fcFunc in enumerate(lfcFeatures):
         dFeatData = ldFeaturesDict[fcFunc];
-        dTrainData = dFeatData[0: lSplit,:]
-        dTestData = dFeatData[lSplit:,:]
+        dTrainData = dFeatData[0: lSplit]
+        dTrainData = dTrainData.reshape((lSplit, 1))
+        dTestData = dFeatData[lSplit:]
+        dTestData = dTestData.reshape((lDataLength - lSplit, 1))
         naFeatTrain = np.hstack((naFeatTrain, dTrainData))
         naFeatTest = np.hstack((naFeatTest, dTestData))
     
@@ -161,7 +157,7 @@ def findBestFeaturesSetAmongAllCombinations (d_dfData, lfc_TestFeatures, lfcClas
 
     lfc_TestFeatures = list(lfc_TestFeatures)
     lfc_TestFeatures.append(lfcClassificationFeature)
-    d_featuresData = calculateFeatures(d_dfData, 'close', lfc_TestFeatures, d_FeatureParameters)
+    d_featuresData = calculateFeatures(d_dfData, 'SOFIX', lfc_TestFeatures, d_FeatureParameters)
     np_dataHistogram = np.histogram(d_featuresData[lfcClassificationFeature], 3)
     print "np_dataHistogram: " + str(np_dataHistogram) 
     for featCombination in featCombinationsList:
@@ -224,7 +220,7 @@ if __name__ == '__main__':
     lsSym = np.array(['SOFIX', '3JR'])
     
     ''' Get data for 2009-2010 '''
-    dtStart = dt.datetime(2011,6,1)
+    dtStart = dt.datetime(2012,6,1)
     dtEnd = dt.datetime(2013,5,30)
     
     dataobj = da.DataAccess('Investor')      
@@ -243,7 +239,7 @@ if __name__ == '__main__':
     d_FeatureParameters = {}
     for feat in lfc_TestFeatures:
         d_FeatureParameters[feat] = {}
-    d_FeatureParameters[featTrend] = {'lForwardlook':2}
+    d_FeatureParameters[featTrend] = {'lForwardlook':7}
 #    ldArgs = [ {'lLookback':30, 'bRel':True},\
 #               {},\
 #               {}]             
