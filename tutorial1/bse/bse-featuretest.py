@@ -86,9 +86,11 @@ def executeQuery( naTrain, naTest, bClassification, lkRange=range(1,101,10), bPl
     res_arr = np.array(lfRes)
     result = res_arr[np.argmax(res_arr[:,1])]
     
+#    if naTrain.shape[1] > 2:
+#        bPlot = True
     if bPlot:
         plt.clf()
-        plt.plot( llRange, res_arr[:,1] )
+        plt.plot( lkRange, res_arr[:,1] )
         if bClassification:
             plt.legend( ('Average Prediction success ')) 
             plt.ylabel('Success')
@@ -124,8 +126,9 @@ def testFeaturesSet(ldFeaturesDict, dLeadDataColumn, lfcFeatures, lkRange):
         dTestData = dTestData.reshape((lDataLength - lSplit, 1))
         naFeatTrain = np.hstack((naFeatTrain, dTrainData))
         naFeatTest = np.hstack((naFeatTest, dTestData))
-    
+
     bPlot = False
+    
     if bPlot:
         ''' Plot feature for XOM '''
         for i, fcFunc in enumerate(lfcFeatures[:]):
@@ -152,7 +155,6 @@ def findBestFeaturesSetAmongAllCombinations (d_dfData, lfc_TestFeatures, lfcClas
     featCombinationsList = bsetools.getAllFeaturesCombinationsList(lfc_TestFeatures)
     maxSuccess = -1
     maxK = 0
-    maxFeat = 0
     combinations = 0
 
     lfc_TestFeatures = list(lfc_TestFeatures)
@@ -167,7 +169,11 @@ def findBestFeaturesSetAmongAllCombinations (d_dfData, lfc_TestFeatures, lfcClas
         if success > maxSuccess:
             maxSuccess = success
             maxK = k
-            maxFeat = featCombination
+            maxFeat = list()
+            for feat in featCombination:
+                maxFeat.append(feat.func_name)
+            maxFeat.remove(lfcClassificationFeature.func_name)
+            maxFeat.sort()
             i_precision = i_TruePositives/(i_TruePositives+i_FakePositives)
             i_recall = i_TruePositives/(i_TruePositives+i_FakeNegatives)
             i_f1score = 2*i_precision*i_recall/(i_precision + i_recall)
@@ -220,7 +226,7 @@ if __name__ == '__main__':
     lsSym = np.array(['SOFIX', '3JR'])
     
     ''' Get data for 2009-2010 '''
-    dtStart = dt.datetime(2012,6,1)
+    dtStart = dt.datetime(2013,1,1)
     dtEnd = dt.datetime(2013,5,30)
     
     dataobj = da.DataAccess('Investor')      
@@ -239,7 +245,7 @@ if __name__ == '__main__':
     d_FeatureParameters = {}
     for feat in lfc_TestFeatures:
         d_FeatureParameters[feat] = {}
-    d_FeatureParameters[featTrend] = {'lForwardlook':7}
+    d_FeatureParameters[featTrend] = {'lForwardlook':5}
 #    ldArgs = [ {'lLookback':30, 'bRel':True},\
 #               {},\
 #               {}]             
@@ -251,7 +257,7 @@ if __name__ == '__main__':
 #    print "findBestFeaturesSetByIteration " + str(tdelta) + " seconds"
     
     t1 = datetime.now()
-    featList, k, successRate = findBestFeaturesSetAmongAllCombinations(dData, lfc_TestFeatures, featTrend, d_FeatureParameters, lkRange = range(31, 32, 1))
+    featList, k, successRate = findBestFeaturesSetAmongAllCombinations(dData, lfc_TestFeatures, featTrend, d_FeatureParameters, lkRange = range(20, 50, 5))
     t2 = datetime.now()
     tdelta = t2 - t1
     print "findBestFeaturesSetAmongAllCombinations " + str(tdelta) + " seconds"
