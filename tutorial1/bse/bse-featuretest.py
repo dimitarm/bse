@@ -277,8 +277,8 @@ if __name__ == '__main__':
 #    print "findBestFeaturesSetByIteration " + str(tdelta) + " seconds"
     
     t1 = datetime.now()
-    #featList, k, successRate = findBestFeaturesSetAmongCombinationsSet(dData, bsetools.getAllFeaturesCombinationsList(lfc_TestFeatures), lfc_TestFeatures, featTrend, d_FeatureParameters, lkRange = range(30, 31, 1))
-    featList, k, successRate = findBestFeaturesSetAmongCombinationsSet(dData, itertools.combinations(lfc_TestFeatures, 4), lfc_TestFeatures, featTrend, d_FeatureParameters, l_K = range(2, 52, 1))
+    #featList, k, successRate = findBestFeaturesSetAmongCombinationsSet(dData, bsetools.getAllFeaturesCombinationsList(lfc_TestFeatures), lfc_TestFeatures, featTrend, d_FeatureParameters, l_K = range(2, 52, 1))
+    featList, k, successRate = findBestFeaturesSetAmongCombinationsSet(dData, itertools.combinations(lfc_TestFeatures, 2), lfc_TestFeatures, featTrend, d_FeatureParameters, l_K = range(2, 52, 1))
     t2 = datetime.now()
     tdelta = t2 - t1
     print "findBestFeaturesSetAmongCombinationsSet " + str(tdelta) + " seconds"
