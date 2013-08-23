@@ -102,25 +102,80 @@ def executeQuery( naTrain, naTest, bClassification, lkRange=range(1,101,10), bPl
         plt.show()
     return result[0], result[1], result[2], result[3], result[4], result[5]
     
-def calculateFeatures(d_dfData, s_symbol, lfcFeatures, d_FeatureParameters):
-    ldfRet = dict()
-    for i, fcFeature in enumerate(lfcFeatures):
-        ldFeatureData = fcFeature( d_dfData, **d_FeatureParameters[fcFeature] )
-    
-        ldfRet[fcFeature] = ldFeatureData[s_symbol].values
-    d_dataWithoutNans = bsetools.removeNansInDict(ldfRet)
-    return d_dataWithoutNans
+#def testFeaturesSet1(dfc_FeaturesData, dLeadDataColumn, lfc_Features, l_K):
+#    ''' Pick Test and Training Points '''
+#    lDataLength = dfc_FeaturesData[lfc_Features[0]].shape[0] 
+#    lSplit = int(lDataLength * 0.7)
+#     
+#    ''' Stack all information into one Numpy array '''
+#    naFeatTrain = np.empty((lSplit, 0))
+#    naFeatTest =  np.empty((lDataLength - lSplit, 0))
+#    for i, fcFunc in enumerate(lfc_Features):
+#        dFeatData = dfc_FeaturesData[fcFunc];
+#        dTrainData = dFeatData[0: lSplit]
+#        dTrainData = dTrainData.reshape((lSplit, 1))
+#        dTestData = dFeatData[lSplit:]
+#        dTestData = dTestData.reshape((lDataLength - lSplit, 1))
+#        naFeatTrain = np.hstack((naFeatTrain, dTrainData))
+#        naFeatTest = np.hstack((naFeatTest, dTestData))
+#
+#    bPlot = False
+#    
+#    if bPlot:
+#        ''' Plot feature for XOM '''
+#        for i, fcFunc in enumerate(lfc_Features[:]):
+#            plt.clf()
+#            plt.subplot(211)
+#            plt.title( fcFunc.__name__ )
+#            timestamps = dfc_FeaturesData[dLeadDataColumn].index
+#            datavalues = dfc_FeaturesData[dLeadDataColumn].values
+#            plt.plot( timestamps, datavalues, 'r-' )
+#            plt.subplot(212)
+#            plt.plot( timestamps, dfc_FeaturesData[fcFunc], 'g-' )
+#            plt.show()
+#    
+#    return executeQuery( naFeatTrain, naFeatTest, bClassification = True, lkRange = l_K )
 
-def testFeaturesSet(ldFeaturesDict, dLeadDataColumn, lfcFeatures, l_K):
-    ''' Pick Test and Training Points '''
-    lDataLength = ldFeaturesDict[lfcFeatures[0]].shape[0] 
-    lSplit = int(lDataLength * 0.7)
-     
+
+def noValidationSet(i_Index, i_count, dna_Data):
+    if i_Index <= i_count*0.7:
+        return 0
+    else:
+        return 2
+    
+def findBestFeaturesSetAmongCombinationsSet (d_dfData, lfc_featCombinationSet, l_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, l_K, b_Plot = False):
+    maxSuccess = -1
+    maxK = 0
+    combinations = 0
+
+    l_fcTestFeatures = list(l_fcTestFeatures)
+    l_fcTestFeatures.append(fc_ClassificationFeature)
+    d_featuresData = bsetools.calculateFeatures(d_dfData, 'SOFIX', l_fcTestFeatures, ld_FeatureParameters)
+    
+    (d_TrainSet, d_ValidationSet, d_TestSet) = bsetools.getTrain_Test_ValidationSets(d_featuresData, noValidationSet)
+    
+    print "All Data Histogram: " + str(np.histogram(d_featuresData[fc_ClassificationFeature], 3)) 
+    print "Test Data Histogram: " + str(np.histogram(d_TestSet[fc_ClassificationFeature], 3)) 
+
+    d_fc2Index = dict()
+    index = 0
+    for key in d_dfData.keys():
+        if index == 0:
+            na_TrainSet = np.empty((d_TrainSet[key].shape(0), 0))
+            na_ValidationSet = np.empty((d_ValidationSet[key].shape(0), 0))
+            na_TestSet = np.empty((d_TestSet[key].shape(0), 0))
+            
+    ''' Normalize features, use same normalization factors for testing data as training data '''
+    ltWeights = ftu.normFeatures( naFeatTrain, -1.0, 1.0, False )
+    ''' Normalize query points with same weights that come from test data '''
+    ftu.normQuery( naFeatTest[:,:-1], ltWeights )
+    
+    
     ''' Stack all information into one Numpy array '''
     naFeatTrain = np.empty((lSplit, 0))
     naFeatTest =  np.empty((lDataLength - lSplit, 0))
-    for i, fcFunc in enumerate(lfcFeatures):
-        dFeatData = ldFeaturesDict[fcFunc];
+    for i, fcFunc in enumerate(lfc_Features):
+        dFeatData = dfc_FeaturesData[fcFunc];
         dTrainData = dFeatData[0: lSplit]
         dTrainData = dTrainData.reshape((lSplit, 1))
         dTestData = dFeatData[lSplit:]
@@ -128,50 +183,15 @@ def testFeaturesSet(ldFeaturesDict, dLeadDataColumn, lfcFeatures, l_K):
         naFeatTrain = np.hstack((naFeatTrain, dTrainData))
         naFeatTest = np.hstack((naFeatTest, dTestData))
 
-    bPlot = False
     
-    if bPlot:
-        ''' Plot feature for XOM '''
-        for i, fcFunc in enumerate(lfcFeatures[:]):
-            plt.clf()
-            plt.subplot(211)
-            plt.title( fcFunc.__name__ )
-            timestamps = ldFeaturesDict[dLeadDataColumn].index
-            datavalues = ldFeaturesDict[dLeadDataColumn].values
-            plt.plot( timestamps, datavalues, 'r-' )
-            plt.subplot(212)
-            plt.plot( timestamps, ldFeaturesDict[fcFunc], 'g-' )
-            plt.show()
-    
-    ''' Normalize features, use same normalization factors for testing data as training data '''
-    ltWeights = ftu.normFeatures( naFeatTrain, -1.0, 1.0, False )
-    ''' Normalize query points with same weights that come from test data '''
-    ftu.normQuery( naFeatTest[:,:-1], ltWeights )
-
-    return executeQuery( naFeatTrain, naFeatTest, bClassification = True, lkRange = l_K )
-
-
-
-def findBestFeaturesSetAmongCombinationsSet (d_dfData, lfc_featCombinationSet, l_fcTestFeatures, fc_ClassificationFeature, d_FeatureParameters, l_K, b_Plot = False):
-    maxSuccess = -1
-    maxK = 0
-    combinations = 0
-
-    l_fcTestFeatures = list(l_fcTestFeatures)
-    l_fcTestFeatures.append(fc_ClassificationFeature)
-    d_featuresData = calculateFeatures(d_dfData, 'SOFIX', l_fcTestFeatures, d_FeatureParameters)
-    np_dataHistogram = np.histogram(d_featuresData[fc_ClassificationFeature], 3)
-    print "All Data Histogram: " + str(np_dataHistogram) 
-
-    lSplit = d_featuresData[fc_ClassificationFeature].shape[0] 
-    lSplit = int(lSplit * 0.7)
-    
-    print "Test Data Histogram: " + str(np.histogram(d_featuresData[fc_ClassificationFeature][lSplit:], 3)) 
-
+    #test each combination
     for featCombination in lfc_featCombinationSet:
         featCombination = list(featCombination)
         featCombination.append(fc_ClassificationFeature)
-        k, success, i_TruePositives, i_FakePositives, i_FakeNegatives, i_TrueNegatives = testFeaturesSet(d_featuresData, 'close', featCombination, l_K = l_K)
+        
+        
+        
+        k, success, i_TruePositives, i_FakePositives, i_FakeNegatives, i_TrueNegatives = executeQuery( naTrain, naTest, bClassification = True, lkRange=l_K )
         if success > maxSuccess:
             maxSuccess = success
             maxK = k
@@ -207,41 +227,6 @@ def findBestFeaturesSetAmongCombinationsSet (d_dfData, lfc_featCombinationSet, l
     return maxFeat, maxK, maxSuccess
     
     
-def findBestFeaturesSetByIteration (dData, lfc_TestFeatures, lfcClassFeature, ldArgs, lkRange):
-    lfcMaxFeaturesList = list()
-    maxKK = 0
-    maxSSuccess = -1
-    lfcMaxFeaturesList.append(lfcClassFeature)
-    ldFeaturesDict = calculateFeatures(dData, 'close', lfc_TestFeatures, ldArgs)
-    ''' Imported functions from qstkfeat.features, NOTE: last function is classification '''
-    while len(lfc_TestFeatures) > 1:
-        maxSuccess = -1
-        maxK = 0
-        for lfcCurrentFeat in lfc_TestFeatures:
-            if lfcCurrentFeat == lfcClassFeature: continue
-            lfcFeatures2Test = list(lfcMaxFeaturesList)
-            lfcFeatures2Test.insert(0, lfcCurrentFeat)
-            ''' Default Arguments '''
-            ldArgs = [{}] * len(lfcFeatures2Test) 
-            
-            k, success = testFeaturesSet(ldFeaturesDict, 'close', lfcFeatures2Test, lkRange = lkRange)
-            if success > maxSuccess:
-                maxSuccess = success
-                maxK = k
-                maxFeat = lfcCurrentFeat
-        
-        lfcMaxFeaturesList.insert(0, maxFeat)
-        lfc_TestFeatures.remove(maxFeat)
-        k, success = testFeaturesSet(ldFeaturesDict, 'close', lfcMaxFeaturesList, lkRange = lkRange)
-        if success < maxSSuccess or success == maxSSuccess:
-            lfcMaxFeaturesList.remove(maxFeat)
-        elif success > maxSSuccess:
-            maxSSuccess = success
-            maxK = k
-            print "best combination so far: " + str(lfcMaxFeaturesList) + " k: " + str(k) + " success: " + str(success)
-    
-    return lfcMaxFeaturesList, maxK, maxSSuccess
-    
 if __name__ == '__main__':
     lsSym = np.array(['SOFIX', '3JR'])
     
@@ -262,23 +247,18 @@ if __name__ == '__main__':
     #lfc_TestFeatures = [featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featBollinger]
     lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featVolumeDelta, featStochastic, featVolume, featBollinger)
     #default parameters
-    d_FeatureParameters = {}
+    ld_FeatureParameters = {}
     for feat in lfc_TestFeatures:
-        d_FeatureParameters[feat] = {}
-    d_FeatureParameters[featTrend] = {'lForwardlook':1}
+        ld_FeatureParameters[feat] = {}
+    ld_FeatureParameters[featTrend] = {'lForwardlook':1}
 #    ldArgs = [ {'lLookback':30, 'bRel':True},\
 #               {},\
 #               {}]             
          
-#    t1 = datetime.now()
-#    featList, k, successRate = findBestFeaturesSetByIteration(dData, list(lfc_TestFeatures), featTrend, d_FeatureParameters, lkRange = range(31, 32, 1))
-#    t2 = datetime.now()
-#    tdelta = t2 - t1
-#    print "findBestFeaturesSetByIteration " + str(tdelta) + " seconds"
-    
+
     t1 = datetime.now()
-    #featList, k, successRate = findBestFeaturesSetAmongCombinationsSet(dData, bsetools.getAllFeaturesCombinationsList(lfc_TestFeatures), lfc_TestFeatures, featTrend, d_FeatureParameters, l_K = range(2, 52, 1))
-    featList, k, successRate = findBestFeaturesSetAmongCombinationsSet(dData, itertools.combinations(lfc_TestFeatures, 2), lfc_TestFeatures, featTrend, d_FeatureParameters, l_K = range(2, 52, 1))
+    #featList, k, successRate = findBestFeaturesSetAmongCombinationsSet(dData, bsetools.getAllFeaturesCombinationsList(lfc_TestFeatures), lfc_TestFeatures, featTrend, ld_FeatureParameters, l_K = range(2, 52, 1))
+    featList, k, successRate = findBestFeaturesSetAmongCombinationsSet(dData, itertools.combinations(lfc_TestFeatures, 2), lfc_TestFeatures, featTrend, ld_FeatureParameters, l_K = range(2, 52, 1))
     t2 = datetime.now()
     tdelta = t2 - t1
     print "findBestFeaturesSetAmongCombinationsSet " + str(tdelta) + " seconds"
