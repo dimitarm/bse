@@ -59,10 +59,13 @@ def calculateFeatures(d_dfData, s_symbol, lfc_Features, ld_FeatureParameters):
 
 def calculateFeaturesNA(d_dfData, s_symbol, lfc_Features, ld_FeatureParameters):
     na_features = np.empty((0, 0))
-    for i, fcFeature in enumerate(lfc_Features):
+    for fcFeature in lfc_Features:
         ldFeatureData = fcFeature( d_dfData, **ld_FeatureParameters[fcFeature] )
-    
-        na_features.hstack(ldFeatureData[s_symbol].values)
+        naShapedData = ldFeatureData[s_symbol].values.reshape(ldFeatureData[s_symbol].values.size, 1)
+        if na_features.shape == (0,0):
+            na_features = naShapedData
+        else:
+            na_features =  np.hstack((na_features, naShapedData))
     na_dataWithoutNans = removeNans(na_features)
     return na_dataWithoutNans
 

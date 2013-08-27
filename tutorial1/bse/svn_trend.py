@@ -19,85 +19,99 @@ from datetime import timedelta
 from qstkutil import DataAccess as da
 
 from qstkfeat.features import *
-from qstkfeat.classes import class_fut_ret
 import qstkfeat.featutil as ftu
 
 import utils.dateutil as bsedateutil
 
 from utils.features import *
 import utils.tools as bsetools
-import bse.myknn as myknn
+from sklearn import preprocessing
 
 from sklearn import svm
 
+def executePredictionAlgorithm():
+    pass
 
-
-def findBestFeaturesSetAmongCombinationsSet (d_dfData, lfc_featCombinationSet, t_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, l_K, b_Plot = False):
+def findBestFeaturesSetAmongCombinationsSet (d_dfData, lfc_featCombinationSet, t_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, b_Plot = False):
     maxSuccess = -1
-    maxK = 0
     combinations = 0
 
-    l_fcTestFeatures = list(t_fcTestFeatures).append(fc_ClassificationFeature)
-    na_featuresData = bsetools.calculateFeaturesNA(d_dfData, 'SOFIX', l_fcTestFeatures, ld_FeatureParameters)
+    l_fcFeatures = list(t_fcTestFeatures)
+    l_fcFeatures.append(fc_ClassificationFeature)
+    
+    na_featuresData = bsetools.calculateFeaturesNA(d_dfData, 'SOFIX', l_fcFeatures, ld_FeatureParameters)
+    scaler = preprocessing.StandardScaler().fit(na_featuresData[:,:-1])
     
     (na_TrainSet, na_ValSet, na_TestSet) = bsetools.getTrainTestValidationSets(na_featuresData, bsetools.defaultTrainTestValidationFunc)
     na_TrainClass = na_TrainSet[:,-1]
     na_TrainSet = na_TrainSet[:,:-1]
+    na_TrainSet = scaler.transform(na_TrainSet)
 
     na_ValClass = na_ValSet[:,-1]
     na_ValSet = na_ValSet[:,:-1]
+    na_ValSet = scaler.transform(na_ValSet)
     
     na_TestClass = na_TestSet[:,-1]
     na_TestSet = na_TestSet[:,:-1]
-
-    
-#    print "All Data Histogram: " + str(np.histogram(d_featuresData[fc_ClassificationFeature], 3)) 
-#    print "Test Data Histogram: " + str(np.histogram(d_TestSet[fc_ClassificationFeature], 3)) 
+    na_TestSet = scaler.transform(na_TestSet)
 
     #test each combination
+    maxSuccess = -1
+    combinations = 0
     for lfc_combination in lfc_featCombinationSet:
         na_trainData = np.empty((na_TrainSet.shape[0], 0))
+        na_valData = np.empty((na_ValSet.shape[0], 0))
+        na_testData = np.empty((na_TestSet.shape[0], 0))
         for fcFeat in lfc_combination:
-            na_trainData = np.hstack((na_trainData, na_TrainSet[:, l_fcTestFeatures.index(fcFeat)]))
+            i_featIndex = l_fcFeatures.index(fcFeat)
+            na_trainData = np.hstack((na_trainData, na_TrainSet[:, i_featIndex].reshape(na_TrainSet[:, i_featIndex].size, 1)))
+            na_valData = np.hstack((na_valData, na_ValSet[:, i_featIndex].reshape(na_ValSet[:, i_featIndex].size, 1)))
+            na_testData = np.hstack((na_testData, na_TestSet[:, i_featIndex].reshape(na_TestSet[:, i_featIndex].size, 1)))
         
-        clf = svm.SVC()
+        clf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='poly', probability=False, shrinking=True, tol=0.001, verbose=False)
         clf.fit(na_trainData, na_TrainClass) 
+        na_Prediction = clf.predict(na_testData)
+        testSuccess = float(na_TestClass.size - np.count_nonzero(na_TestClass - na_Prediction))/float(na_TestClass.size)
+        na_Prediction = clf.predict(na_valData)
+        success = float(na_ValClass.size - np.count_nonzero(na_ValClass - na_Prediction))/float(na_ValClass.size)
         
         #k, success, i_TruePositives, i_FakePositives, i_FakeNegatives, i_TrueNegatives = executeQuery( naTrain, naTest, bClassification = True, lkRange=l_K )
-        
+    
         if success > maxSuccess:
             maxSuccess = success
-            maxK = k
-            maxFeat = list()
-            for feat in featCombination:
-                maxFeat.append(feat.func_name)
-            maxFeat.remove(fc_ClassificationFeature.func_name)
-            maxFeat.sort()
-            i_precision = i_TruePositives/(i_TruePositives+i_FakePositives)
-            i_recall = i_TruePositives/(i_TruePositives+i_FakeNegatives)
-            i_f1score = 2*i_precision*i_recall/(i_precision + i_recall)
-            print "best combination so far: " + str(maxFeat) + " k: " + str(k) + " success: " + str(success) + " precision: " + str(i_precision) + " recall: " + str(i_recall) + " f1score: " + str(i_f1score)
-                
-#            if b_Plot == True:
-#                plt.clf()
-#                for i in range(d_featuresData[fc_ClassificationFeature].shape[0]):
-#                    if d_featuresData[fc_ClassificationFeature][i] == 1:
-#                        plt.plot( d_featuresData[featCombination[0]][i], d_featuresData[featCombination[1]][i], 'go' )
-#                    elif d_featuresData[fc_ClassificationFeature][i] == -1:
-#                        plt.plot( d_featuresData[featCombination[0]][i], d_featuresData[featCombination[1]][i], 'ro' )
-#                    elif d_featuresData[fc_ClassificationFeature][i] == 0:
-#                        plt.plot( d_featuresData[featCombination[0]][i], d_featuresData[featCombination[1]][i], 'bo' )
-#                    else:
-#                        plt.plot( d_featuresData[featCombination[0]][i], d_featuresData[featCombination[1]][i], 'bo' )
-#                plt.legend( ('Trend') )
-#                plt.ylabel(featCombination[0].func_name)
-#                plt.xlabel(featCombination[1].func_name)
-#                plt.show()            
-            
-            
+            maxClf = clf
+            l_maxFeatSet = list()
+            for feat in lfc_combination:
+                l_maxFeatSet.append(feat.func_name)
+            l_maxFeatSet.sort()
+            print "CV: " + str(success) + " Test:" + str(testSuccess) + " combination: " + str(l_maxFeatSet)
+            if b_Plot == True:
+                plt.clf()
+                for i in range(0, na_TrainClass.shape[0]):
+                    if na_TrainClass[i] == 1:
+                        plt.plot( na_trainData[i][0], na_trainData[i][1], 'g+' )
+                    elif na_TrainClass[i] == -1:
+                        plt.plot( na_trainData[i][0], na_trainData[i][1], 'ro' )
+                    elif na_TrainClass[i] == 0:
+                        plt.plot( na_trainData[i][0], na_trainData[i][1], 'bo' )
+                    else:
+                        plt.plot( na_trainData[i][0], na_trainData[i][1], 'kx' )
+                #plt.legend( ('Trend') )
+                plt.ylabel(lfc_combination[0].func_name)
+                plt.xlabel(lfc_combination[1].func_name)
+                plt.show()            
+        elif success == maxSuccess:
+            l_feat = list()
+            for feat in lfc_combination:
+                l_feat.append(feat.func_name)
+            l_feat.sort()
+            print "CV: " + str(success) + " Test:" + str(testSuccess) + " combination: " + str(l_feat)
+             
+
         combinations += 1
-    print str(combinations) + " tested"
-    return maxFeat, maxK, maxSuccess
+        
+    print str(combinations) + " combinations tested"
+    return l_maxFeatSet, maxSuccess
 
 
 
@@ -105,18 +119,10 @@ def findBestFeaturesSetAmongCombinationsSet (d_dfData, lfc_featCombinationSet, t
 
 if __name__ == '__main__':
     
-    X = np.array([[0, 0], [1, 1]])
-    y = [0, 1]
-    clf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=3,
-    gamma=0.0, kernel='rbf', probability=False, shrinking=True, tol=0.001,
-    verbose=False)
-    clf.fit(X, y)  
-    print clf.predict([[2., 2.]])
-    
     lsSym = np.array(['SOFIX', '3JR'])
     
     ''' Get data for 2009-2010 '''
-    dtStart = dt.datetime(2010,1,1)
+    dtStart = dt.datetime(2011,1,1)
     dtEnd = dt.datetime(2013,5,30)
     
     dataobj = da.DataAccess('Investor')      
@@ -141,8 +147,8 @@ if __name__ == '__main__':
          
 
     t1 = datetime.now()
-    #featList, k, successRate = findBestFeaturesSetAmongCombinationsSet(dData, bsetools.getAllFeaturesCombinationsList(lfc_TestFeatures), lfc_TestFeatures, featTrend, ld_FeatureParameters, l_K = range(2, 52, 1))
-    featList, k, successRate = findBestFeaturesSetAmongCombinationsSet(dData, itertools.combinations(lfc_TestFeatures, 2), lfc_TestFeatures, featTrend, ld_FeatureParameters, l_K = range(2, 52, 1))
+    findBestFeaturesSetAmongCombinationsSet(dData, bsetools.getAllFeaturesCombinationsList(lfc_TestFeatures), lfc_TestFeatures, featTrend, ld_FeatureParameters)
+    #findBestFeaturesSetAmongCombinationsSet(dData, itertools.combinations(lfc_TestFeatures, 4), lfc_TestFeatures, featTrend, ld_FeatureParameters, b_Plot = False)
     t2 = datetime.now()
     tdelta = t2 - t1
     print "findBestFeaturesSetAmongCombinationsSet " + str(tdelta) + " seconds"
