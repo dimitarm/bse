@@ -34,10 +34,10 @@ class Test(unittest.TestCase):
         
         self.assertEqual(len(d_featResData.index) , len(d_featdata['close'].index), 'lengths not equal')
         
-        df_expectedResult = pand.DataFrame({'one' : pand.Series([0., 1., np.nan, np.nan, np.nan], index=['a', 'b', 'c', 'd', 'e']),
+        df_expectedResult = pand.DataFrame({'one' : pand.Series([np.nan, 1., np.nan, np.nan, np.nan], index=['a', 'b', 'c', 'd', 'e']),
              'two' : pand.Series([-1., -1., 1., np.nan, np.nan], index=['a', 'b', 'c', 'd', 'e'])})
-        self.assertTrue((pand.DataFrame.fillna(df_orgDatacopy, -5) == pand.DataFrame.fillna(df_data, -5)).all().all(), 'data passed to featTrend has changed')
-        self.assertTrue((pand.DataFrame.fillna(d_featResData, -5) == pand.DataFrame.fillna(df_expectedResult, -5)).all().all(), 'result of featTrend not as expected')
+        self.assertTrue((pand.DataFrame.fillna(df_orgDatacopy, -5) == pand.DataFrame.fillna(df_data, -5)).values.all().all(), 'data passed to featTrend has changed')
+        self.assertTrue((pand.DataFrame.fillna(d_featResData, -5) == pand.DataFrame.fillna(df_expectedResult, -5)).values.all().all(), 'result of featTrend not as expected')
 
 
 if __name__ == "__main__":
