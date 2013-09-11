@@ -44,7 +44,7 @@ def findBestFeatureParamValue (d_dfData, lfc_testFeatures, fc_ClassificationFeat
             #d_featParams[s_paramName] = paramVal
             ld_FeatureParameters[fc_feature][s_paramName] = paramVal
             
-            na_featuresData = bsetools.calculateFeaturesNA(d_dfData, 'SOFIX', l_fcFeatures, ld_FeatureParameters)
+            na_featuresData = bsetools.calculateFeaturesNA(d_dfData, '3JR', l_fcFeatures, ld_FeatureParameters)
             scaler = preprocessing.StandardScaler().fit(na_featuresData[:,:-1])
             
             (na_TrainSet, na_ValSet, na_TestSet) = bsetools.getTrainTestValidationSets(na_featuresData, bsetools.defaultTrainTestValidationFunc)
@@ -83,7 +83,7 @@ if __name__ == '__main__':
     lsSym = np.array(['SOFIX', '3JR'])
     
     ''' Get data for 2009-2010 '''
-    dtStart = dt.datetime(2011,1,1)
+    dtStart = dt.datetime(2012,5,31)
     dtEnd = dt.datetime(2013,5,30)
     
     dataobj = da.DataAccess('Investor')      
