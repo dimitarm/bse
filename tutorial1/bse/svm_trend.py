@@ -26,13 +26,9 @@ import utils.dateutil as bsedateutil
 from utils.features import *
 import utils.tools as bsetools
 from sklearn import preprocessing
-
 from sklearn import svm
 
-def executePredictionAlgorithm():
-    pass
-
-def findBestCombination (d_dfData, lfc_featCombinationSet, t_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, b_Plot = False):
+def findBestFeaturesCombination(d_dfData, lfc_featCombinationSet, t_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, b_Plot = False):
     maxSuccess = -1
     combinations = 0
     l_fcFeatures = list(t_fcTestFeatures)
@@ -108,7 +104,7 @@ if __name__ == '__main__':
     lsSym = np.array(['SOFIX', '3JR'])
     
     ''' Get data for 2009-2010 '''
-    dtStart = dt.datetime(2012,5,31)
+    dtStart = dt.datetime(2010,5,31)
     dtEnd = dt.datetime(2013,5,30)
     
     dataobj = da.DataAccess('Investor')      
@@ -121,7 +117,8 @@ if __name__ == '__main__':
 
     ldArgs = list()
     
-    lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featVolumeDelta, featStochastic, featVolume, featBollinger)
+    #lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featVolumeDelta, featStochastic, featVolume, featBollinger)
+    lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featVolumeDelta, featStochastic, featVolume)
     
     #default parameters
     ld_FeatureParameters = {}
@@ -129,24 +126,24 @@ if __name__ == '__main__':
         ld_FeatureParameters[fc_feat] = {}
         
     ld_FeatureParameters[featTrend] = {'lForwardlook':1}
-#    ld_FeatureParameters[featMomentum] = {'lLookback':2}  #34
-#    ld_FeatureParameters[featHiLow] = {'lLookback':42}
-#    ld_FeatureParameters[featMA] = {'lLookback':50}
-#    ld_FeatureParameters[featEMA] = {'lLookback':44}
-#    ld_FeatureParameters[featSTD] = {'lLookback':35}
-#    ld_FeatureParameters[featRSI] = {'lLookback':46}
-#    ld_FeatureParameters[featDrawDown] = {'lLookback':2}
-#    ld_FeatureParameters[featRunUp] = {'lLookback':34}
-#    ld_FeatureParameters[featAroon] = {'lLookback':2}
-#    ld_FeatureParameters[featVolumeDelta] = {'lLookback':13}
-#    ld_FeatureParameters[featStochastic] = {'lLookback':7}
-#    ld_FeatureParameters[featBollinger] = {'lLookback':2}
-#    ld_FeatureParameters[featVolume] = {}
+    ld_FeatureParameters[featMomentum] = {'lLookback':6}  
+    ld_FeatureParameters[featHiLow] = {'lLookback':6}
+    ld_FeatureParameters[featMA] = {'lLookback':5}
+    ld_FeatureParameters[featEMA] = {'lLookback':3}
+    ld_FeatureParameters[featSTD] = {'lLookback':2}
+    ld_FeatureParameters[featRSI] = {'lLookback':7}
+    ld_FeatureParameters[featDrawDown] = {'lLookback':3}
+    ld_FeatureParameters[featRunUp] = {'lLookback':7}
+    ld_FeatureParameters[featAroon] = {'lLookback':2}
+    ld_FeatureParameters[featVolumeDelta] = {'lLookback':6}
+    ld_FeatureParameters[featStochastic] = {'lLookback':3}
+    ld_FeatureParameters[featBollinger] = {'lLookback':2}
+    ld_FeatureParameters[featVolume] = {}
          
 
     t1 = datetime.now()
     
-    findBestCombination(dData, bsetools.getAllFeaturesCombinationsList(lfc_TestFeatures), lfc_TestFeatures, featTrend, ld_FeatureParameters)
+    findBestFeaturesCombination(dData, bsetools.getAllFeaturesCombinationsList(lfc_TestFeatures), lfc_TestFeatures, featTrend, ld_FeatureParameters)
     #findBestCombination(dData, itertools.combinations(lfc_TestFeatures, 1), lfc_TestFeatures, featTrend, ld_FeatureParameters, b_Plot = False)
     t2 = datetime.now()
     tdelta = t2 - t1

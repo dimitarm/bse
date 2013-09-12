@@ -29,14 +29,13 @@ from sklearn import preprocessing
 
 from sklearn import svm
 
-def findBestFeatureParamValue (d_dfTrainData, d_dfTestData, fc_feature, fc_ClassificationFeature, s_paramName, l_paramValues, d_basicFeatParameters, b_Plot = True):
-    l_fcFeatures = (fc_feature, fc_ClassificationFeature)
-    ld_FeatureParameters = dict(d_basicFeatParameters)
-    na_featPerf = ()
-    for paramVal in l_paramValues:
-        ld_FeatureParameters[fc_feature][s_paramName] = paramVal
-        na_trainData = bsetools.calculateFeaturesNA(d_dfTrainData, 'SOFIX', l_fcFeatures, ld_FeatureParameters)
-        na_testData = bsetools.calculateFeaturesNA(d_dfTestData, 'SOFIX', l_fcFeatures, ld_FeatureParameters)
+def dataAnalysis (d_dfTrainData, d_dfTestData, b_Plot = True):
+    na_trainData = bsetools.calculateFeaturesNA(d_dfTrainData, 'SOFIX', lfc_algFeatures, ld_FeatureParameters)
+    na_testData = bsetools.calculateFeaturesNA(d_dfTestData, 'SOFIX', lfc_algFeatures, ld_FeatureParameters)
+    
+    l_featPerf = []
+    for i_percent in range(0.05, 1, 0.05):
+
         scaler = preprocessing.StandardScaler().fit(na_trainData[:,:-1])
 
         na_TrainClass = na_trainData[:,-1]
@@ -45,20 +44,18 @@ def findBestFeatureParamValue (d_dfTrainData, d_dfTestData, fc_feature, fc_Class
         na_TestClass = na_testData[:,-1]
         na_testData = na_testData[:,:-1]
         na_testData = scaler.transform(na_testData)
-    
+        
+        i_splitPt = na_trainData.shape[0] - na_trainData.shape[0]*i_percent
         clf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='rbf', probability=False, shrinking=True, tol=0.001, verbose=False)
-        clf.fit(na_trainData, na_TrainClass) 
+        clf.fit(na_trainData[i_splitPt:-1,:], na_TrainClass) 
         na_Prediction = clf.predict(na_testData)
         testSuccess = float(na_TestClass.size - np.count_nonzero(na_TestClass - na_Prediction))/float(na_TestClass.size)
-        na_featPerf.append(testSuccess)
+        l_featPerf.append(testSuccess)
         
-    i_maxValSetValue = na_featPerf[:, 0].argmax()
-    print fc_feature.func_name + ': ' + 'param: ' + str(l_paramValues[i_maxValSetValue]) + ' validationSet: ' + str(na_featPerf[i_maxValSetValue][0]) + ' testSet: ' + str(na_featPerf[i_maxValSetValue][1])
     plt.clf()
-    plt.plot(l_paramValues, na_featPerf)
-    plt.legend(('validationSet', 'testSet'))
-    plt.ylabel(fc_feature.func_name)
-    plt.xlabel(s_paramName)
+    plt.plot(range(0.05, 1, 0.05), l_featPerf)
+    plt.ylabel('success')
+    plt.xlabel('% data')
     plt.show()    
      
 
@@ -67,8 +64,8 @@ if __name__ == '__main__':
     lsSym = np.array(['SOFIX', '3JR'])
     lsKeys = ['open', 'high', 'low', 'close', 'volume']
     dataobj = da.DataAccess('Investor')      
-    lfc_Features2Test = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featVolumeDelta, featStochastic, featBollinger)
-    valPeriodLength = dt.timedelta(days = 7) 
+    lfc_algFeatures = [featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featVolumeDelta, featStochastic, featBollinger]
+    valPeriodLength = dt.timedelta(months = 12) 
     testPeriodLength = dt.timedelta(days = 7)
     dtPOI = dt.datetime(2012,5,31)
     
@@ -82,26 +79,28 @@ if __name__ == '__main__':
     ldtTimestamps = bsedateutil.getBSEdays( dtPOI, dtEnd, dt.timedelta(hours=16) )
     ldfData = dataobj.get_data( ldtTimestamps, lsSym, lsKeys, verbose=True )
     d_dfTestData = dict(zip(lsKeys, ldfData))
-    
+    #add classification feature
+    lfc_algFeatures.append(featTrend)
     #default parameters
-    d_basicFeatParameters = {}
-    for feat in lfc_Features2Test:
-        d_basicFeatParameters[feat] = {}
-    d_basicFeatParameters[featTrend] = {'lForwardlook':1}
-
-    for fc_feature in lfc_Features2Test:
-        findBestFeatureParamValue (d_dfTrainData, d_dfTestData, fc_feature, featTrend, 'lLookback', range(2, testPeriodLength.days, 1), d_basicFeatParameters)
-
-
-
-
-
-
-
-
-
-
-
-    findBestFeatureParamValue (dData, lfc_TestFeatures, featTrend, 'lLookback', [20], d_FeatureParameters, b_Plot = True)    
+    ld_FeatureParameters = {}
+    for feat in lfc_algFeatures:
+        ld_FeatureParameters[feat] = {}
+    ld_FeatureParameters[featTrend] = {'lForwardlook':5}
+    ld_FeatureParameters[featMomentum] = {'lLookback':2}  #34
+    ld_FeatureParameters[featHiLow] = {'lLookback':42}
+    ld_FeatureParameters[featMA] = {'lLookback':50}
+    ld_FeatureParameters[featEMA] = {'lLookback':44}
+    ld_FeatureParameters[featSTD] = {'lLookback':35}
+    ld_FeatureParameters[featRSI] = {'lLookback':46}
+    ld_FeatureParameters[featDrawDown] = {'lLookback':2}
+    ld_FeatureParameters[featRunUp] = {'lLookback':34}
+    ld_FeatureParameters[featAroon] = {'lLookback':2}
+    ld_FeatureParameters[featVolumeDelta] = {'lLookback':13}
+    ld_FeatureParameters[featStochastic] = {'lLookback':7}
+    ld_FeatureParameters[featBollinger] = {'lLookback':2}
+    ld_FeatureParameters[featVolume] = {}
     
+    dataAnalysis(d_dfTrainData, d_dfTestData)
+
+
 

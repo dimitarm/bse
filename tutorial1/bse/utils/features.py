@@ -26,7 +26,6 @@ def featTrend(dData, lForwardlook=2, b_human=False):
     dfPrice = dData['close']
     
     trds = np.array(map(trends, (dfPrice.values[lForwardlook:, :] - dfPrice.values[0:-lForwardlook, :])))
-    #trds = np.reshape(trds, (trds.shape[0], dfPrice.values.shape[1]))
     nans = np.empty((lForwardlook, dfPrice.values.shape[1]))
     nans[0:lForwardlook,:] = np.nan
     

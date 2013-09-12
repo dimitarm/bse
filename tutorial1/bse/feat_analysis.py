@@ -32,7 +32,7 @@ from sklearn import svm
 def executePredictionAlgorithm():
     pass
 
-def findBestFeatureParamValue (d_dfData, lfc_testFeatures, fc_ClassificationFeature, s_paramName, l_paramValues, d_basicFeatParameters, b_Plot = True):
+def findBestParamValue(d_dfData, lfc_testFeatures, fc_ClassificationFeature, s_paramName, l_paramValues, d_basicFeatParameters, b_Plot = True):
     for fc_feature in lfc_testFeatures:
         l_fcFeatures = list()
         l_fcFeatures.append(fc_feature)
@@ -74,7 +74,7 @@ def findBestFeatureParamValue (d_dfData, lfc_testFeatures, fc_ClassificationFeat
         plt.plot(l_paramValues, na_featPerf)
         plt.legend(('validationSet', 'testSet'))
         plt.ylabel(fc_feature.func_name)
-        plt.xlabel('param value')
+        plt.xlabel(s_paramName)
         plt.show()    
      
 
@@ -83,7 +83,7 @@ if __name__ == '__main__':
     lsSym = np.array(['SOFIX', '3JR'])
     
     ''' Get data for 2009-2010 '''
-    dtStart = dt.datetime(2012,5,31)
+    dtStart = dt.datetime(2010,5,31)
     dtEnd = dt.datetime(2013,5,30)
     
     dataobj = da.DataAccess('Investor')      
@@ -102,7 +102,7 @@ if __name__ == '__main__':
         d_FeatureParameters[feat] = {}
     d_FeatureParameters[featTrend] = {'lForwardlook':1}
 
-    findBestFeatureParamValue (dData, lfc_TestFeatures, featTrend, 'lLookback', range(2, 80, 1), d_FeatureParameters, b_Plot = True)    
+    findBestParamValue(dData, lfc_TestFeatures, featTrend, 'lLookback', range(2, 80, 1), d_FeatureParameters, b_Plot = True)    
     
 
 

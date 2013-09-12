@@ -67,7 +67,6 @@ def calculateFeaturesNA(d_dfData, s_symbol, lfc_Features, ld_FeatureParameters):
             na_features = naShapedData
         else:
             na_features =  np.hstack((na_features, naShapedData))
-    tsutil.fillforward(na_features)
     na_dataWithoutNans = removeNans(na_features)
     return na_dataWithoutNans
 
