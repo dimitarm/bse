@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-  <name>tutorial1</name>
+	<name>tutorial1</name>
 	<comment></comment>
 	<projects>
+		<project>QSTK</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
