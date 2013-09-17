@@ -16,10 +16,10 @@ from datetime import datetime
 from datetime import timedelta
 
 ''' QSTK imports '''
-from qstkutil import DataAccess as da
+from QSTK.qstkutil import DataAccess as da
 
-from qstkfeat.features import *
-import qstkfeat.featutil as ftu
+from QSTK.qstkfeat.features import *
+import QSTK.qstkfeat.featutil as ftu
 
 import utils.dateutil as bsedateutil
 
@@ -83,10 +83,10 @@ if __name__ == '__main__':
     lsSym = np.array(['SOFIX', '3JR'])
     
     ''' Get data for 2009-2010 '''
-    dtStart = dt.datetime(2010,5,31)
+    dtStart = dt.datetime(2012,5,31)
     dtEnd = dt.datetime(2013,5,30)
     
-    dataobj = da.DataAccess('Investor')      
+    dataobj = da.DataAccess(sourcein = da.DataSource.CUSTOM, verbose=True)
     ldtTimestamps = bsedateutil.getBSEdays( dtStart, dtEnd, dt.timedelta(hours=16) )
     
     lsKeys = ['open', 'high', 'low', 'close', 'volume']

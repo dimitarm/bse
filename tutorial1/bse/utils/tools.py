@@ -5,7 +5,7 @@ Created on Jun 28, 2013
 '''
 import math
 import numpy as np
-import qstkutil.tsutil as tsutil
+import QSTK.qstkutil.tsutil as tsutil
 
 def getAllFeaturesCombinationsList(l_items):
     ll_retItems = list()

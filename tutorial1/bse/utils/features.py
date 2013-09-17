@@ -11,7 +11,7 @@ import datetime as dt
 import math
 
 # ''' QSTK Imports '''
-import qstkutil.tsutil as tsu
+import QSTK.qstkutil.tsutil as tsu
 
 
 def featReturn0(dData, b_human=False):
