@@ -16,10 +16,10 @@ from datetime import datetime
 from datetime import timedelta
 
 ''' QSTK imports '''
-from qstkutil import DataAccess as da
+from QSTK.qstkutil import DataAccess as da
 
-from qstkfeat.features import *
-import qstkfeat.featutil as ftu
+from QSTK.qstkfeat.features import *
+import QSTK.qstkfeat.featutil as ftu
 
 import utils.dateutil as bsedateutil
 
@@ -32,7 +32,7 @@ from sklearn import svm
 def executePredictionAlgorithm():
     pass
 
-def findBestFeatureParamValue (d_dfData, lfc_testFeatures, fc_ClassificationFeature, s_paramName, l_paramValues, d_basicFeatParameters, b_Plot = True):
+def findBestParamValue(d_dfData, lfc_testFeatures, fc_ClassificationFeature, s_paramName, l_paramValues, d_basicFeatParameters, b_Plot = True):
     for fc_feature in lfc_testFeatures:
         l_fcFeatures = list()
         l_fcFeatures.append(fc_feature)
@@ -44,7 +44,7 @@ def findBestFeatureParamValue (d_dfData, lfc_testFeatures, fc_ClassificationFeat
             #d_featParams[s_paramName] = paramVal
             ld_FeatureParameters[fc_feature][s_paramName] = paramVal
             
-            na_featuresData = bsetools.calculateFeaturesNA(d_dfData, 'SOFIX', l_fcFeatures, ld_FeatureParameters)
+            na_featuresData = bsetools.calculateFeaturesNA(d_dfData, '3JR', l_fcFeatures, ld_FeatureParameters)
             scaler = preprocessing.StandardScaler().fit(na_featuresData[:,:-1])
             
             (na_TrainSet, na_ValSet, na_TestSet) = bsetools.getTrainTestValidationSets(na_featuresData, bsetools.defaultTrainTestValidationFunc)
@@ -83,10 +83,10 @@ if __name__ == '__main__':
     lsSym = np.array(['SOFIX', '3JR'])
     
     ''' Get data for 2009-2010 '''
-    dtStart = dt.datetime(2011,1,1)
+    dtStart = dt.datetime(2012,5,31)
     dtEnd = dt.datetime(2013,5,30)
     
-    dataobj = da.DataAccess('Investor')      
+    dataobj = da.DataAccess(sourcein = da.DataSource.CUSTOM, verbose=True)
     ldtTimestamps = bsedateutil.getBSEdays( dtStart, dtEnd, dt.timedelta(hours=16) )
     
     lsKeys = ['open', 'high', 'low', 'close', 'volume']
@@ -102,7 +102,7 @@ if __name__ == '__main__':
         d_FeatureParameters[feat] = {}
     d_FeatureParameters[featTrend] = {'lForwardlook':5}
 
-    findBestFeatureParamValue (dData, lfc_TestFeatures, featTrend, 'lLookback', range(2, 80, 1), d_FeatureParameters, b_Plot = True)    
+    findBestParamValue(dData, lfc_TestFeatures, featTrend, 'lLookback', range(2, 80, 1), d_FeatureParameters, b_Plot = True)    
     
 
 

@@ -11,7 +11,7 @@ import datetime as dt
 import math
 
 # ''' QSTK Imports '''
-import qstkutil.tsutil as tsu
+import QSTK.qstkutil.tsutil as tsu
 
 
 def featReturn0(dData, b_human=False):
@@ -26,7 +26,6 @@ def featTrend(dData, lForwardlook=2, b_human=False):
     dfPrice = dData['close']
     
     trds = np.array(map(trends, (dfPrice.values[lForwardlook:, :] - dfPrice.values[0:-lForwardlook, :])))
-    #trds = np.reshape(trds, (trds.shape[0], dfPrice.values.shape[1]))
     nans = np.empty((lForwardlook, dfPrice.values.shape[1]))
     nans[0:lForwardlook,:] = np.nan
     

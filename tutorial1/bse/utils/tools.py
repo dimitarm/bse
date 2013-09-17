@@ -5,7 +5,7 @@ Created on Jun 28, 2013
 '''
 import math
 import numpy as np
-import qstkutil.tsutil as tsutil
+import QSTK.qstkutil.tsutil as tsutil
 
 def getAllFeaturesCombinationsList(l_items):
     ll_retItems = list()
@@ -67,7 +67,6 @@ def calculateFeaturesNA(d_dfData, s_symbol, lfc_Features, ld_FeatureParameters):
             na_features = naShapedData
         else:
             na_features =  np.hstack((na_features, naShapedData))
-    tsutil.fillforward(na_features)
     na_dataWithoutNans = removeNans(na_features)
     return na_dataWithoutNans
 
