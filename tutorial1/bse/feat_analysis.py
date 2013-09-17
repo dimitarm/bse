@@ -96,6 +96,7 @@ if __name__ == '__main__':
 
     ldArgs = list()
     lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featVolumeDelta, featStochastic, featBollinger)
+    lfc_TestFeatures = (featHiLow,)
     #default parameters
     d_FeatureParameters = {}
     for feat in lfc_TestFeatures:
