@@ -16,10 +16,10 @@ from datetime import datetime
 from datetime import timedelta
 
 ''' QSTK imports '''
-from qstkutil import DataAccess as da
+from QSTK.qstkutil import DataAccess as da
 
-from qstkfeat.features import *
-import qstkfeat.featutil as ftu
+from QSTK.qstkfeat.features import *
+import QSTK.qstkfeat.featutil as ftu
 
 import utils.dateutil as bsedateutil
 
@@ -107,7 +107,7 @@ if __name__ == '__main__':
     dtStart = dt.datetime(2010,5,31)
     dtEnd = dt.datetime(2013,5,30)
     
-    dataobj = da.DataAccess('Investor')      
+    dataobj = da.DataAccess(da.DataSource.CUSTOM)      
     ldtTimestamps = bsedateutil.getBSEdays( dtStart, dtEnd, dt.timedelta(hours=16) )
     
     lsKeys = ['open', 'high', 'low', 'close', 'volume']
@@ -117,8 +117,8 @@ if __name__ == '__main__':
 
     ldArgs = list()
     
-    #lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featVolumeDelta, featStochastic, featVolume, featBollinger)
-    lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featVolumeDelta, featStochastic, featVolume)
+    lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featAroonDown, featVolumeDelta, featStochastic, featVolume, featBollinger)
+    #lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featVolumeDelta, featStochastic, featVolume)
     
     #default parameters
     ld_FeatureParameters = {}
@@ -126,18 +126,19 @@ if __name__ == '__main__':
         ld_FeatureParameters[fc_feat] = {}
         
     ld_FeatureParameters[featTrend] = {'lForwardlook':1}
-    ld_FeatureParameters[featMomentum] = {'lLookback':6}  
-    ld_FeatureParameters[featHiLow] = {'lLookback':6}
-    ld_FeatureParameters[featMA] = {'lLookback':5}
-    ld_FeatureParameters[featEMA] = {'lLookback':3}
-    ld_FeatureParameters[featSTD] = {'lLookback':2}
-    ld_FeatureParameters[featRSI] = {'lLookback':7}
-    ld_FeatureParameters[featDrawDown] = {'lLookback':3}
-    ld_FeatureParameters[featRunUp] = {'lLookback':7}
-    ld_FeatureParameters[featAroon] = {'lLookback':2}
-    ld_FeatureParameters[featVolumeDelta] = {'lLookback':6}
-    ld_FeatureParameters[featStochastic] = {'lLookback':3}
-    ld_FeatureParameters[featBollinger] = {'lLookback':2}
+#    ld_FeatureParameters[featMomentum] = {'lLookback':6}  
+#    ld_FeatureParameters[featHiLow] = {'lLookback':6}
+#    ld_FeatureParameters[featMA] = {'lLookback':5}
+#    ld_FeatureParameters[featEMA] = {'lLookback':3}
+#    ld_FeatureParameters[featSTD] = {'lLookback':2}
+#    ld_FeatureParameters[featRSI] = {'lLookback':7}
+#    ld_FeatureParameters[featDrawDown] = {'lLookback':3}
+#    ld_FeatureParameters[featRunUp] = {'lLookback':7}
+#    ld_FeatureParameters[featAroon] = {'lLookback':2}
+#    ld_FeatureParameters[featAroonDown] = {'lLookback':20}
+#    ld_FeatureParameters[featVolumeDelta] = {'lLookback':6}
+#    ld_FeatureParameters[featStochastic] = {'lLookback':3}
+#    ld_FeatureParameters[featBollinger] = {'lLookback':2}
     ld_FeatureParameters[featVolume] = {}
          
 
