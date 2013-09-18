@@ -104,7 +104,7 @@ if __name__ == '__main__':
     lsSym = np.array(['SOFIX', '3JR'])
     
     ''' Get data for 2009-2010 '''
-    dtStart = dt.datetime(2010,5,31)
+    dtStart = dt.datetime(2012,5,31)
     dtEnd = dt.datetime(2013,5,30)
     
     dataobj = da.DataAccess(da.DataSource.CUSTOM)      
@@ -125,7 +125,7 @@ if __name__ == '__main__':
     for fc_feat in lfc_TestFeatures:
         ld_FeatureParameters[fc_feat] = {}
         
-    ld_FeatureParameters[featTrend] = {'lForwardlook':1}
+    ld_FeatureParameters[featTrend] = {'lForwardlook':10}
 #    ld_FeatureParameters[featMomentum] = {'lLookback':6}  
 #    ld_FeatureParameters[featHiLow] = {'lLookback':6}
 #    ld_FeatureParameters[featMA] = {'lLookback':5}
