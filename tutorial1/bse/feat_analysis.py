@@ -96,12 +96,12 @@ if __name__ == '__main__':
 
     ldArgs = list()
     lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featVolumeDelta, featStochastic, featBollinger)
-    lfc_TestFeatures = (featHiLow,)
+    #lfc_TestFeatures = (featHiLow,)
     #default parameters
     d_FeatureParameters = {}
     for feat in lfc_TestFeatures:
         d_FeatureParameters[feat] = {}
-    d_FeatureParameters[featTrend] = {'lForwardlook':5}
+    d_FeatureParameters[featTrend] = {'lForwardlook':1}
 
     findBestParamValue(dData, lfc_TestFeatures, featTrend, 'lLookback', range(2, 80, 1), d_FeatureParameters, b_Plot = True)    
     

@@ -16,10 +16,10 @@ from datetime import datetime
 from datetime import timedelta
 
 ''' QSTK imports '''
-from qstkutil import DataAccess as da
+from qstk.qstkutil import DataAccess as da
 
 from qstkfeat.features import *
-import qstkfeat.featutil as ftu
+from QSTK.qstkfeat.features import *
 
 import utils.dateutil as bsedateutil
 

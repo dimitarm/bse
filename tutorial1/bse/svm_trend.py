@@ -27,6 +27,7 @@ from utils.features import *
 import utils.tools as bsetools
 from sklearn import preprocessing
 from sklearn import svm
+from sklearn import metrics 
 
 def findBestFeaturesCombination(d_dfData, lfc_featCombinationSet, t_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, b_Plot = False):
     maxSuccess = -1
@@ -66,8 +67,8 @@ def findBestFeaturesCombination(d_dfData, lfc_featCombinationSet, t_fcTestFeatur
  
         na_Prediction = clf.predict(na_TestSet)
         testSuccess = float(na_TestClass.size - np.count_nonzero(na_TestClass - na_Prediction))/float(na_TestClass.size)
-        na_Prediction = clf.predict(na_ValSet)
-        success = float(na_ValClass.size - np.count_nonzero(na_ValClass - na_Prediction))/float(na_ValClass.size)
+        na_ValPrediction = clf.predict(na_ValSet)
+        success = float(na_ValClass.size - np.count_nonzero(na_ValClass - na_ValPrediction))/float(na_ValClass.size)
         if success > maxSuccess:
             maxSuccess = success
             maxClf = clf
@@ -75,7 +76,9 @@ def findBestFeaturesCombination(d_dfData, lfc_featCombinationSet, t_fcTestFeatur
             for feat in lfc_combination:
                 l_maxFeatSet.append(feat.func_name)
             l_maxFeatSet.sort()
-            print "CV: " + str(success) + " Test:" + str(testSuccess) + " combination: " + str(l_maxFeatSet)
+            metric = "None"
+            #print "CV: " + str(success) + " Test:" + str(testSuccess) + " combination: " + str(l_maxFeatSet) + " " + metric + ": " + str(metrics.metrics.f1_score(na_ValClass, na_ValPrediction, average = metric))
+            print "CV: " + str(success) + " Test:" + str(testSuccess) + " combination: " + str(l_maxFeatSet) + " " + "-1" + ": " + str(metrics.metrics.f1_score(na_ValClass, na_ValPrediction, pos_label = -1))  + " " + "1" + ": " + str(metrics.metrics.f1_score(na_ValClass, na_ValPrediction, pos_label = 1))
             if b_Plot == True:
                 plt.clf()
                 for i in range(0, na_TrainClass.shape[0]):
@@ -89,12 +92,12 @@ def findBestFeaturesCombination(d_dfData, lfc_featCombinationSet, t_fcTestFeatur
                 plt.ylabel(lfc_combination[0].func_name)
                 plt.xlabel(lfc_combination[1].func_name)
                 plt.show()            
-        elif success == maxSuccess:
-            l_feat = list()
-            for feat in lfc_combination:
-                l_feat.append(feat.func_name)
-            l_feat.sort()
-            print "CV: " + str(success) + " Test:" + str(testSuccess) + " combination: " + str(l_feat)
+#        elif success == maxSuccess:
+#            l_feat = list()
+#            for feat in lfc_combination:
+#                l_feat.append(feat.func_name)
+#            l_feat.sort()
+#            print "CV: " + str(success) + " Test:" + str(testSuccess) + " combination: " + str(l_feat) + " " + metric + ": " + str(metrics.metrics.f1_score(na_ValClass, na_ValPrediction, average = metric))
         combinations += 1
     print str(combinations) + " combinations tested"
     return l_maxFeatSet, maxSuccess
@@ -104,7 +107,7 @@ if __name__ == '__main__':
     lsSym = np.array(['SOFIX', '3JR'])
     
     ''' Get data for 2009-2010 '''
-    dtStart = dt.datetime(2012,5,31)
+    dtStart = dt.datetime(2011,5,31)
     dtEnd = dt.datetime(2013,5,30)
     
     dataobj = da.DataAccess(da.DataSource.CUSTOM)      
@@ -125,7 +128,7 @@ if __name__ == '__main__':
     for fc_feat in lfc_TestFeatures:
         ld_FeatureParameters[fc_feat] = {}
         
-    ld_FeatureParameters[featTrend] = {'lForwardlook':10}
+    ld_FeatureParameters[featTrend] = {'lForwardlook':5}
 #    ld_FeatureParameters[featMomentum] = {'lLookback':6}  
 #    ld_FeatureParameters[featHiLow] = {'lLookback':6}
 #    ld_FeatureParameters[featMA] = {'lLookback':5}
