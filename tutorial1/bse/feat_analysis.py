@@ -28,6 +28,7 @@ import utils.tools as bsetools
 from sklearn import preprocessing
 
 from sklearn import svm
+from sklearn import neighbors
 
 def executePredictionAlgorithm():
     pass
@@ -38,7 +39,7 @@ def findBestParamValue(d_dfData, lfc_testFeatures, fc_ClassificationFeature, s_p
         l_fcFeatures.append(fc_feature)
         l_fcFeatures.append(fc_ClassificationFeature)
         ld_FeatureParameters = dict(d_basicFeatParameters)
-        na_featPerf = np.empty((0, 2))
+        na_featPerf = np.empty((0, 3))
         for paramVal in l_paramValues:
             #d_featParams = dict(d_basicFeatParameters[fc_feature])
             #d_featParams[s_paramName] = paramVal
@@ -66,13 +67,19 @@ def findBestParamValue(d_dfData, lfc_testFeatures, fc_ClassificationFeature, s_p
             testSuccess = float(na_TestClass.size - np.count_nonzero(na_TestClass - na_Prediction))/float(na_TestClass.size)
             na_Prediction = clf.predict(na_ValSet)
             valSuccess = float(na_ValClass.size - np.count_nonzero(na_ValClass - na_Prediction))/float(na_ValClass.size)
+
+            knn = neighbors.KNeighborsClassifier(n_neighbors = 30)
+            knn.fit(na_TrainSet, na_TrainClass)
+            na_PredictionKNN = knn.predict(na_ValSet)
+            valSuccessKNN = float(na_ValClass.size - np.count_nonzero(na_ValClass - na_PredictionKNN))/float(na_ValClass.size)
             #print '    ' + 'param: ' + str(paramVal) + ' validationSet: ' + str(valSuccess) + ' testSet: ' + str(testSuccess)
-            na_featPerf = np.append(na_featPerf, [[valSuccess, testSuccess]], axis = 0)
+            na_featPerf = np.append(na_featPerf, [[valSuccess, testSuccess, valSuccessKNN]], axis = 0)
+            
         i_maxValSetValue = na_featPerf[:, 0].argmax()
         print fc_feature.func_name + ': ' + 'param: ' + str(l_paramValues[i_maxValSetValue]) + ' validationSet: ' + str(na_featPerf[i_maxValSetValue][0]) + ' testSet: ' + str(na_featPerf[i_maxValSetValue][1])
         plt.clf()
         plt.plot(l_paramValues, na_featPerf)
-        plt.legend(('validationSet', 'testSet'))
+        plt.legend(('validationSet', 'testSet', 'ValidationSetKNN'))
         plt.ylabel(fc_feature.func_name)
         plt.xlabel(s_paramName)
         plt.show()    

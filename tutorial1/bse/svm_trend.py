@@ -28,6 +28,8 @@ import utils.tools as bsetools
 from sklearn import preprocessing
 from sklearn import svm
 from sklearn import metrics 
+from sklearn import cross_validation
+
 
 def findBestFeaturesCombination(d_dfData, lfc_featCombinationSet, t_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, b_Plot = False):
     maxSuccess = -1
@@ -107,7 +109,7 @@ if __name__ == '__main__':
     lsSym = np.array(['SOFIX', '3JR'])
     
     ''' Get data for 2009-2010 '''
-    dtStart = dt.datetime(2011,5,31)
+    dtStart = dt.datetime(2012,5,31)
     dtEnd = dt.datetime(2013,5,30)
     
     dataobj = da.DataAccess(da.DataSource.CUSTOM)      
@@ -129,19 +131,19 @@ if __name__ == '__main__':
         ld_FeatureParameters[fc_feat] = {}
         
     ld_FeatureParameters[featTrend] = {'lForwardlook':5}
-#    ld_FeatureParameters[featMomentum] = {'lLookback':6}  
-#    ld_FeatureParameters[featHiLow] = {'lLookback':6}
-#    ld_FeatureParameters[featMA] = {'lLookback':5}
-#    ld_FeatureParameters[featEMA] = {'lLookback':3}
-#    ld_FeatureParameters[featSTD] = {'lLookback':2}
-#    ld_FeatureParameters[featRSI] = {'lLookback':7}
-#    ld_FeatureParameters[featDrawDown] = {'lLookback':3}
-#    ld_FeatureParameters[featRunUp] = {'lLookback':7}
-#    ld_FeatureParameters[featAroon] = {'lLookback':2}
-#    ld_FeatureParameters[featAroonDown] = {'lLookback':20}
-#    ld_FeatureParameters[featVolumeDelta] = {'lLookback':6}
-#    ld_FeatureParameters[featStochastic] = {'lLookback':3}
-#    ld_FeatureParameters[featBollinger] = {'lLookback':2}
+    ld_FeatureParameters[featMomentum] = {'lLookback':5}  
+    ld_FeatureParameters[featHiLow] = {'lLookback':5}
+    ld_FeatureParameters[featMA] = {'lLookback':5}
+    ld_FeatureParameters[featEMA] = {'lLookback':5}
+    ld_FeatureParameters[featSTD] = {'lLookback':5}
+    ld_FeatureParameters[featRSI] = {'lLookback':5}
+    ld_FeatureParameters[featDrawDown] = {'lLookback':5}
+    ld_FeatureParameters[featRunUp] = {'lLookback':5}
+    ld_FeatureParameters[featAroon] = {'lLookback':5}
+    ld_FeatureParameters[featAroonDown] = {'lLookback':5}
+    ld_FeatureParameters[featVolumeDelta] = {'lLookback':5}
+    ld_FeatureParameters[featStochastic] = {'lLookback':5}
+    ld_FeatureParameters[featBollinger] = {'lLookback':5}
     ld_FeatureParameters[featVolume] = {}
          
 
