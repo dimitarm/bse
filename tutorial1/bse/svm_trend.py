@@ -51,7 +51,7 @@ def findBestFeaturesCombination(d_dfData, lfc_featCombinationSet, t_fcTestFeatur
         na_data = np.hstack((na_data, na_featuresData[:, -1].reshape(na_featuresData.shape[0], 1)))
         scaler = preprocessing.StandardScaler().fit(na_data[:,:-1])
         
-        (na_TrainSet, na_ValSet, na_TestSet) = bsetools.getTrainTestValidationSets(na_data, bsetools.defaultTrainTestValidationFunc)
+        (na_TrainSet, na_ValSet, na_TestSet) = bsetools.getTrainTestValidationSets(na_data, bsetools.defaultTrainTestValidationFunc) to take random validation set
         na_TrainClass = na_TrainSet[:,-1]
         na_TrainSet = na_TrainSet[:,:-1]
         na_TrainSet = scaler.transform(na_TrainSet)
@@ -110,7 +110,7 @@ if __name__ == '__main__':
     lsSym = np.array(['SOFIX', '3JR'])
     
     ''' Get data for 2009-2010 '''
-    dtStart = dt.datetime(2011,5,31)
+    dtStart = dt.datetime(2013,1,1)
     dtEnd = dt.datetime(2013,5,30)
     
     dataobj = da.DataAccess(da.DataSource.CUSTOM)      
@@ -121,7 +121,7 @@ if __name__ == '__main__':
 
     dData = dict(zip(lsKeys, ldfData))
 
-    #dData = datautil.get_random_data(l_keys = lsKeys, l_index = ldtTimestamps, l_symbols = lsSym, method = 'sin')
+#    dData = datautil.get_random_data(l_keys = lsKeys, l_index = ldtTimestamps, l_symbols = lsSym)
     plt.clf()
     plt.plot(ldtTimestamps, dData['close'])
     plt.show()     
