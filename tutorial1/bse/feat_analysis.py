@@ -22,8 +22,9 @@ from QSTK.qstkfeat.features import *
 import QSTK.qstkfeat.featutil as ftu
 
 import utils.dateutil as bsedateutil
-
+import utils.data as datautil
 from utils.features import *
+
 import utils.tools as bsetools
 from sklearn import preprocessing
 
@@ -101,7 +102,7 @@ if __name__ == '__main__':
     
     dData = dict(zip(lsKeys, ldfData))
 
-
+    #dData = datautil.get_random_data(l_keys = lsKeys, l_index = ldtTimestamps, l_symbols = lsSym, method = 'sin')
         
     lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featVolumeDelta, featStochastic, featBollinger)
     #lfc_TestFeatures = (featHiLow,)
