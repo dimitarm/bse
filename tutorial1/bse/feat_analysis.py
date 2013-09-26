@@ -101,7 +101,8 @@ if __name__ == '__main__':
     
     dData = dict(zip(lsKeys, ldfData))
 
-    ldArgs = list()
+
+        
     lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featVolumeDelta, featStochastic, featBollinger)
     #lfc_TestFeatures = (featHiLow,)
     #default parameters

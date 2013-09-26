@@ -22,6 +22,7 @@ from QSTK.qstkfeat.features import *
 import QSTK.qstkfeat.featutil as ftu
 
 import utils.dateutil as bsedateutil
+import utils.data as datautil
 
 from utils.features import *
 import utils.tools as bsetools
@@ -117,10 +118,13 @@ if __name__ == '__main__':
     
     lsKeys = ['open', 'high', 'low', 'close', 'volume']
     ldfData = dataobj.get_data( ldtTimestamps, lsSym, lsKeys, verbose=True )
-    
+
     dData = dict(zip(lsKeys, ldfData))
 
-    ldArgs = list()
+    dData = datautil.get_random_data(l_keys = lsKeys, l_index = ldtTimestamps, l_symbols = lsSym)
+    plt.clf()
+    plt.plot(ldtTimestamps, dData['close'])
+    plt.show()     
     
     lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featAroonDown, featVolumeDelta, featStochastic, featVolume, featBollinger)
     #lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featVolumeDelta, featStochastic, featVolume)
