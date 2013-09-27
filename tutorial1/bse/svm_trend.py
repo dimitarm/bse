@@ -30,7 +30,7 @@ from sklearn import preprocessing
 from sklearn import svm
 from sklearn import metrics 
 from sklearn import cross_validation
-
+from sklearn import datasets
 
 def findBestFeaturesCombination(d_dfData, lfc_featCombinationSet, t_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, b_Plot = False):
     maxSuccess = -1
@@ -51,15 +51,12 @@ def findBestFeaturesCombination(d_dfData, lfc_featCombinationSet, t_fcTestFeatur
         na_data = np.hstack((na_data, na_featuresData[:, -1].reshape(na_featuresData.shape[0], 1)))
         scaler = preprocessing.StandardScaler().fit(na_data[:,:-1])
         
-        (na_TrainSet, na_ValSet, na_TestSet) = bsetools.getTrainTestValidationSets(na_data, bsetools.defaultTrainTestValidationFunc) to take random validation set
+        na_TrainSet, na_TestSet = cross_validation.train_test_split(na_data, test_size=0.3, random_state=1)
+        
         na_TrainClass = na_TrainSet[:,-1]
         na_TrainSet = na_TrainSet[:,:-1]
         na_TrainSet = scaler.transform(na_TrainSet)
     
-        na_ValClass = na_ValSet[:,-1]
-        na_ValSet = na_ValSet[:,:-1]
-        na_ValSet = scaler.transform(na_ValSet)
-        
         na_TestClass = na_TestSet[:,-1]
         na_TestSet = na_TestSet[:,:-1]
         na_TestSet = scaler.transform(na_TestSet)
@@ -69,9 +66,7 @@ def findBestFeaturesCombination(d_dfData, lfc_featCombinationSet, t_fcTestFeatur
         dec = clf.decision_function(na_TrainSet)
  
         na_Prediction = clf.predict(na_TestSet)
-        testSuccess = float(na_TestClass.size - np.count_nonzero(na_TestClass - na_Prediction))/float(na_TestClass.size)
-        na_ValPrediction = clf.predict(na_ValSet)
-        success = float(na_ValClass.size - np.count_nonzero(na_ValClass - na_ValPrediction))/float(na_ValClass.size)
+        success = float(na_TestClass.size - np.count_nonzero(na_TestClass - na_Prediction))/float(na_TestClass.size)
         if success > maxSuccess:
             maxSuccess = success
             maxClf = clf
@@ -80,8 +75,10 @@ def findBestFeaturesCombination(d_dfData, lfc_featCombinationSet, t_fcTestFeatur
                 l_maxFeatSet.append(feat.func_name)
             l_maxFeatSet.sort()
             metric = "None"
-            #print "CV: " + str(success) + " Test:" + str(testSuccess) + " combination: " + str(l_maxFeatSet) + " " + metric + ": " + str(metrics.metrics.f1_score(na_ValClass, na_ValPrediction, average = metric))
-            print "CV: " + str(success) + " Test:" + str(testSuccess) + " combination: " + str(l_maxFeatSet) + " " + "-1" + ": " + str(metrics.metrics.f1_score(na_ValClass, na_ValPrediction, pos_label = -1))  + " " + "1" + ": " + str(metrics.metrics.f1_score(na_ValClass, na_ValPrediction, pos_label = 1))
+            print "Test:" + str(success) + " combination: " + str(l_maxFeatSet) + " " + "-1" + ": " + str(metrics.metrics.f1_score(na_TestClass, na_Prediction, pos_label = -1))  + " " + "1" + ": " + str(metrics.metrics.f1_score(na_TestClass, na_Prediction, pos_label = 1))
+            scores = cross_validation.cross_val_score(clf, na_data[:,:-1], na_data[:,-1], cv=5)            
+            print str(scores)
+            
             if b_Plot == True:
                 plt.clf()
                 for i in range(0, na_TrainClass.shape[0]):
@@ -91,16 +88,9 @@ def findBestFeaturesCombination(d_dfData, lfc_featCombinationSet, t_fcTestFeatur
                         plt.plot( na_TrainSet[i][0], na_TrainSet[i][1], 'ro' )
                     else:
                         plt.plot( na_TrainSet[i][0], na_TrainSet[i][1], 'kx' )
-                #plt.legend( ('Trend') )
                 plt.ylabel(lfc_combination[0].func_name)
                 plt.xlabel(lfc_combination[1].func_name)
                 plt.show()            
-#        elif success == maxSuccess:
-#            l_feat = list()
-#            for feat in lfc_combination:
-#                l_feat.append(feat.func_name)
-#            l_feat.sort()
-#            print "CV: " + str(success) + " Test:" + str(testSuccess) + " combination: " + str(l_feat) + " " + metric + ": " + str(metrics.metrics.f1_score(na_ValClass, na_ValPrediction, average = metric))
         combinations += 1
     print str(combinations) + " combinations tested"
     return l_maxFeatSet, maxSuccess
@@ -110,7 +100,7 @@ if __name__ == '__main__':
     lsSym = np.array(['SOFIX', '3JR'])
     
     ''' Get data for 2009-2010 '''
-    dtStart = dt.datetime(2013,1,1)
+    dtStart = dt.datetime(2012,1,1)
     dtEnd = dt.datetime(2013,5,30)
     
     dataobj = da.DataAccess(da.DataSource.CUSTOM)      
