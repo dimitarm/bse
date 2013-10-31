@@ -16,9 +16,9 @@ from datetime import datetime
 from datetime import timedelta
 
 ''' QSTK imports '''
-from qstk.qstkutil import DataAccess as da
+from QSTK.qstkutil import DataAccess as da
 
-from qstkfeat.features import *
+from QSTK.qstkfeat.features import *
 from QSTK.qstkfeat.features import *
 
 import utils.dateutil as bsedateutil
@@ -29,13 +29,15 @@ from sklearn import preprocessing
 
 from sklearn import svm
 
-def dataAnalysis (d_dfTrainData, d_dfTestData, b_Plot = True):
-    na_trainData = bsetools.calculateFeaturesNA(d_dfTrainData, 'SOFIX', lfc_algFeatures, ld_FeatureParameters)
+def dataAnalysis (d_dfData, dtPOI, b_Plot = True):
+    na_allTrainData = bsetools.calculateFeaturesNA(d_dfTrainData, 'SOFIX', lfc_algFeatures, ld_FeatureParameters)
     na_testData = bsetools.calculateFeaturesNA(d_dfTestData, 'SOFIX', lfc_algFeatures, ld_FeatureParameters)
     
     l_featPerf = []
-    for i_percent in range(0.05, 1, 0.05):
-
+    l_percents = range(5, 100, 5)
+    for i_percent in l_percents:
+        i_intPart = na_allTrainData.shape[0] - na_allTrainData.shape[0] * i_percent / 100
+        na_trainData = na_allTrainData[i_intPart:-1,:]
         scaler = preprocessing.StandardScaler().fit(na_trainData[:,:-1])
 
         na_TrainClass = na_trainData[:,-1]
@@ -45,15 +47,14 @@ def dataAnalysis (d_dfTrainData, d_dfTestData, b_Plot = True):
         na_testData = na_testData[:,:-1]
         na_testData = scaler.transform(na_testData)
         
-        i_splitPt = na_trainData.shape[0] - na_trainData.shape[0]*i_percent
         clf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='rbf', probability=False, shrinking=True, tol=0.001, verbose=False)
-        clf.fit(na_trainData[i_splitPt:-1,:], na_TrainClass) 
+        clf.fit(na_trainData, na_TrainClass) 
         na_Prediction = clf.predict(na_testData)
         testSuccess = float(na_TestClass.size - np.count_nonzero(na_TestClass - na_Prediction))/float(na_TestClass.size)
         l_featPerf.append(testSuccess)
         
     plt.clf()
-    plt.plot(range(0.05, 1, 0.05), l_featPerf)
+    plt.plot(l_percents, l_featPerf)
     plt.ylabel('success')
     plt.xlabel('% data')
     plt.show()    
@@ -61,16 +62,18 @@ def dataAnalysis (d_dfTrainData, d_dfTestData, b_Plot = True):
 
 
 if __name__ == '__main__':
+    i_ForwardLook = 1
+    i_lookback = 20
     lsSym = np.array(['SOFIX', '3JR'])
     lsKeys = ['open', 'high', 'low', 'close', 'volume']
-    dataobj = da.DataAccess('Investor')      
+    dataobj = da.DataAccess(da.DataSource.CUSTOM)      
     lfc_algFeatures = [featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featVolumeDelta, featStochastic, featBollinger]
-    valPeriodLength = dt.timedelta(months = 12) 
-    testPeriodLength = dt.timedelta(days = 7)
+    valPeriodLength = dt.timedelta(days = 7) 
+    trainPeriodLength = dt.timedelta(days = 365)
     dtPOI = dt.datetime(2012,5,31)
     
-    dtStart = dtPOI - testPeriodLength
-    dtEnd = dt.POI + valPeriodLength 
+    dtStart = dtPOI - trainPeriodLength
+    dtEnd = dtPOI + valPeriodLength 
     
     ldtTimestamps = bsedateutil.getBSEdays( dtStart, dtPOI, dt.timedelta(hours=16) )
     ldfData = dataobj.get_data( ldtTimestamps, lsSym, lsKeys, verbose=True )
@@ -84,20 +87,8 @@ if __name__ == '__main__':
     #default parameters
     ld_FeatureParameters = {}
     for feat in lfc_algFeatures:
-        ld_FeatureParameters[feat] = {}
-    ld_FeatureParameters[featTrend] = {'lForwardlook':5}
-    ld_FeatureParameters[featMomentum] = {'lLookback':2}  #34
-    ld_FeatureParameters[featHiLow] = {'lLookback':42}
-    ld_FeatureParameters[featMA] = {'lLookback':50}
-    ld_FeatureParameters[featEMA] = {'lLookback':44}
-    ld_FeatureParameters[featSTD] = {'lLookback':35}
-    ld_FeatureParameters[featRSI] = {'lLookback':46}
-    ld_FeatureParameters[featDrawDown] = {'lLookback':2}
-    ld_FeatureParameters[featRunUp] = {'lLookback':34}
-    ld_FeatureParameters[featAroon] = {'lLookback':2}
-    ld_FeatureParameters[featVolumeDelta] = {'lLookback':13}
-    ld_FeatureParameters[featStochastic] = {'lLookback':7}
-    ld_FeatureParameters[featBollinger] = {'lLookback':2}
+        ld_FeatureParameters[feat] = {'lLookback':i_lookback}
+    ld_FeatureParameters[featTrend] = {'lForwardlook':i_ForwardLook}
     ld_FeatureParameters[featVolume] = {}
     
     dataAnalysis(d_dfTrainData, d_dfTestData)
