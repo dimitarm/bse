@@ -1,7 +1,7 @@
 '''
-Created on Aug 23, 2013
+Created on Oct 31, 2013
 
-@author: I028663
+@author: dimitar
 '''
 
 import math
@@ -32,79 +32,58 @@ from sklearn import metrics
 from sklearn import cross_validation
 from sklearn import datasets
 from sklearn import neighbors
+from sklearn.ensemble import AdaBoostClassifier
+
 
 def executeEnsembleLearner(d_dfData, lfc_featCombinationSet, t_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, b_Plot = False):
     maxSuccess = -1
     combinations = 0
     l_fcFeatures = list(t_fcTestFeatures)
     l_fcFeatures.append(fc_ClassificationFeature)
-    na_featuresData = bsetools.calculateFeaturesNA(d_dfData, 'SOFIX', l_fcFeatures, ld_FeatureParameters)
+    na_data = bsetools.calculateFeaturesNA(d_dfData, 'SOFIX', l_fcFeatures, ld_FeatureParameters)
     #test each combination
     maxSuccess = -1
     combinations = 0
-    for lfc_combination in lfc_featCombinationSet:
-        na_data = np.empty((na_featuresData.shape[0], 0))
-        #stack feat data from combination
-        for fcFeat in lfc_combination:
-            i_featIndex = l_fcFeatures.index(fcFeat)
-            na_data = np.hstack((na_data, na_featuresData[:, i_featIndex].reshape(na_featuresData.shape[0], 1)))
-        #stack classification data
-        na_data = np.hstack((na_data, na_featuresData[:, -1].reshape(na_featuresData.shape[0], 1)))
-        scaler = preprocessing.StandardScaler().fit(na_data[:,:-1])
-        
-        na_TrainSet, na_TestSet = cross_validation.train_test_split(na_data, test_size=0.3, random_state=1)
-        
-        na_TrainClass = na_TrainSet[:,-1]
-        na_TrainSet = na_TrainSet[:,:-1]
-        na_TrainSet = scaler.transform(na_TrainSet)
     
-        na_TestClass = na_TestSet[:,-1]
-        na_TestSet = na_TestSet[:,:-1]
-        na_TestSet = scaler.transform(na_TestSet)
-        
-        clf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='rbf', probability=False, shrinking=True, tol=0.001, verbose=False)
-        #clf = neighbors.KNeighborsClassifier(n_neighbors = 20)
+    scaler = preprocessing.StandardScaler().fit(na_data[:,:-1])
+    
+    na_TrainSet, na_TestSet = cross_validation.train_test_split(na_data, test_size=0.3, random_state=1)
+    
+    na_TrainClass = na_TrainSet[:,-1]
+    na_TrainSet = na_TrainSet[:,:-1]
+    na_TrainSet = scaler.transform(na_TrainSet)
+
+    na_TestClass = na_TestSet[:,-1]
+    na_TestSet = na_TestSet[:,:-1]
+    na_TestSet = scaler.transform(na_TestSet)
+    
+    na_learnerResults = np.empty((0, 2))
+    for i in range(4, 200, 4):
+        baseclf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='rbf', probability=True, shrinking=True, tol=0.001, verbose=False)
+        clf = AdaBoostClassifier(n_estimators=i, base_estimator = baseclf)
+        #clf = AdaBoostClassifier(n_estimators=i)
         clf.fit(na_TrainSet, na_TrainClass)
- 
         na_Prediction = clf.predict(na_TestSet)
-        
         success = metrics.metrics.accuracy_score(na_TestClass, na_Prediction)
-        if success > maxSuccess:
-            maxSuccess = success
-            maxClf = clf
-            l_maxFeatSet = list()
-            for feat in lfc_combination:
-                l_maxFeatSet.append(feat.func_name)
-            l_maxFeatSet.sort()
-            metric = "None"
-            print "Test:" + str(success) + " combination: " + str(l_maxFeatSet) + " " + "-1" + ": " + str(metrics.metrics.f1_score(na_TestClass, na_Prediction, pos_label = -1))  + " " + "1" + ": " + str(metrics.metrics.f1_score(na_TestClass, na_Prediction, pos_label = 1))
-            clf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='rbf', probability=False, shrinking=True, tol=0.001, verbose=False)
-            scores = cross_validation.cross_val_score(clf, na_data[:,:-1], na_data[:,-1], cv=5)            
-            print str(scores)
-            print "test data: " + str(np.histogram(na_TestClass, 2))
-            print ""
-            if b_Plot == True:
-                plt.clf()
-                for i in range(0, na_TrainClass.shape[0]):
-                    if na_TrainClass[i] == 1:
-                        plt.plot( na_TrainSet[i][0], na_TrainSet[i][1], 'g+' )
-                    elif na_TrainClass[i] == -1:
-                        plt.plot( na_TrainSet[i][0], na_TrainSet[i][1], 'ro' )
-                    else:
-                        plt.plot( na_TrainSet[i][0], na_TrainSet[i][1], 'kx' )
-                plt.ylabel(lfc_combination[0].func_name)
-                plt.xlabel(lfc_combination[1].func_name)
-                plt.show()            
-        combinations += 1
-    print str(combinations) + " combinations tested"
-    return l_maxFeatSet, maxSuccess
+        na_learnerResults = np.append(na_learnerResults, [[i, success]], axis = 0)
+
+    plt.clf()
+    plt.plot(na_learnerResults[:, 0], na_learnerResults[:, 1])
+    plt.ylabel('acuracy score')
+    plt.xlabel('n estimators')
+    plt.show()            
+#    print "Test:" + str(success) + " -1: " + str(metrics.metrics.f1_score(na_TestClass, na_Prediction, pos_label = -1))  + " 1: " + str(metrics.metrics.f1_score(na_TestClass, na_Prediction, pos_label = 1))
+#    clf = AdaBoostClassifier(n_estimators=28)
+#    scores = cross_validation.cross_val_score(clf, na_data[:,:-1], na_data[:,-1], cv=5)            
+#    print str(scores)
+#    print "test data: " + str(np.histogram(na_TestClass, 2))
 
 if __name__ == '__main__':
     
     lsSym = np.array(['SOFIX', '3JR'])
     
     ''' Get data for 2009-2010 '''
-    dtStart = dt.datetime(2011,8,1)
+    dtStart = dt.datetime(2010,6,1)
     dtEnd = dt.datetime(2012,5,30)
     testPeriodLength = dt.timedelta(days = 7)
     dtValEnd = dtEnd + testPeriodLength
