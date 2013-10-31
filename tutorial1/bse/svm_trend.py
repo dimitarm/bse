@@ -31,8 +31,9 @@ from sklearn import svm
 from sklearn import metrics 
 from sklearn import cross_validation
 from sklearn import datasets
+from sklearn import neighbors
 
-def findBestFeaturesCombination(d_dfData, lfc_featCombinationSet, t_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, b_Plot = False):
+def findBestFeaturesCombination(d_dfData, d_dfValidationData, lfc_featCombinationSet, t_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, b_Plot = False):
     maxSuccess = -1
     combinations = 0
     l_fcFeatures = list(t_fcTestFeatures)
@@ -61,12 +62,13 @@ def findBestFeaturesCombination(d_dfData, lfc_featCombinationSet, t_fcTestFeatur
         na_TestSet = na_TestSet[:,:-1]
         na_TestSet = scaler.transform(na_TestSet)
         
-        clf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='rbf', probability=False, shrinking=True, tol=0.001, verbose=False)
+        #clf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='rbf', probability=False, shrinking=True, tol=0.001, verbose=False)
+        clf = neighbors.KNeighborsClassifier(n_neighbors = 20)
         clf.fit(na_TrainSet, na_TrainClass)
-        dec = clf.decision_function(na_TrainSet)
  
         na_Prediction = clf.predict(na_TestSet)
-        success = float(na_TestClass.size - np.count_nonzero(na_TestClass - na_Prediction))/float(na_TestClass.size)
+        
+        success = metrics.metrics.accuracy_score(na_TestClass, na_Prediction)
         if success > maxSuccess:
             maxSuccess = success
             maxClf = clf
@@ -76,9 +78,10 @@ def findBestFeaturesCombination(d_dfData, lfc_featCombinationSet, t_fcTestFeatur
             l_maxFeatSet.sort()
             metric = "None"
             print "Test:" + str(success) + " combination: " + str(l_maxFeatSet) + " " + "-1" + ": " + str(metrics.metrics.f1_score(na_TestClass, na_Prediction, pos_label = -1))  + " " + "1" + ": " + str(metrics.metrics.f1_score(na_TestClass, na_Prediction, pos_label = 1))
-            scores = cross_validation.cross_val_score(clf, na_data[:,:-1], na_data[:,-1], cv=5)            
+            scores = cross_validation.cross_val_score(estimator = clf, X = na_data[:,:-1], y = na_data[:,-1], cv=5)            
             print str(scores)
-            
+            print "test data: " + str(np.histogram(na_TestClass, 2))
+            print ""
             if b_Plot == True:
                 plt.clf()
                 for i in range(0, na_TrainClass.shape[0]):
@@ -100,21 +103,27 @@ if __name__ == '__main__':
     lsSym = np.array(['SOFIX', '3JR'])
     
     ''' Get data for 2009-2010 '''
-    dtStart = dt.datetime(2012,1,1)
+    dtStart = dt.datetime(2012,5,31)
     dtEnd = dt.datetime(2013,5,30)
-    
+    testPeriodLength = dt.timedelta(days = 7)
+    dtValEnd = dtEnd + testPeriodLength
     dataobj = da.DataAccess(da.DataSource.CUSTOM)      
-    ldtTimestamps = bsedateutil.getBSEdays( dtStart, dtEnd, dt.timedelta(hours=16) )
-    
     lsKeys = ['open', 'high', 'low', 'close', 'volume']
+
+    #get train data
+    ldtTimestamps = bsedateutil.getBSEdays( dtStart, dtEnd, dt.timedelta(hours=16) )
     ldfData = dataobj.get_data( ldtTimestamps, lsSym, lsKeys, verbose=True )
-
+    #get test data
+    ldtTimestamps = bsedateutil.getBSEdays( dtEnd, dtValEnd, dt.timedelta(hours=16) )
+    l_dfValidationData = dataobj.get_data( ldtTimestamps, lsSym, lsKeys, verbose=True )
+    
     dData = dict(zip(lsKeys, ldfData))
-
-#    dData = datautil.get_random_data(l_keys = lsKeys, l_index = ldtTimestamps, l_symbols = lsSym)
-    plt.clf()
-    plt.plot(ldtTimestamps, dData['close'])
-    plt.show()     
+    d_dfValidationData = dict(zip(lsKeys, l_dfValidationData))
+    
+    #dData = datautil.get_random_data(l_keys = lsKeys, l_index = ldtTimestamps, l_symbols = lsSym)
+#    plt.clf()
+#    plt.plot(ldtTimestamps, dData['close'])
+#    plt.show()     
     
     lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featAroonDown, featVolumeDelta, featStochastic, featVolume, featBollinger)
     #lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featVolumeDelta, featStochastic, featVolume)
@@ -143,7 +152,7 @@ if __name__ == '__main__':
 
     t1 = datetime.now()
     
-    findBestFeaturesCombination(dData, bsetools.getAllFeaturesCombinationsList(lfc_TestFeatures), lfc_TestFeatures, featTrend, ld_FeatureParameters)
+    findBestFeaturesCombination(dData, d_dfValidationData, bsetools.getAllFeaturesCombinationsList(lfc_TestFeatures), lfc_TestFeatures, featTrend, ld_FeatureParameters)
     #findBestCombination(dData, itertools.combinations(lfc_TestFeatures, 1), lfc_TestFeatures, featTrend, ld_FeatureParameters, b_Plot = False)
     t2 = datetime.now()
     tdelta = t2 - t1

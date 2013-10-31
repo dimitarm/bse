@@ -11,7 +11,7 @@ import shlex
 import os
 
 
-lines = [line.strip() for line in open('equities.txt')]
+lines = [line.strip() for line in open('../equities.txt')]
 
  
 
@@ -24,15 +24,15 @@ for equity in lines:
 
     url = "http://www.bse-sofia.bg/graphics/phpfiles/MYgethistoDeA.php?MonCode=" + equity + "&MonPays=BE&Periode=1&De=01/01/2009&A=" + datetime.date.today().strftime("%d/%m/%Y") 
     print url
-    urllib2.install_opener(
-        urllib2.build_opener(
-            urllib2.ProxyHandler({'http': 'http://proxy:8080'})
-        )
-    )    
+#    urllib2.install_opener(
+#        urllib2.build_opener(
+#            urllib2.ProxyHandler({'http': 'http://proxy:8080'})
+#        )
+#    )    
     file_trades = urllib2.urlopen(url)
     tradedays = file_trades.readline()
 
-    local_file_name = os.environ['QSDATA'] + "/Investor/" + equity + '.csv' 
+    local_file_name = os.environ['QSDATA'] + "/Processed/Custom/" + equity + '.csv' 
 
     with open(local_file_name, 'w+b') as csvfile:
         eqwriter = csv.writer(csvfile, delimiter=',')
