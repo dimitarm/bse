@@ -33,7 +33,7 @@ from sklearn import cross_validation
 from sklearn import datasets
 from sklearn import neighbors
 
-def executeEnsembleLearner(d_dfData, lfc_featCombinationSet, t_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, b_Plot = False):
+def findBestFeatCobination(d_dfData, lfc_featCombinationSet, t_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, b_Plot = False):
     maxSuccess = -1
     combinations = 0
     l_fcFeatures = list(t_fcTestFeatures)
@@ -153,7 +153,7 @@ if __name__ == '__main__':
 
     t1 = datetime.now()
     
-    executeEnsembleLearner(dData, bsetools.getAllFeaturesCombinationsList(lfc_TestFeatures), lfc_TestFeatures, featTrend, ld_FeatureParameters)
+    findBestFeatCobination(dData, bsetools.getAllFeaturesCombinationsList(lfc_TestFeatures), lfc_TestFeatures, featTrend, ld_FeatureParameters)
     #findBestCombination(dData, itertools.combinations(lfc_TestFeatures, 1), lfc_TestFeatures, featTrend, ld_FeatureParameters, b_Plot = False)
     t2 = datetime.now()
     tdelta = t2 - t1

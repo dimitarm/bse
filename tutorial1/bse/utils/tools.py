@@ -67,8 +67,9 @@ def calculateFeaturesNA(d_dfData, s_symbol, lfc_Features, ld_FeatureParameters):
             na_features = naShapedData
         else:
             na_features =  np.hstack((na_features, naShapedData))
-    na_dataWithoutNans = removeNans(na_features)
-    return na_dataWithoutNans
+    #na_dataWithoutNans = removeNans(na_features)
+    #return na_dataWithoutNans
+    return na_features
 
 def getTrainTestValidationSets(na_data, fc_func):
     na_TrainSet = np.empty((0, na_data.shape[1]))
