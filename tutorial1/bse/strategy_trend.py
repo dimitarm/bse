@@ -32,6 +32,7 @@ from sklearn import metrics
 from sklearn import cross_validation
 from sklearn import datasets
 from sklearn import neighbors
+from sklearn.ensemble import AdaBoostClassifier
 
 
 def testLearner(d_dfData, t_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, fc_learnerFactory, i_lookback, i_trainPeriod, i_forwardlook, b_Plot = False):
@@ -45,6 +46,10 @@ def testLearner(d_dfData, t_fcTestFeatures, fc_ClassificationFeature, ld_Feature
     
     na_mainData = scaler.transform(na_data[:,:-1])
     na_classData = na_data[:,-1]
+    if (math.isnan(np.sum(na_mainData))):
+        print 'nan'
+    if (math.isnan(np.sum(na_classData))):
+        print 'nan'
     for i in range(i_trainPeriod, na_data.shape[0] - i_forwardlook - 1):
         clf = fc_learnerFactory(na_mainData[i - i_trainPeriod:i-1,:], na_classData[i - i_trainPeriod:i-1])
         i_prediction = clf.predict(na_mainData[i,:])
@@ -56,6 +61,13 @@ def svmLearner(na_data, na_class):
     clf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='rbf', probability=False, shrinking=True, tol=0.001, verbose=False)
     clf.fit(na_data, na_class)    
     return clf
+
+def adaBoostLearner(na_data, na_class):
+    clf = AdaBoostClassifier(n_estimators=10)
+    clf.fit(na_data, na_class)    
+    return clf
+
+
 
 if __name__ == '__main__':
     i_forwardlook = 1
@@ -102,7 +114,7 @@ if __name__ == '__main__':
 
     t1 = datetime.now()
     
-    testLearner(dData, lfc_TestFeatures, featTrend, ld_FeatureParameters, svmLearner, i_lookback = i_lookback, i_trainPeriod = 60, i_forwardlook = i_forwardlook)
+    testLearner(dData, lfc_TestFeatures, featTrend, ld_FeatureParameters, adaBoostLearner, i_lookback = i_lookback, i_trainPeriod = 60, i_forwardlook = i_forwardlook)
     t2 = datetime.now()
     tdelta = t2 - t1
     print "testLearner " + str(tdelta) + " seconds"
