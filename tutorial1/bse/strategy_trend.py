@@ -24,7 +24,8 @@ import QSTK.qstkfeat.featutil as ftu
 import utils.dateutil as bsedateutil
 import utils.data as datautil
 
-from utils.features import *
+from utils.classes import *
+from utils import tools as bsetools
 import utils.tools as bsetools
 from sklearn import preprocessing
 from sklearn import svm
@@ -46,10 +47,6 @@ def testLearner(d_dfData, t_fcTestFeatures, fc_ClassificationFeature, ld_Feature
     
     na_mainData = scaler.transform(na_data[:,:-1])
     na_classData = na_data[:,-1]
-    if (math.isnan(np.sum(na_mainData))):
-        print 'nan'
-    if (math.isnan(np.sum(na_classData))):
-        print 'nan'
     for i in range(i_trainPeriod, na_data.shape[0] - i_forwardlook - 1):
         clf = fc_learnerFactory(na_mainData[i - i_trainPeriod:i-1,:], na_classData[i - i_trainPeriod:i-1])
         i_prediction = clf.predict(na_mainData[i,:])
@@ -59,11 +56,12 @@ def testLearner(d_dfData, t_fcTestFeatures, fc_ClassificationFeature, ld_Feature
 
 def svmLearner(na_data, na_class):
     clf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='rbf', probability=False, shrinking=True, tol=0.001, verbose=False)
-    clf.fit(na_data, na_class)    
+    clf.fit(na_data, na_class)
     return clf
 
 def adaBoostLearner(na_data, na_class):
-    clf = AdaBoostClassifier(n_estimators=10)
+    baseClf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='rbf', probability=True, shrinking=True, tol=0.001, verbose=False)
+    clf = AdaBoostClassifier(n_estimators=100, base_estimator=baseClf)
     clf.fit(na_data, na_class)    
     return clf
 
@@ -87,8 +85,8 @@ if __name__ == '__main__':
     dData = dict(zip(lsKeys, ldfData))
     
     
-    lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featAroonDown, featVolumeDelta, featStochastic, featVolume, featBollinger)
-#    lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA)
+#    lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featAroonDown, featVolumeDelta, featStochastic, featVolume, featBollinger)
+    lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featRSI)
     
     #default parameters
     ld_FeatureParameters = {}

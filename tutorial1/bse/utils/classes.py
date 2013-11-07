@@ -41,8 +41,8 @@ def trends(ret):
         if value > 0:
             na_res[pos] = 1
         elif value == 0:
-            na_res[pos] = np.nan
-            #na_res[pos] = 1
+            #na_res[pos] = np.nan
+            na_res[pos] = 1
         elif math.isnan(value):
             na_res[pos] = np.nan
         else:
