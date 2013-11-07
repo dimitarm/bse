@@ -126,8 +126,13 @@ def tradeRuleRSI(rsit1, rsi):
         return -1 #sell
     return 0 #hold
 
+
+
+
+
 if __name__ == '__main__':
         
     dData = {}
-    dData['close'] = pand.DataFrame(data=np.random.rand(100, 2) * 10, columns=('aaaaaa', 'bb'), index = range(100))
+    index = [str(x) for x in range(100)]
+    dData['close'] = pand.DataFrame(data=np.random.rand(100, 2) * 10, columns=('aaaaaa', 'bb'), index = index)
     print featRSITradingRule(dData, lLookback=2)
