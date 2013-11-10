@@ -23,7 +23,7 @@ import QSTK.qstkfeat.featutil as ftu
 
 import utils.dateutil as bsedateutil
 
-from utils.features import *
+import utils.classes as bseclasses
 import utils.tools as bsetools
 from sklearn import preprocessing
 from sklearn import metrics 
@@ -97,7 +97,7 @@ if __name__ == '__main__':
     for fc_feat in lfc_TestFeatures:
         ld_FeatureParameters[fc_feat] = {}
         
-    ld_FeatureParameters[featTrend] = {'lForwardlook':1}
+    ld_FeatureParameters[bseclasses.featTrend] = {'lForwardlook':1}
     ld_FeatureParameters[featMomentum] = {'lLookback':20}
     ld_FeatureParameters[featHiLow] = {'lLookback':20}
     ld_FeatureParameters[featMA] = {'lLookback':20}
@@ -114,7 +114,7 @@ if __name__ == '__main__':
          
 
     t1 = datetime.now()
-    findBestCombination(dData, np.arange(1, 100, 1), lfc_TestFeatures, featTrend, ld_FeatureParameters)
+    findBestCombination(dData, np.arange(1, 100, 1), lfc_TestFeatures, bseclasses.featTrend, ld_FeatureParameters)
     t2 = datetime.now()
     tdelta = t2 - t1
     print "ready " + str(tdelta) + " seconds"
