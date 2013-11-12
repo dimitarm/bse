@@ -15,7 +15,11 @@ import binascii
 
 equities = [line.strip() for line in open('../equities.txt')]
 
- 
+urllib2.install_opener(
+    urllib2.build_opener(
+        urllib2.ProxyHandler({'http': 'http://proxy:8080'})
+    )
+)     
 
 #22/12/2012"
 count = 0
@@ -42,14 +46,34 @@ for equity in equities:
     df_data = pand.io.parsers.read_csv(equity_file_name, index_col = 0)
     
     trades = list()
-    for line in fl_url: 
+    sym = fl_url.read(1)
+    day_data = str()
+    while sym:
+        case sym:
+        if sym == '\n':
+            trades.append(day_data)
+            day_data = str()
+        if sym == 'E':
+            of = fl_url.read(4)
+            if of == '\x00O\x00F':
+                trades.append(day_data)
+                day_data = str()
+                break;
+        else:
+            day_data += sym
+        sym = fl_url.read(1)
+    if day_data:
+        trades.append(day_data)
+    
         #if line.strip():
             #continue
-        print line.encode('string_escape')
-        line, b = decodefunc(line)
+    for trade in trades:
+        print str(len(trade)) + " : " + trade.encode('string_escape')
+        trade, b = decodefunc(trade)
+        print trade
 
-        #split main line
-        main_splitter = shlex.shlex(line.strip(), posix=True)
+    #split main line
+        main_splitter = shlex.shlex(trade.strip(), posix=True)
         main_splitter.whitespace += ';'
         main_splitter.whitespace_split = True
         trade = list(main_splitter)
