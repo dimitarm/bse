@@ -64,10 +64,7 @@ def featTypicalPrice(dData):
     return (dData['high'] + dData['low'] + dData['close']) / 3
 
 def featMFI(dData, lLookback=14):
-    #dfPriceTyp = featTypicalPrice(dData)
-    
-    dfPriceTyp = dData['close']
-    
+    dfPriceTyp = featTypicalPrice(dData)
     dfMF = dfPriceTyp * dData['volume']
     dfPriceTypt1 = dfPriceTyp.shift(1)
     dfUptrend = dfPriceTyp > dfPriceTypt1
@@ -93,6 +90,13 @@ def tradeRuleMFI(mfit1, mfi):
     if mfit1 <= 30 and mfi > 70:
         return -1 #sell
     return 0 #hold
+
+def featMFITradingRule(dData, lLookback = 14):
+    dfMFI = featMFI(dData, lLookback)
+    dfMFIt1 = dfMFI.shift(1)
+    rule_func = np.vectorize(tradeRuleMFI)
+    return pand.DataFrame(data=rule_func(dfMFIt1, dfMFI), index=dfMFI.index, columns=dfMFI.columns)    
+    
     
     
 if __name__ == '__main__':
