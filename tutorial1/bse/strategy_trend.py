@@ -61,7 +61,7 @@ def svmLearner(na_data, na_class):
 
 def adaBoostLearner(na_data, na_class):
     baseClf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='rbf', probability=True, shrinking=True, tol=0.001, verbose=False)
-    clf = AdaBoostClassifier(n_estimators=100, base_estimator=baseClf)
+    clf = AdaBoostClassifier(n_estimators=100)
     clf.fit(na_data, na_class)    
     return clf
 
@@ -85,8 +85,8 @@ if __name__ == '__main__':
     dData = dict(zip(lsKeys, ldfData))
     
     
-#    lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featAroonDown, featVolumeDelta, featStochastic, featVolume, featBollinger)
-    lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featRSI)
+    lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featAroonDown, featVolumeDelta, featStochastic, featVolume, featBollinger)
+#    lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featRSI)
     
     #default parameters
     ld_FeatureParameters = {}
@@ -112,7 +112,7 @@ if __name__ == '__main__':
 
     t1 = datetime.now()
     
-    testLearner(dData, lfc_TestFeatures, featTrend, ld_FeatureParameters, adaBoostLearner, i_lookback = i_lookback, i_trainPeriod = 60, i_forwardlook = i_forwardlook)
+    testLearner(dData, lfc_TestFeatures, featTrend, ld_FeatureParameters, adaBoostLearner, i_lookback = i_lookback, i_trainPeriod = 120, i_forwardlook = i_forwardlook)
     t2 = datetime.now()
     tdelta = t2 - t1
     print "testLearner " + str(tdelta) + " seconds"

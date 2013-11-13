@@ -31,6 +31,7 @@ from sklearn import svm
 from sklearn import cross_validation
 from sklearn.ensemble import AdaBoostClassifier
 from bse.utils import tools
+import utils.data as datautil
 
 def executePredictionAlgorithm():
     pass
@@ -54,6 +55,7 @@ def findBestCombination (d_dfData, li_param, lfc_TestFeatures, fc_Classification
     #test each combination
     na_errRate = np.empty((0, 2))
     for i_C in li_param:
+        #baseClf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='rbf', probability=True, shrinking=True, tol=0.001, verbose=False)
         clf = AdaBoostClassifier(n_estimators=i_C)
         clf.fit(na_TrainSet, na_TrainClass)
         
@@ -76,10 +78,10 @@ def findBestCombination (d_dfData, li_param, lfc_TestFeatures, fc_Classification
 
 if __name__ == '__main__':
     
-    lsSym = np.array(['SOFIX', '3JR'])
+    lsSym = np.array(['SOFIX'])
     
     ''' Get data for 2009-2010 '''
-    dtStart = dt.datetime(2011,1,1)
+    dtStart = dt.datetime(2012,1,1)
     dtEnd = dt.datetime(2013,1,1)
     
     dataobj = da.DataAccess(da.DataSource.CUSTOM)      
@@ -87,11 +89,15 @@ if __name__ == '__main__':
     
     lsKeys = ['open', 'high', 'low', 'close', 'volume']
     ldfData = dataobj.get_data( ldtTimestamps, lsSym, lsKeys, verbose=True )
-    
     dData = dict(zip(lsKeys, ldfData))
 
+    #dData = datautil.get_random_data(l_keys = lsKeys, l_index = ldtTimestamps, l_symbols = lsSym)
+    #plt.clf()
+    #plt.plot(ldtTimestamps, dData['close'])
+    #plt.show()  
+
     ldArgs = list()
-    lfc_TestFeatures = (featBollinger, featEMA, featMA, featStochastic)
+    lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featVolumeDelta, featStochastic, featBollinger, featVolume)
     #default parameters
     ld_FeatureParameters = {}
     for fc_feat in lfc_TestFeatures:
@@ -114,7 +120,7 @@ if __name__ == '__main__':
          
 
     t1 = datetime.now()
-    findBestCombination(dData, np.arange(1, 100, 1), lfc_TestFeatures, bseclasses.featTrend, ld_FeatureParameters)
+    findBestCombination(dData, np.arange(1, 200, 2), lfc_TestFeatures, bseclasses.featTrend, ld_FeatureParameters)
     t2 = datetime.now()
     tdelta = t2 - t1
     print "ready " + str(tdelta) + " seconds"

@@ -111,20 +111,20 @@ def tradeRuleMACD(macdt1, macd, macds):
         return -1  # sell
     return 0  # hold
 
-def featRSITradingRule(dData, lLookback = 9):
-    dfRSI = qstkfeat.featRSI(dData, lLookback = lLookback)
+def featRSITradingRule(dData, lLookback=9):
+    dfRSI = qstkfeat.featRSI(dData, lLookback=lLookback)
     dfRSIt1 = dfRSI.shift(1)
     ruleFunc = np.vectorize(tradeRuleRSI)
-    return pand.DataFrame(data=ruleFunc(dfRSIt1, dfRSI), index = dfRSI.index, columns=dfRSI.columns)
+    return pand.DataFrame(data=ruleFunc(dfRSIt1, dfRSI), index=dfRSI.index, columns=dfRSI.columns)
 
 def tradeRuleRSI(rsit1, rsi):
     if math.isnan(rsit1) or math.isnan(rsi):
         return np.nan
     if rsit1 >= 30 and rsi < 70:
-        return 1 #buy
+        return 1  # buy
     if rsit1 <= 30 and rsi > 70:
-        return -1 #sell
-    return 0 #hold
+        return -1  # sell
+    return 0  # hold
 
 
 
@@ -134,5 +134,6 @@ if __name__ == '__main__':
         
     dData = {}
     index = [str(x) for x in range(100)]
-    dData['close'] = pand.DataFrame(data=np.random.rand(100, 2) * 10, columns=('aaaaaa', 'bb'), index = index)
+    dData['close'] = pand.DataFrame(data=(24.63, 24.69, 24.99, 25.36, 25.19, 25.17, 25.01, 24.96, 25.08, 25.25, 25.21, 25.37, 25.61, 25.58, 25.46, 25.33, 25.09, 25.03, 24.91, 24.89, 25.13, 24.64, 24.51, 24.15, 23.98, 24.07, 24.36, 24.35, 24.14, 24.81),
+                                    columns=('aaaaaa'), index=index)
     print featRSITradingRule(dData, lLookback=2)
