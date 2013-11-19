@@ -64,13 +64,13 @@ def tradeRuleAcceleration(accel, accel1):
         return -1  # sell
     return 0  # hold
 
-def featRateOfChange(dData, serie='close', lLookback=10):
+def featROC(dData, serie='close', lLookback=10):
     dfPrice = dData[serie]
     dfPriceTn = dfPrice.shift(lLookback)
     return ((dfPrice - dfPriceTn) * 100) / dfPriceTn
 
 def featRateOfChangeTradingRule(dData, serie='close', lLookback=10):
-    dfRoc = featRateOfChange(dData, serie, lLookback)
+    dfRoc = featROC(dData, serie, lLookback)
     dfRoc1 = dfRoc.shift(1)
     ruleFunc = np.vectorize(tradeRuleRoc)
     return pand.DataFrame(data=ruleFunc(dfRoc, dfRoc1), index=dfRoc.index, columns=dfRoc.columns) 
