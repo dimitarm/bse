@@ -47,8 +47,8 @@ def testLearner(d_dfData, t_fcTestFeatures, fc_ClassificationFeature, ld_Feature
     
     na_mainData = scaler.transform(na_data[:,:-1])
     na_classData = na_data[:,-1]
-    for i in range(i_trainPeriod, na_data.shape[0] - i_forwardlook - 1):
-        clf = fc_learnerFactory(na_mainData[i - i_trainPeriod:i-1,:], na_classData[i - i_trainPeriod:i-1])
+    for i in range(i_trainPeriod, na_data.shape[0] - i_forwardlook + 1):
+        clf = fc_learnerFactory(na_mainData[i - i_trainPeriod:i,:], na_classData[i - i_trainPeriod:i])
         i_prediction = clf.predict(na_mainData[i,:])
         if (i_prediction == na_classData[i]):
             success += 1
@@ -61,10 +61,76 @@ def svmLearner(na_data, na_class):
 
 def adaBoostLearner(na_data, na_class):
     baseClf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='rbf', probability=True, shrinking=True, tol=0.001, verbose=False)
-    clf = AdaBoostClassifier(n_estimators=100)
+    clf = AdaBoostClassifier(base_estimator = baseClf, n_estimators=50)
     clf.fit(na_data, na_class)    
     return clf
 
+def findBestFeatCobination(na_data, b_Plot = False):
+    maxSuccess = -1
+    combinations = 0
+    #test each combination
+    maxSuccess = -1
+    combinations = 0
+    
+    l_featCombinations = ()
+    for i in range(1, na_data.shape[1] + 1):
+        l_featCombinations.apend(itertools.combinations(range(0, na_data.shape[1]), i))
+    for lfc_combination in lfc_featCombinationSet:
+        na_data = np.empty((na_featuresData.shape[0], 0))
+        #stack feat data from combination
+        for fcFeat in lfc_combination:
+            i_featIndex = l_fcFeatures.index(fcFeat)
+            na_data = np.hstack((na_data, na_featuresData[:, i_featIndex].reshape(na_featuresData.shape[0], 1)))
+        #stack classification data
+        na_data = np.hstack((na_data, na_featuresData[:, -1].reshape(na_featuresData.shape[0], 1)))
+        scaler = preprocessing.StandardScaler().fit(na_data[:,:-1])
+        
+        na_TrainSet, na_TestSet = cross_validation.train_test_split(na_data, test_size=0.3, random_state=1)
+        
+        na_TrainClass = na_TrainSet[:,-1]
+        na_TrainSet = na_TrainSet[:,:-1]
+        na_TrainSet = scaler.transform(na_TrainSet)
+    
+        na_TestClass = na_TestSet[:,-1]
+        na_TestSet = na_TestSet[:,:-1]
+        na_TestSet = scaler.transform(na_TestSet)
+        
+        clf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='rbf', probability=False, shrinking=True, tol=0.001, verbose=False)
+        #clf = neighbors.KNeighborsClassifier(n_neighbors = 20)
+        clf.fit(na_TrainSet, na_TrainClass)
+ 
+        na_Prediction = clf.predict(na_TestSet)
+        
+        success = metrics.metrics.accuracy_score(na_TestClass, na_Prediction)
+        if success > maxSuccess:
+            maxSuccess = success
+            maxClf = clf
+            l_maxFeatSet = list()
+            for feat in lfc_combination:
+                l_maxFeatSet.append(feat.func_name)
+            l_maxFeatSet.sort()
+            metric = "None"
+            print "Test:" + str(success) + " combination: " + str(l_maxFeatSet) + " " + "-1" + ": " + str(metrics.metrics.f1_score(na_TestClass, na_Prediction, pos_label = -1))  + " " + "1" + ": " + str(metrics.metrics.f1_score(na_TestClass, na_Prediction, pos_label = 1))
+            clf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='rbf', probability=False, shrinking=True, tol=0.001, verbose=False)
+            scores = cross_validation.cross_val_score(clf, na_data[:,:-1], na_data[:,-1], cv=5)            
+            print str(scores)
+            print "test data: " + str(np.histogram(na_TestClass, 2))
+            print ""
+            if b_Plot == True:
+                plt.clf()
+                for i in range(0, na_TrainClass.shape[0]):
+                    if na_TrainClass[i] == 1:
+                        plt.plot( na_TrainSet[i][0], na_TrainSet[i][1], 'g+' )
+                    elif na_TrainClass[i] == -1:
+                        plt.plot( na_TrainSet[i][0], na_TrainSet[i][1], 'ro' )
+                    else:
+                        plt.plot( na_TrainSet[i][0], na_TrainSet[i][1], 'kx' )
+                plt.ylabel(lfc_combination[0].func_name)
+                plt.xlabel(lfc_combination[1].func_name)
+                plt.show()            
+        combinations += 1
+    print str(combinations) + " combinations tested"
+    return l_maxFeatSet, maxSuccess
 
 
 if __name__ == '__main__':
@@ -112,7 +178,7 @@ if __name__ == '__main__':
 
     t1 = datetime.now()
     
-    testLearner(dData, lfc_TestFeatures, featTrend, ld_FeatureParameters, adaBoostLearner, i_lookback = i_lookback, i_trainPeriod = 120, i_forwardlook = i_forwardlook)
+    testLearner(dData, lfc_TestFeatures, featTrend, ld_FeatureParameters, adaBoostLearner, i_lookback = i_lookback, i_trainPeriod = 60, i_forwardlook = i_forwardlook)
     t2 = datetime.now()
     tdelta = t2 - t1
     print "testLearner " + str(tdelta) + " seconds"

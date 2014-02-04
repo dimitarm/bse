@@ -65,10 +65,10 @@ def featBollingerTradeRule( dData, serie = 'close', lLookback = 20):
     
     naRet = ruleFunc(dfPt1.values, dData[serie].values, dfBollUp.values, dfBollDown.values)
     dfRet = pand.DataFrame(data=naRet, index=dData[serie].index, columns=dData[serie].columns)
-    print dfRet
+    return dfRet
 
 def tradeRuleBollinger(pt1, pt, bu, bd):
-    if pt1 == np.nan or pt == np.nan or bu == np.nan or bd == np.nan:
+    if math.isnan(pt1) or math.isnan(pt) or math.isnan(bu) or math.isnan(bd):
         return np.nan
     if pt1 >= bd and pt < bu:
         return 1 #buy

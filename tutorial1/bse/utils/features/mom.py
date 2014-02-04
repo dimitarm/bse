@@ -33,10 +33,10 @@ def featMomentumTradeRule(dData, serie='close', lambd=0.75, lLookback=20):
     dfEmaMom = pricefeat.featEMAlambda(dDataMOM, serie=serie, lambd=lambd)
 
     ruleFunc = np.vectorize(tradeRuleMomentum)
-    return pand.DataFrame(data=ruleFunc(dfMomentum.values, dfMomentum1.values, dfEmaMom.values), index=dfMomentum.index, columns=dfMomentum.columns)
+    return pand.DataFrame(data=ruleFunc(dfMomentum, dfMomentum1, dfEmaMom), index=dfMomentum.index, columns=dfMomentum.columns)
 
 def tradeRuleMomentum(mom, momt1, ema):
-    if mom == np.nan or momt1 == np.nan or ema == np.nan:
+    if math.isnan(mom) or math.isnan(momt1) or math.isnan(ema):
         return np.nan
     if momt1 <= ema and mom > ema:
         return 1  # buy
@@ -56,7 +56,7 @@ def featAccelerationTradingRule(dData, serie='close', lLookback=20):
     return pand.DataFrame(data=ruleFunc(dfAcceleration, dfAcceleration1), index=dfAcceleration.index, columns=dfAcceleration.columns)
  
 def tradeRuleAcceleration(accel, accel1):
-    if accel == np.nan or accel1 == np.nan:
+    if math.isnan(accel) or math.isnan(accel):
         return np.nan
     if accel1 + 1 <= 0 and accel + 1 > 0:
         return 1  # buy
@@ -111,6 +111,11 @@ def tradeRuleMACD(macdt1, macd, macds):
         return -1  # sell
     return 0  # hold
 
+def featMACDR(dData, slow=26, fast=12, lLookback=9):
+    dfMACD = featMACD(dData, slow = slow, fast = fast)
+    dfMACDS = featMACDS(dData, slow = slow, fast = fast, lLookback = lLookback)
+    return dfMACD/dfMACDS   
+
 def featRSITradingRule(dData, lLookback=9):
     dfRSI = qstkfeat.featRSI(dData, lLookback=lLookback)
     dfRSIt1 = dfRSI.shift(1)
@@ -126,14 +131,8 @@ def tradeRuleRSI(rsit1, rsi):
         return -1  # sell
     return 0  # hold
 
-
-
-
-
 if __name__ == '__main__':
         
     dData = {}
-    index = [str(x) for x in range(100)]
-    dData['close'] = pand.DataFrame(data=(24.63, 24.69, 24.99, 25.36, 25.19, 25.17, 25.01, 24.96, 25.08, 25.25, 25.21, 25.37, 25.61, 25.58, 25.46, 25.33, 25.09, 25.03, 24.91, 24.89, 25.13, 24.64, 24.51, 24.15, 23.98, 24.07, 24.36, 24.35, 24.14, 24.81),
-                                    columns=('aaaaaa'), index=index)
-    print featRSITradingRule(dData, lLookback=2)
+    dData['close'] = pand.DataFrame(data=[86.1557,89.0867,88.7829,90.3228,89.0671,91.1453,89.4397,89.175,86.9302,87.6752,86.9596,89.4299,89.3221,88.7241,87.4497,87.2634,89.4985,87.9006,89.126,90.7043,92.9001,92.9784,91.8021,92.6647,92.6843,92.3021,92.7725,92.5373,92.949,93.2039,91.0669,89.8318,89.7435,90.3994,90.7387,88.0177,88.0867,88.8439,90.7781,90.5416,91.3894,90.65], columns=['aaaaaa'])
+    print featRSITradingRule(dData, lLookback=5)
