@@ -147,7 +147,7 @@ def getBestFeaturesCombinationForwardSearch(na_featData, na_class, fc_learnerFac
             clf_bestCLF = clf_bestIntCLF
         else:
             break    
-    print "success: " + str(i_bestIntResult) + " " + str(l_featBestSet)
+    #print "success: " + str(i_bestIntResult) + " " + str(l_featBestSet)
     return clf_bestCLF, l_featBestSet
         
         

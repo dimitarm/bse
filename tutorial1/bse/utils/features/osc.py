@@ -30,7 +30,7 @@ def tradeRuleFAST(fastkt1, fastkt, fastd):
     return 0  # hold
 
 def featFASTTradingRule(dData, serie='close', lLookback=12):
-    dfFastkt = featFASTK(dData=dData, serie=serie, lLookBack=lLookback)
+    dfFastkt = featFASTK(dData=dData, serie=serie, lLookback=lLookback)
     dfFastkt1 = dfFastkt.shift(1)
     dfFastd = featFASTD(dData=dData, serie=serie, lLookback=lLookback)
     rule_func = np.vectorize(tradeRuleFAST)

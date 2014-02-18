@@ -24,6 +24,7 @@ import QSTK.qstkfeat.featutil as ftu
 import QSTK.qstkutil.tsutil as tsutil
 import utils.dateutil as bsedateutil
 import utils.data as datautil
+import utils.features.feats as bsefeats
 
 from utils.classes import *
 from utils import tools as bsetools
@@ -40,7 +41,7 @@ from sklearn.ensemble import AdaBoostClassifier
 def testLearner(d_dfData, t_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, fc_learnerFactory, i_lookback, i_trainPeriod, i_forwardlook, b_Plot = False):
     l_fcFeatures = list(t_fcTestFeatures)
     l_fcFeatures.append(fc_ClassificationFeature)
-    na_data = bsetools.calculateFeaturesNA(d_dfData, '3JR', l_fcFeatures, ld_FeatureParameters)
+    na_data = bsetools.calculateFeaturesNA(d_dfData, 'SOFIX', l_fcFeatures, ld_FeatureParameters)
     #fill forward
     tsutil.fillforward(na_data)
     #fillbackward
@@ -53,11 +54,15 @@ def testLearner(d_dfData, t_fcTestFeatures, fc_ClassificationFeature, ld_Feature
     
     na_mainData = scaler.transform(na_data[:,:-1])
     na_classData = na_data[:,-1]#.reshape(na_data.shape[0], 1)
+    count = 0
     for i in range(i_trainPeriod, na_data.shape[0] - i_forwardlook + 1):
+        hit = 0
         i_prediction = fc_learnerFactory(na_mainData[i - i_trainPeriod:i,:], na_classData[i - i_trainPeriod:i], na_mainData[i,:])
         if (i_prediction == na_classData[i]):
             success += 1
-    print "success rate: " + str(success/(na_data.shape[0] - i_forwardlook - i_trainPeriod))
+            hit = 1
+        count += 1
+    print "success rate: " + str(success/count)
 
 def svmLearner(na_train, na_class, na_data):
     clf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='rbf', probability=False, shrinking=True, tol=0.001, verbose=False)
@@ -81,7 +86,7 @@ def knnBestFeatCombinationLearner(na_train, na_class, na_data):
     return clf.predict(na_data[:, l_featInd])
 
 def adaBoostBestFeatCombinationLearner(na_train, na_class, na_data):
-    clf, l_featInd = findBestFeatCombinationLearner(na_train, na_class, lambda : AdaBoostClassifier(n_estimators=50))
+    clf, l_featInd = findBestFeatCombinationLearner(na_train, na_class, lambda : AdaBoostClassifier(n_estimators=20))
     return clf.predict(na_data[:, l_featInd])
     
 def svmBestFeatCombinationLearner(na_train, na_class, na_data):
@@ -94,13 +99,13 @@ def findBestFeatCombinationLearner(na_train, na_class, fc_learnerFactory):
     return bsetools.getBestFeaturesCombinationForwardSearch(na_train, na_class, fc_learnerFactory)
 
 if __name__ == '__main__':
-    i_forwardlook = 1
-    i_lookback = 20
-    lsSym = np.array(['3JR'])
+    i_forwardlook = 5
+    i_lookback = 26
+    lsSym = np.array(['SOFIX'])
     
     ''' Get data for 2009-2010 '''
-    dtStart = dt.datetime(2010,1,1)
-    dtEnd = dt.datetime(2011,1,1)
+    dtStart = dt.datetime(2013,2,18)
+    dtEnd = dt.datetime(2014,2,17)
     dataobj = da.DataAccess(da.DataSource.CUSTOM)      
     lsKeys = ['open', 'high', 'low', 'close', 'volume']
 
@@ -135,9 +140,12 @@ if __name__ == '__main__':
     ld_FeatureParameters[featVolume] = {}
          
 
+    lfc_TestFeatures, ld_FeatureParameters = bsefeats.get_feats()
+    ld_FeatureParameters[featTrend] = {'lForwardlook':i_forwardlook}
+
     t1 = datetime.now()
     
-    testLearner(dData, lfc_TestFeatures, featTrend, ld_FeatureParameters, svmLearner, i_lookback = i_lookback, i_trainPeriod = 120, i_forwardlook = i_forwardlook)
+    testLearner(dData, lfc_TestFeatures, featTrend, ld_FeatureParameters, adaBoostLearner, i_lookback = i_lookback, i_trainPeriod = 120, i_forwardlook = i_forwardlook)
     t2 = datetime.now()
     tdelta = t2 - t1
     print str(tdelta) + " seconds"
