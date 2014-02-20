@@ -5,7 +5,7 @@ Created on Jul 19, 2013
 '''
 import unittest
 import pandas as pand
-import bse.utils.features as bsefeatures
+import bse.utils.classes as bseclasses
 import numpy as np
 
 class Test(unittest.TestCase):
@@ -30,7 +30,7 @@ class Test(unittest.TestCase):
         df_orgDatacopy = df_data.copy()
         d_featdata = {'close': df_data, 'dfg' : df_data}
         
-        d_featResData = bsefeatures.featTrend(d_featdata, lForwardlook=2)
+        d_featResData = bseclasses.featTrend(d_featdata, lForwardlook=2)
         
         self.assertEqual(len(d_featResData.index) , len(d_featdata['close'].index), 'lengths not equal')
         

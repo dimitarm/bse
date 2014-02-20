@@ -33,10 +33,10 @@ def featMomentumTradeRule(dData, serie='close', lambd=0.75, lLookback=20):
     dfEmaMom = pricefeat.featEMAlambda(dDataMOM, serie=serie, lambd=lambd)
 
     ruleFunc = np.vectorize(tradeRuleMomentum)
-    return pand.DataFrame(data=ruleFunc(dfMomentum.values, dfMomentum1.values, dfEmaMom.values), index=dfMomentum.index, columns=dfMomentum.columns)
+    return pand.DataFrame(data=ruleFunc(dfMomentum, dfMomentum1, dfEmaMom), index=dfMomentum.index, columns=dfMomentum.columns)
 
 def tradeRuleMomentum(mom, momt1, ema):
-    if mom == np.nan or momt1 == np.nan or ema == np.nan:
+    if math.isnan(mom) or math.isnan(momt1) or math.isnan(ema):
         return np.nan
     if momt1 <= ema and mom > ema:
         return 1  # buy
@@ -56,7 +56,7 @@ def featAccelerationTradingRule(dData, serie='close', lLookback=20):
     return pand.DataFrame(data=ruleFunc(dfAcceleration, dfAcceleration1), index=dfAcceleration.index, columns=dfAcceleration.columns)
  
 def tradeRuleAcceleration(accel, accel1):
-    if accel == np.nan or accel1 == np.nan:
+    if math.isnan(accel) or math.isnan(accel):
         return np.nan
     if accel1 + 1 <= 0 and accel + 1 > 0:
         return 1  # buy
@@ -64,13 +64,13 @@ def tradeRuleAcceleration(accel, accel1):
         return -1  # sell
     return 0  # hold
 
-def featRateOfChange(dData, serie='close', lLookback=10):
+def featROC(dData, serie='close', lLookback=10):
     dfPrice = dData[serie]
     dfPriceTn = dfPrice.shift(lLookback)
     return ((dfPrice - dfPriceTn) * 100) / dfPriceTn
 
 def featRateOfChangeTradingRule(dData, serie='close', lLookback=10):
-    dfRoc = featRateOfChange(dData, serie, lLookback)
+    dfRoc = featROC(dData, serie, lLookback)
     dfRoc1 = dfRoc.shift(1)
     ruleFunc = np.vectorize(tradeRuleRoc)
     return pand.DataFrame(data=ruleFunc(dfRoc, dfRoc1), index=dfRoc.index, columns=dfRoc.columns) 
@@ -111,28 +111,28 @@ def tradeRuleMACD(macdt1, macd, macds):
         return -1  # sell
     return 0  # hold
 
-def featRSITradingRule(dData, lLookback = 9):
-    dfRSI = qstkfeat.featRSI(dData, lLookback = lLookback)
+def featMACDR(dData, slow=26, fast=12, lLookback=9):
+    dfMACD = featMACD(dData, slow = slow, fast = fast)
+    dfMACDS = featMACDS(dData, slow = slow, fast = fast, lLookback = lLookback)
+    return dfMACD/dfMACDS   
+
+def featRSITradingRule(dData, lLookback=9):
+    dfRSI = qstkfeat.featRSI(dData, lLookback=lLookback)
     dfRSIt1 = dfRSI.shift(1)
     ruleFunc = np.vectorize(tradeRuleRSI)
-    return pand.DataFrame(data=ruleFunc(dfRSIt1, dfRSI), index = dfRSI.index, columns=dfRSI.columns)
+    return pand.DataFrame(data=ruleFunc(dfRSIt1, dfRSI), index=dfRSI.index, columns=dfRSI.columns)
 
 def tradeRuleRSI(rsit1, rsi):
     if math.isnan(rsit1) or math.isnan(rsi):
         return np.nan
     if rsit1 >= 30 and rsi < 70:
-        return 1 #buy
+        return 1  # buy
     if rsit1 <= 30 and rsi > 70:
-        return -1 #sell
-    return 0 #hold
-
-
-
-
+        return -1  # sell
+    return 0  # hold
 
 if __name__ == '__main__':
         
     dData = {}
-    index = [str(x) for x in range(100)]
-    dData['close'] = pand.DataFrame(data=np.random.rand(100, 2) * 10, columns=('aaaaaa', 'bb'), index = index)
-    print featRSITradingRule(dData, lLookback=2)
+    dData['close'] = pand.DataFrame(data=[86.1557,89.0867,88.7829,90.3228,89.0671,91.1453,89.4397,89.175,86.9302,87.6752,86.9596,89.4299,89.3221,88.7241,87.4497,87.2634,89.4985,87.9006,89.126,90.7043,92.9001,92.9784,91.8021,92.6647,92.6843,92.3021,92.7725,92.5373,92.949,93.2039,91.0669,89.8318,89.7435,90.3994,90.7387,88.0177,88.0867,88.8439,90.7781,90.5416,91.3894,90.65], columns=['aaaaaa'])
+    print featRSITradingRule(dData, lLookback=5)

@@ -89,18 +89,11 @@ class TestTools(unittest.TestCase):
         self.assertTrue((na_exData == na_res).all())
         
                 
-    def testgetTrainTestValidationSets(self):
-        na_data = np.array([[1, 3, 8, 10], [5, 2, 9, 11], [7, 4, 3, 5], [2, 8, 7, 6]])
-        na_exTrainSet = np.array([[1, 3, 8, 10], [2, 8, 7, 6]])
-        na_exValSet = np.array([[5, 2, 9, 11]])
-        na_exTestSet = np.array([[7, 4, 3, 5]])
-        (na_TrainSet, na_ValSet, na_TestSet) = tools.getTrainTestValidationSets(na_data, trainSetValidationFunc)
-        np.testing.assert_array_equal(na_exTrainSet, na_TrainSet)
-        np.testing.assert_array_equal(na_exValSet, na_ValSet)
-        np.testing.assert_array_equal(na_exTestSet, na_TestSet)
-
-def trainSetValidationFunc(iIndex, na_data):
-    return iIndex%3
+    def testFeaturesCombination(self):
+        na_data = np.array([[1, 2, 3], [2, 3, 4], [5, 6, 7]])
+        na_exData = np.array([[1, 3], [2, 4], [5, 7]])
+        na_res = tools.getFeaturesCombination(na_data, (0, 2))
+        np.testing.assert_array_equal(na_exData, na_res)
     
 if __name__ == '__main__':
     pass                

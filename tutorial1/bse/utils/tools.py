@@ -6,6 +6,8 @@ Created on Jun 28, 2013
 import math
 import numpy as np
 import QSTK.qstkutil.tsutil as tsutil
+from sklearn import cross_validation
+from sklearn import metrics 
 
 def getAllFeaturesCombinationsList(l_items):
     ll_retItems = list()
@@ -71,28 +73,82 @@ def calculateFeaturesNA(d_dfData, s_symbol, lfc_Features, ld_FeatureParameters):
     #return na_dataWithoutNans
     return na_features
 
-def getTrainTestValidationSets(na_data, fc_func):
-    na_TrainSet = np.empty((0, na_data.shape[1]))
-    na_ValidationSet = np.empty((0, na_data.shape[1]))
-    na_TestSet = np.empty((0, na_data.shape[1]))
+def getFeaturesCombination(na_featData, l_featCombination):
+    na_data = np.empty((na_featData.shape[0], 0))
+    #stack feat data from combination
+    for i_featIndex in l_featCombination:
+        na_data = np.hstack((na_data, na_featData[:, i_featIndex].reshape(na_featData.shape[0], 1)))
+    return na_data
     
-    for i in range(0, na_data.shape[0]):
-        vote = fc_func(i, na_data)
-        if vote == 0:
-            na_TrainSet = np.vstack((na_TrainSet, na_data[i,:]))
-        elif vote == 1:
-            na_ValidationSet = np.vstack((na_ValidationSet, na_data[i,:]))
+def getBestFeaturesCombinationBruteSearch(na_featData, na_class, l_featCombinations, fc_learnerFactory):
+    i_bestResult = -1
+    for l_featCombination in l_featCombinations:
+        na_TrainSet = getFeaturesCombination(na_featData, l_featCombination)
+        #stack feat data and class
+        na_TrainSet = np.hstack((na_TrainSet, na_class))
+        na_TrainSet, na_TestSet = cross_validation.train_test_split(na_TrainSet, test_size=0.3, random_state=1)
+
+        na_TrainClass = na_TrainSet[:,-1]
+        na_TrainSet = na_TrainSet[:,:-1]
+    
+        na_TestClass = na_TestSet[:,-1]
+        na_TestSet = na_TestSet[:,:-1]
+
+        clf = fc_learnerFactory()
+        clf.fit(na_TrainSet, na_TrainClass)
+        #make prediction
+        na_Prediction = clf.predict(na_TestSet)
+        #calculate result
+        success = metrics.metrics.accuracy_score(na_TestClass, na_Prediction)
+        #check result with best so far
+        if success > i_bestResult:
+            i_bestResult = success
+            clf_bestCLF = clf
+            l_bestFeatCombination = l_featCombination
+    print "best success: " + str(i_bestResult)
+    return clf_bestCLF, l_bestFeatCombination
+
+def getBestFeaturesCombinationForwardSearch(na_featData, na_class, fc_learnerFactory):
+    i_BestResult = -1
+    l_featBestSet = list()
+    l_untestedFeats = range(0, na_featData.shape[1])
+    for ll in range(0, na_featData.shape[1]):
+        i_bestIntResult = -1
+        #iterate over all untested features
+        for i_curFeat in l_untestedFeats:
+            #initialize with best feat combination so far
+            l_curFeatSet = list(l_featBestSet)
+            #append current feature index
+            l_curFeatSet.append(i_curFeat)
+            #get features
+            na_TrainSet = getFeaturesCombination(na_featData, l_curFeatSet)
+            #test again feature set
+            na_TrainSet = np.hstack((na_TrainSet, na_class.reshape(na_class.shape[0], 1)))
+            na_TrainSet, na_TestSet = cross_validation.train_test_split(na_TrainSet, test_size=0.3, random_state=1)
+            na_TrainClass = na_TrainSet[:,-1]
+            na_TrainSet = na_TrainSet[:,:-1]
+            na_TestClass = na_TestSet[:,-1]
+            na_TestSet = na_TestSet[:,:-1]
+            #fit learner
+            clf = fc_learnerFactory()
+            clf.fit(na_TrainSet, na_TrainClass)
+            #make prediction
+            na_Prediction = clf.predict(na_TestSet)
+            #calculate result
+            success = metrics.metrics.accuracy_score(na_TestClass, na_Prediction)
+            if success > i_bestIntResult:
+                i_bestIntResult = success
+                l_bestFeatIndex = i_curFeat
+                clf_bestIntCLF = clf
+        if i_bestIntResult > i_BestResult:
+            i_BestResult = i_bestIntResult
+            l_featBestSet.append(l_bestFeatIndex)
+            l_untestedFeats.remove(l_bestFeatIndex)
+            clf_bestCLF = clf_bestIntCLF
         else:
-            na_TestSet = np.vstack((na_TestSet, na_data[i,:]))
+            break    
+    #print "success: " + str(i_bestIntResult) + " " + str(l_featBestSet)
+    return clf_bestCLF, l_featBestSet
         
-    return na_TrainSet, na_ValidationSet, na_TestSet
-
-
-def defaultTrainTestValidationFunc(i_Index, na_Data):
-    if i_Index < na_Data.shape[0]*0.6:
-        return 0
-    elif i_Index < na_Data.shape[0]*0.8:
-        return 1
-    else:
-        return 2
-    
+        
+        
