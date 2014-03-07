@@ -41,7 +41,6 @@ def featCHO(dData, lLookback1=3, lLookback2=10):
 def featChaikinTradeRule(dData, lLookback1=3, lLookback2=10):
     rule_func = np.vectorize(lambda y: math.copysign(1, y))
     dfCHO = featCHO(dData, lLookback1, lLookback2)
-    print dfCHO
     return pand.DataFrame(data=rule_func(dfCHO.values), index=dfCHO.index, columns=dfCHO.columns)
 
 def featNVI(dData, iInitValue=100):

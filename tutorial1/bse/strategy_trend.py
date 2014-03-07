@@ -41,7 +41,7 @@ from sklearn.ensemble import AdaBoostClassifier
 def testLearner(d_dfData, t_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, fc_learnerFactory, i_lookback, i_trainPeriod, i_forwardlook, b_Plot = False):
     l_fcFeatures = list(t_fcTestFeatures)
     l_fcFeatures.append(fc_ClassificationFeature)
-    na_data = bsetools.calculateFeaturesNA(d_dfData, 'SOFIX', l_fcFeatures, ld_FeatureParameters)
+    na_data = bsetools.calculateFeaturesNA(d_dfData, '3JR', l_fcFeatures, ld_FeatureParameters)
     #fill forward
     tsutil.fillforward(na_data)
     #fillbackward
@@ -90,8 +90,8 @@ def adaBoostBestFeatCombinationLearner(na_train, na_class, na_data):
     return clf.predict(na_data[:, l_featInd])
     
 def svmBestFeatCombinationLearner(na_train, na_class, na_data):
-    clf, l_featInd = findBestFeatCombinationLearner(na_train, na_class, lambda : svm.SVC(probability=True))
-    clf = svm.SVC(probability=True)
+    clf, l_featInd = findBestFeatCombinationLearner(na_train, na_class, lambda : svm.SVC())
+    clf = svm.SVC()
     clf.fit(na_train[:, l_featInd], na_class)
     return clf.predict(na_data[:, l_featInd])
 
@@ -99,18 +99,18 @@ def findBestFeatCombinationLearner(na_train, na_class, fc_learnerFactory):
     return bsetools.getBestFeaturesCombinationForwardSearch(na_train, na_class, fc_learnerFactory)
 
 if __name__ == '__main__':
-    i_forwardlook = 5
+    i_forwardlook = 1
     i_lookback = 26
-    lsSym = np.array(['SOFIX'])
+    lsSym = np.array(['3JR'])
     
     ''' Get data for 2009-2010 '''
-    dtStart = dt.datetime(2013,2,18)
-    dtEnd = dt.datetime(2014,2,17)
+    dtStart = dt.datetime(2012,2,18)
+    dtEnd = dt.datetime(2013,2,17)
     dataobj = da.DataAccess(da.DataSource.CUSTOM)      
     lsKeys = ['open', 'high', 'low', 'close', 'volume']
 
     #get train data
-    ldtTimestamps = bsedateutil.getBSEdays( dtStart, dtEnd, dt.timedelta(hours=16) )
+    ldtTimestamps = bsedateutil.getBSEdays( dtStart, dtEnd)
     ldfData = dataobj.get_data( ldtTimestamps, lsSym, lsKeys, verbose=False )
     
     dData = dict(zip(lsKeys, ldfData))
@@ -123,29 +123,12 @@ if __name__ == '__main__':
     for fc_feat in lfc_TestFeatures:
         ld_FeatureParameters[fc_feat] = {}
         
-    ld_FeatureParameters[featTrend] = {'lForwardlook':i_forwardlook}
-    ld_FeatureParameters[featMomentum] = {'lLookback':i_lookback}  
-    ld_FeatureParameters[featHiLow] = {'lLookback':i_lookback}
-    ld_FeatureParameters[featMA] = {'lLookback':i_lookback}
-    ld_FeatureParameters[featEMA] = {'lLookback':i_lookback}
-    ld_FeatureParameters[featSTD] = {'lLookback':i_lookback}
-    ld_FeatureParameters[featRSI] = {'lLookback':i_lookback}
-    ld_FeatureParameters[featDrawDown] = {'lLookback':i_lookback}
-    ld_FeatureParameters[featRunUp] = {'lLookback':i_lookback}
-    ld_FeatureParameters[featAroon] = {'lLookback':i_lookback}
-    ld_FeatureParameters[featAroonDown] = {'lLookback':i_lookback}
-    ld_FeatureParameters[featVolumeDelta] = {'lLookback':i_lookback}
-    ld_FeatureParameters[featStochastic] = {'lLookback':i_lookback}
-    ld_FeatureParameters[featBollinger] = {'lLookback':i_lookback}
-    ld_FeatureParameters[featVolume] = {}
-         
-
     lfc_TestFeatures, ld_FeatureParameters = bsefeats.get_feats()
     ld_FeatureParameters[featTrend] = {'lForwardlook':i_forwardlook}
 
     t1 = datetime.now()
     
-    testLearner(dData, lfc_TestFeatures, featTrend, ld_FeatureParameters, adaBoostLearner, i_lookback = i_lookback, i_trainPeriod = 120, i_forwardlook = i_forwardlook)
+    testLearner(dData, lfc_TestFeatures, featTrend, ld_FeatureParameters, svmBestFeatCombinationLearner, i_lookback = i_lookback, i_trainPeriod = 60, i_forwardlook = i_forwardlook)
     t2 = datetime.now()
     tdelta = t2 - t1
     print str(tdelta) + " seconds"

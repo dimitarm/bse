@@ -24,11 +24,11 @@ for equity in lines:
 
     url = "http://www.bse-sofia.bg/graphics/phpfiles/MYgethistoDeA.php?MonCode=" + equity + "&MonPays=BE&Periode=1&De=01/01/2009&A=" + datetime.date.today().strftime("%d/%m/%Y") 
     print url
-    urllib2.install_opener(
-        urllib2.build_opener(
-            urllib2.ProxyHandler({'http': 'http://proxy:8080'})
-        )
-    )    
+#    urllib2.install_opener(
+#        urllib2.build_opener(
+#            urllib2.ProxyHandler({'http': 'http://proxy:8080'})
+#        )
+#    )    
     file_trades = urllib2.urlopen(url)
     tradedays = file_trades.readline()
 
@@ -36,7 +36,7 @@ for equity in lines:
 
     with open(local_file_name, 'w+b') as csvfile:
         eqwriter = csv.writer(csvfile, delimiter=',')
-        eqwriter.writerow(["Date" , "Open", "High", "Low", "Close", "AdjClose", "Volumes"])
+        eqwriter.writerow(["Date" , "Open", "High", "Low", "Close", "Volume"])
         trades = list()
         for line in file_trades: 
             #if line.strip():
@@ -56,7 +56,7 @@ for equity in lines:
                 date = list(date_splitter)
                 #2012-12-21,10000,14046.26,1.423,1.4,1.4,1.423
                 trades.append([date[2] + "-" + date[1] + "-" + date[0], 
-                                  float(trade[1])/100, float(trade[2])/100, float(trade[3])/100, float(trade[4])/100, -1, trade[5]])
+                                  float(trade[1])/100, float(trade[2])/100, float(trade[3])/100, float(trade[4])/100, trade[5]])
         trades.reverse()        
         for trade in trades:
             eqwriter.writerow(trade)

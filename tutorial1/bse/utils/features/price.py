@@ -38,7 +38,7 @@ def featBollingerUp( dData, serie = 'close', lLookback = 20):
     dfAvg = pand.rolling_mean(dfPrice, lLookback)
     dfStd = pand.rolling_std(dfPrice, lLookback)
     
-    dfRet = dfAvg + 2.0 * dfStd * dfStd
+    dfRet = dfAvg + 2.0 * dfStd
     return dfRet
    
 def featBollingerDown( dData, serie = 'close', lLookback = 20):
@@ -47,7 +47,7 @@ def featBollingerDown( dData, serie = 'close', lLookback = 20):
     dfAvg = pand.rolling_mean(dfPrice, lLookback)
     dfStd = pand.rolling_std(dfPrice, lLookback)
     
-    dfRet = dfAvg - 2.0 * dfStd * dfStd
+    dfRet = dfAvg - 2.0 * dfStd
     return dfRet
                    
 def featPrice2BollingerUp( dData, serie='close', lLookback = 20):

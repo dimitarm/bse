@@ -22,7 +22,7 @@ def featReturn0(dData, b_human=False):
     
     return dfPrice
 
-def featTrend(dData, lForwardlook=2, b_human=False):
+def featTrend(dData, lForwardlook=2):
     dfPrice = dData['close']
     
     trds = np.array(map(trends, (dfPrice.values[lForwardlook:, :] - dfPrice.values[0:-lForwardlook, :])))
