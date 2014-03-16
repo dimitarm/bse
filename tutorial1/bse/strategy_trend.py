@@ -22,7 +22,7 @@ from QSTK.qstkutil import DataAccess as da
 from QSTK.qstkfeat.features import *
 import QSTK.qstkfeat.featutil as ftu
 import QSTK.qstkutil.tsutil as tsutil
-import utils.dateutil as bsedateutil
+import utils.bsedateutil as bsedateutil
 import utils.data as datautil
 import utils.features.feats as bsefeats
 
@@ -38,10 +38,10 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import AdaBoostClassifier
 
 
-def testLearner(d_dfData, t_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, fc_learnerFactory, i_lookback, i_trainPeriod, i_forwardlook, b_Plot = False):
+def testLearner(d_dfData, s_symbol, t_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, fc_learnerFactory, i_lookback, i_trainPeriod, i_forwardlook, b_Plot = False):
     l_fcFeatures = list(t_fcTestFeatures)
     l_fcFeatures.append(fc_ClassificationFeature)
-    na_data = bsetools.calculateFeaturesNA(d_dfData, '3JR', l_fcFeatures, ld_FeatureParameters)
+    na_data = bsetools.calculateFeaturesNA(d_dfData, s_symbol, l_fcFeatures, ld_FeatureParameters)
     #fill forward
     tsutil.fillforward(na_data)
     #fillbackward
@@ -50,19 +50,23 @@ def testLearner(d_dfData, t_fcTestFeatures, fc_ClassificationFeature, ld_Feature
     na_data = na_data[i_lookback:-i_forwardlook,:]
     #test each combination
     success = float(0)
+    success_up = float(0)
+    success_down = float(0)
     scaler = preprocessing.StandardScaler().fit(na_data[:,:-1])
     
     na_mainData = scaler.transform(na_data[:,:-1])
     na_classData = na_data[:,-1]#.reshape(na_data.shape[0], 1)
     count = 0
     for i in range(i_trainPeriod, na_data.shape[0] - i_forwardlook + 1):
-        hit = 0
         i_prediction = fc_learnerFactory(na_mainData[i - i_trainPeriod:i,:], na_classData[i - i_trainPeriod:i], na_mainData[i,:])
         if (i_prediction == na_classData[i]):
             success += 1
-            hit = 1
+            if (i_prediction == 1):
+                success_up += 1
+            else:
+                success_down += 1
         count += 1
-    print "success rate: " + str(success/count)
+    print s_symbol + " success rate: " + str(success/count) + " up: " + str(success_up/count) + " down: " + str(success_down/count)
 
 def svmLearner(na_train, na_class, na_data):
     clf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='rbf', probability=False, shrinking=True, tol=0.001, verbose=False)
@@ -101,16 +105,16 @@ def findBestFeatCombinationLearner(na_train, na_class, fc_learnerFactory):
 if __name__ == '__main__':
     i_forwardlook = 1
     i_lookback = 26
-    lsSym = np.array(['3JR'])
+    lsSym = np.array(['SOFIX', '3JR', '4CF', '6C4', '6A6'])
     
     ''' Get data for 2009-2010 '''
-    dtStart = dt.datetime(2012,2,18)
-    dtEnd = dt.datetime(2013,2,17)
+    dtStart = dt.datetime(2013,2,18)
+    dtEnd = dt.datetime(2014,8,17)
     dataobj = da.DataAccess(da.DataSource.CUSTOM)      
     lsKeys = ['open', 'high', 'low', 'close', 'volume']
 
     #get train data
-    ldtTimestamps = bsedateutil.getBSEdays( dtStart, dtEnd)
+    ldtTimestamps = bsedateutil.getBSEdays( dtStart, dtEnd, dt.timedelta(hours=16))
     ldfData = dataobj.get_data( ldtTimestamps, lsSym, lsKeys, verbose=False )
     
     dData = dict(zip(lsKeys, ldfData))
@@ -128,7 +132,8 @@ if __name__ == '__main__':
 
     t1 = datetime.now()
     
-    testLearner(dData, lfc_TestFeatures, featTrend, ld_FeatureParameters, svmBestFeatCombinationLearner, i_lookback = i_lookback, i_trainPeriod = 60, i_forwardlook = i_forwardlook)
+    for symbol in lsSym:
+        testLearner(dData, symbol, lfc_TestFeatures, featTrend, ld_FeatureParameters, adaBoostBestFeatCombinationLearner, i_lookback = i_lookback, i_trainPeriod = 60, i_forwardlook = i_forwardlook)
     t2 = datetime.now()
     tdelta = t2 - t1
     print str(tdelta) + " seconds"

@@ -52,6 +52,9 @@ def removeNansInDict(d_Data, sDelNan='ALL', bShowRemoved=False):
     return d_resultData
 
 def calculateFeatures(d_dfData, s_symbol, lfc_Features, ld_FeatureParameters):
+    """
+    @summary: calculates features and removes all NANs
+    """
     ldfRet = dict()
     for i, fcFeature in enumerate(lfc_Features):
         ldFeatureData = fcFeature( d_dfData, **ld_FeatureParameters[fcFeature] )
@@ -61,6 +64,10 @@ def calculateFeatures(d_dfData, s_symbol, lfc_Features, ld_FeatureParameters):
     return dna_dataWithoutNans
 
 def calculateFeaturesNA(d_dfData, s_symbol, lfc_Features, ld_FeatureParameters):
+    """
+    @summary: Calculate features preserving NANs
+    """
+    
     na_features = np.empty((0, 0))
     for fcFeature in lfc_Features:
         ldFeatureData = fcFeature( d_dfData, **ld_FeatureParameters[fcFeature] )

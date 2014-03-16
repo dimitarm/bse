@@ -22,7 +22,7 @@ import QSTK.qstkutil.tsutil as tsutil
 
 
 
-import utils.dateutil as bsedateutil
+import utils.bsedateutil as bsedateutil
 import utils.equities as bseeq
 import utils.data as datautil
 
@@ -32,15 +32,15 @@ if __name__ == '__main__':
     
     lsSym = np.array(bseeq.get_all_equities())
     
-    ''' Get data for 2009-2010 '''
-    dtStart = dt.datetime(2009,1,1)
-    dtEnd = dt.datetime(2013,11,1)
+    #get data
+    dtStart = dt.datetime(2013,2,18)
+    dtEnd = dt.datetime(2014,2,17)
     dataobj = da.DataAccess(da.DataSource.CUSTOM)      
 
     #get train data
     ldtTimestamps = bsedateutil.getBSEdays( dtStart, dtEnd, dt.timedelta(hours=16) )
     
-    dmPrice = dataobj.get_data( ldtTimestamps, lsSym, 'close', verbose = True )
+    dmPrice = dataobj.get_data( ldtTimestamps, lsSym, 'close')
     dmVolume = dataobj.get_data( ldtTimestamps, lsSym, 'volume' )
     
     
