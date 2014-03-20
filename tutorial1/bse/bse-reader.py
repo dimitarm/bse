@@ -9,9 +9,10 @@ import urllib2
 import datetime
 import shlex
 import os
+import utils.equities as bseeq
 
 
-lines = [line.strip() for line in open('../equities.txt')]
+lines = bseeq.get_all_equities()
 
  
 
@@ -24,7 +25,7 @@ for equity in lines:
 
     url = "http://www.bse-sofia.bg/graphics/phpfiles/MYgethistoDeA.php?MonCode=" + equity + "&MonPays=BE&Periode=1&De=01/01/2009&A=" + datetime.date.today().strftime("%d/%m/%Y")
     print url
-    if os.environ['HTTP_PROXY_HOST'] != '':  
+    if 'HTTP_PROXY_HOST' in os.environ:  
         urllib2.install_opener(
             urllib2.build_opener(
                 urllib2.ProxyHandler({'http': 'http://proxy:8080'})
