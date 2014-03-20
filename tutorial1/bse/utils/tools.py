@@ -131,26 +131,22 @@ def getBestFeaturesCombinationForwardSearch(na_featData, na_class, fc_learnerFac
             na_TrainSet = getFeaturesCombination(na_featData, l_curFeatSet)
             #test again feature set
             na_TrainSet = np.hstack((na_TrainSet, na_class.reshape(na_class.shape[0], 1)))
-            na_TrainSet, na_TestSet = cross_validation.train_test_split(na_TrainSet, test_size=0.3, random_state=1)
             na_TrainClass = na_TrainSet[:,-1]
             na_TrainSet = na_TrainSet[:,:-1]
-            na_TestClass = na_TestSet[:,-1]
-            na_TestSet = na_TestSet[:,:-1]
             #fit learner
             clf = fc_learnerFactory()
-            clf.fit(na_TrainSet, na_TrainClass)
-            #make prediction
-            na_Prediction = clf.predict(na_TestSet)
-            #calculate result
-            success = metrics.metrics.accuracy_score(na_TestClass, na_Prediction)
+            #calculate success ratio
+            scores = cross_validation.cross_val_score(clf, na_TrainSet, na_TrainClass, cv=3)
+            success = scores.mean()
+            #check if we've got better temp result 
             if success > i_bestIntResult:
                 i_bestIntResult = success
-                l_bestFeatIndex = i_curFeat
+                i_bestFeatIndex = i_curFeat
                 clf_bestIntCLF = clf
         if i_bestIntResult > i_BestResult:
             i_BestResult = i_bestIntResult
-            l_featBestSet.append(l_bestFeatIndex)
-            l_untestedFeats.remove(l_bestFeatIndex)
+            l_featBestSet.append(i_bestFeatIndex)
+            l_untestedFeats.remove(i_bestFeatIndex)
             clf_bestCLF = clf_bestIntCLF
         else:
             break    

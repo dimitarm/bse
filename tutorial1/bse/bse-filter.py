@@ -33,7 +33,7 @@ if __name__ == '__main__':
     lsSym = np.array(bseeq.get_all_equities())
     
     #get data
-    dtStart = dt.datetime(2013,2,18)
+    dtStart = dt.datetime(2010,2,18)
     dtEnd = dt.datetime(2014,2,17)
     dataobj = da.DataAccess(da.DataSource.CUSTOM)      
 
