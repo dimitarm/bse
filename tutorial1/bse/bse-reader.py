@@ -9,67 +9,59 @@ import urllib2
 import datetime
 import shlex
 import os
-import pandas as pd
-import numpy as np
-import utils.equities as bseequities
-import datetime as dt
-
-def bgDateParser(date):
-    dat = dt.datetime.strptime(date,"%Y-%m-%d")
-    return dt.date(dat.year, dat.month, dat.day)    
 
 
-lines = bseequities.get_few_equities() 
+lines = [line.strip() for line in open('../equities.txt')]
+
+ 
 
 #22/12/2012"
 count = 0
 for equity in lines:
-    local_file_name = os.environ['QSDATA'] + "/Processed/Custom/" + equity + '.csv' 
-    df_data = pd.read_csv(local_file_name, index_col = 0, parse_dates = True, date_parser = bgDateParser)
-    l_dates = np.sort(df_data.index.values)
-    last_avail_date = l_dates[-1] + dt.timedelta(days = 1)
-        
-    url = "http://www.bse-sofia.bg/graphics/phpfiles/MYgethistoDeA.php?MonCode=" + equity + "&MonPays=BE&Periode=1&De=" + last_avail_date.strftime("%d/%m/%Y") + "&A=" + datetime.date.today().strftime("%d/%m/%Y")
-    print url 
-#    urllib2.install_opener(
-#        urllib2.build_opener(
-#            urllib2.ProxyHandler({'http': 'http://proxy:8080'})
-#        )
-#    )    
+    equity = equity.strip()
+    if (not equity or equity[0] == '#'):
+        continue
+
+    url = "http://www.bse-sofia.bg/graphics/phpfiles/MYgethistoDeA.php?MonCode=" + equity + "&MonPays=BE&Periode=1&De=01/01/2009&A=" + datetime.date.today().strftime("%d/%m/%Y")
+    print url
+    if os.environ['HTTP_PROXY_HOST'] != '':  
+        urllib2.install_opener(
+            urllib2.build_opener(
+                urllib2.ProxyHandler({'http': 'http://proxy:8080'})
+            )
+        ) 
     file_trades = urllib2.urlopen(url)
     tradedays = file_trades.readline()
-    l_close = list()
-    l_open = list()
-    l_high = list()
-    l_low = list()
-    l_volumes = list()
-    l_date = list()
-    for line in file_trades: 
-        #if line.strip():
-            #continue
-        #split main line
-        main_splitter = shlex.shlex(line.strip(), posix=True)
-        main_splitter.whitespace += ';'
-        main_splitter.whitespace_split = True
-        trade = list(main_splitter)
-        #if any trading for this day
-        if trade[1] != 'N':
-            #21/02/2014;58060;58752;58039;58592;296839
-            l_date.append(dt.datetime.strptime(trade[0],"%d/%m/%Y"))
-            l_open.append(float(trade[1])/100)
-            l_high.append(float(trade[2])/100)
-            l_low.append(float(trade[3])/100)
-            l_close.append(float(trade[4])/100)
-            l_volumes.append(trade[5])
+
+    local_file_name = os.environ['QSDATA'] + "/Processed/Custom/" + equity + '.csv'
+
+    with open(local_file_name, 'w+b') as csvfile:
+        eqwriter = csv.writer(csvfile, delimiter=',')
+        eqwriter.writerow(["Date" , "Open", "High", "Low", "Close", "Volumes"])
+        trades = list()
+        for line in file_trades:
+            #if line.strip():
+                #continue
+            #split main line
+            main_splitter = shlex.shlex(line.strip(), posix=True)
+            main_splitter.whitespace += ';'
+            main_splitter.whitespace_split = True
+            trade = list(main_splitter)
+            #if any trading for this day
+            if trade[1] != 'N':
+                #split date
+                date_splitter = shlex.shlex(trade[0], posix=True)
+                date_splitter.whitespace += '/'
+                date_splitter.whitespace_split = True
+                date = list(date_splitter)
+                #2012-12-21,10000,14046.26,1.423,1.4,1.4,1.423
+                trades.append([date[2] + "-" + date[1] + "-" + date[0],
+                                  float(trade[1])/100, float(trade[2])/100, float(trade[3])/100, float(trade[4])/100, trade[5]])
+        trades.reverse()
+        for trade in trades:
+            eqwriter.writerow(trade)
+                
     file_trades.close()
-    d_newData = {'Open':l_open, 'High':l_high, 'Low':l_low, 'Close':l_close, 'Volumes':l_volumes}
-    df_newData = pd.DataFrame(d_newData, index = l_date)
-    df_data = df_data.append(df_newData)
-    df_data.sort_index()
-    #with open(local_file_name, 'w+b') as csvfile:
-    #    pass
     count = count + 1
     todo = len(lines) - count
     print str(todo) + " to do...\n" 
-
-
