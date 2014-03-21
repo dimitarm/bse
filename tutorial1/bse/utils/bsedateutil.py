@@ -40,6 +40,7 @@ def getBSEdays(startday, endday, timeofday = dt.timedelta(0)):
     return(ret)
 
 def isBSEDay(date):
+    date = dt.date(year = date.year, month = date.month, day = date.day)
     if date in _special_days:
         return _special_days[date]
     if date.weekday() == 5 or date.weekday() == 6:
