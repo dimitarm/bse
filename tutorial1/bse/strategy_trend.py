@@ -43,7 +43,9 @@ def testLearner(d_dfData, s_symbol, t_fcTestFeatures, fc_ClassificationFeature, 
     l_fcFeatures = list(t_fcTestFeatures)
     l_fcFeatures.append(fc_ClassificationFeature)
 
+    t1 = datetime.now()
     na_data = bsetools.calculateFeaturesNA(d_dfData, s_symbol, l_fcFeatures, ld_FeatureParameters)
+    #print str(datetime.now() - t1) + " seconds"
     
     #fill forward
     tsutil.fillforward(na_data)
@@ -55,6 +57,9 @@ def testLearner(d_dfData, s_symbol, t_fcTestFeatures, fc_ClassificationFeature, 
     success = float(0)
     success_up = float(0)
     success_down = float(0)
+    for i in range(0, na_data.shape[1]):
+        if np.isfinite(na_data[:, i]).all() == False:
+            print i
     scaler = preprocessing.StandardScaler().fit(na_data[:,:-1])
     
     na_mainData = scaler.transform(na_data[:,:-1])
@@ -70,7 +75,7 @@ def testLearner(d_dfData, s_symbol, t_fcTestFeatures, fc_ClassificationFeature, 
             else:
                 success_down += 1
         count += 1
-        sys.stdout.write(str(all_count - count) + " to go\n")
+        #sys.stdout.write(str(all_count - count) + " to go\r")
     print s_symbol + " success rate: " + str(success/count) + " up: " + str(success_up/count) + " down: " + str(success_down/count)
 
 def svmLearner(na_train, na_class, na_data):
@@ -112,35 +117,30 @@ def findBestFeatCombinationLearner(na_train, na_class, fc_learnerFactory):
 if __name__ == '__main__':
     i_forwardlook = 5
     i_lookback = 26
-    lsSym = np.array(['3JR'])
+    lsSym = np.array(['3JR', '4CF', '6A6', '6C4', 'E4A', 'SOFIX', 'T57'])
+    #lsSym = np.array(['SOFIX'])
     
-    ''' Get data for 2009-2010 '''
-    dtStart = dt.datetime(2012,1,1)
-    dtEnd = dt.datetime(2013,1,1)
+    ''' Get data '''
+    dtEnd = dt.datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0)
+    dtStart = dtEnd - dt.timedelta(days = 365)
     dataobj = da.DataAccess(da.DataSource.CUSTOM)      
     lsKeys = ['open', 'high', 'low', 'close', 'volume']
 
     #get train data
     ldtTimestamps = bsedateutil.getBSEdays( dtStart, dtEnd, dt.timedelta(hours=16))
     ldfData = dataobj.get_data( ldtTimestamps, lsSym, lsKeys, verbose=False )
-    
     dData = dict(zip(lsKeys, ldfData))
-    
-    
-    lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featAroonDown, featVolumeDelta, featStochastic, featVolume, featBollinger)
-    
+    lfc_TestFeatures, ld_FeatureParameters = bsefeats.get_feats()
     #default parameters
     ld_FeatureParameters = {}
     for fc_feat in lfc_TestFeatures:
         ld_FeatureParameters[fc_feat] = {}
-        
-    lfc_TestFeatures, ld_FeatureParameters = bsefeats.get_feats()
     ld_FeatureParameters[featTrend] = {'lForwardlook':i_forwardlook}
 
     t1 = datetime.now()
     
     for symbol in lsSym:
-        testLearner(dData, symbol, lfc_TestFeatures, featTrend, ld_FeatureParameters, svmBestFeatCombinationLearner, i_lookback = i_lookback, i_trainPeriod = 60, i_forwardlook = i_forwardlook)
+        testLearner(dData, symbol, lfc_TestFeatures, featTrend, ld_FeatureParameters, svmLearner, i_lookback = i_lookback, i_trainPeriod = 60, i_forwardlook = i_forwardlook)
     t2 = datetime.now()
     tdelta = t2 - t1
     print str(tdelta) + " seconds"

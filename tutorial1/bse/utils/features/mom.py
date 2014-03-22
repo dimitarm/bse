@@ -10,14 +10,14 @@ import QSTK.qstkfeat.features as qstkfeat
 import math
 
 
-def featMomentum(dData, serie='close', lLookback=20):
+def featMomentum(dData, serie='close', lLookback=12):
     '''
     @summary: price change in the last n periods
     '''
     dfPtn = dData[serie].shift(lLookback)
     return dData[serie] - dfPtn
 
-def featMomentum2Ema(dData, serie='close', lambd=0.75, lLookback=20):
+def featMomentum2Ema(dData, serie='close', lambd=0.75, lLookback=12):
     dfMomentum = featMomentum(dData, serie, lLookback)
     dDataMOM = {}
     dDataMOM[serie] = dfMomentum
@@ -44,7 +44,7 @@ def tradeRuleMomentum(mom, momt1, ema):
         return -1  # sell
     return 0  # hold
 
-def featAcceleration(dData, serie='close', lLookback=20):
+def featAcceleration(dData, serie='close', lLookback=12):
     dfMomentum = featMomentum(dData, serie, lLookback)
     dfMomentum1 = dfMomentum.shift(1)
     return dfMomentum - dfMomentum1
@@ -93,7 +93,7 @@ def featMACDS(dData, slow=26, fast=12, lLookback=9):
     dfMacd = featMACD(dData, slow=slow, fast=fast)
     dTmp = {}
     dTmp['close'] = dfMacd
-    return qstkfeat.featEMA(dData, lLookback=lLookback, bRel=False)
+    return qstkfeat.featEMA(dTmp, lLookback=lLookback, bRel=False)
     
 def featMACDTradingRule(dData, slow=26, fast=12, lLookback=9):
     dfMacd = featMACD(dData, slow=slow, fast=fast)
@@ -131,8 +131,3 @@ def tradeRuleRSI(rsit1, rsi):
         return -1  # sell
     return 0  # hold
 
-if __name__ == '__main__':
-        
-    dData = {}
-    dData['close'] = pand.DataFrame(data=[86.1557,89.0867,88.7829,90.3228,89.0671,91.1453,89.4397,89.175,86.9302,87.6752,86.9596,89.4299,89.3221,88.7241,87.4497,87.2634,89.4985,87.9006,89.126,90.7043,92.9001,92.9784,91.8021,92.6647,92.6843,92.3021,92.7725,92.5373,92.949,93.2039,91.0669,89.8318,89.7435,90.3994,90.7387,88.0177,88.0867,88.8439,90.7781,90.5416,91.3894,90.65], columns=['aaaaaa'])
-    print featRSITradingRule(dData, lLookback=5)

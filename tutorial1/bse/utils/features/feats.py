@@ -11,9 +11,22 @@ import volatility
 import volume
 
 def get_feats():
-
-    lfc_TestFeatures = (mom.featMomentum, mom.featMomentum2Ema, mom.featMomentumTradeRule, mom.featAcceleration, mom.featAccelerationTradingRule,
-                        mom.featROC, mom.featRateOfChangeTradingRule, mom.featMACD, mom.featMACDS, mom.featMACDR, mom.featRSITradingRule,
+#lambda : KNeighborsClassifier(n_neighbors = 5)
+    lfc_TestFeatures = (
+        lambda (dData): mom.featMomentum(dData, lLookback = 12),
+        lambda (dData): mom.featMomentum(dData, lLookback = 18),
+        lambda (dData): mom.featMomentum(dData, lLookback = 24), 
+        mom.featMomentum2Ema, 
+        mom.featMomentumTradeRule, 
+        mom.featAcceleration, 
+        mom.featAccelerationTradingRule,
+        mom.featROC, 
+        mom.featRateOfChangeTradingRule, 
+        mom.featMACD, 
+        mom.featMACDS, 
+        mom.featMACDR, 
+        mom.featRSITradingRule,
+        
         osc.featFASTK,
         osc.featFASTD,
         osc.featFASTTradingRule,

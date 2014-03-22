@@ -27,11 +27,11 @@ import utils.data as datautil
 
 if __name__ == '__main__':
     
-    lsSym = np.array(bseeq.get_few_equities())
+    lsSym = np.array(bseeq.get_all_equities())
     
     #get data
     dtEnd = dt.datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0)
-    dtStart = dtEnd - dt.timedelta(days = 90)
+    dtStart = dtEnd - dt.timedelta(days = 180)
     dataobj = da.DataAccess(da.DataSource.CUSTOM)      
 
     #get train data
