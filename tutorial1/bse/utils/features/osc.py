@@ -14,11 +14,22 @@ def featFASTK(dData, serie='close', lLookback=12):
     dfHighestHigh = pand.rolling_max(dData['high'], lLookback)
     return 100 * (dfPrice - dfLowestLow) / (dfHighestHigh - dfLowestLow)
 
-def featFASTD(dData, serie='close', lLookback=3):
+def featFASTD(dData, serie='close', lLookback=12):
     dfFAST = featFASTK(dData, serie=serie, lLookback=lLookback)
     dTmp = {}
     dTmp['close'] = dfFAST
     return qstkfeat.featEMA(dTmp, lLookback=3, bRel=False)
+
+def featSLOWK(dData, serie='close', lLookback=12):
+    return featFASTK(dData, serie, lLookback)
+
+def featSLOWD(dData, serie='close', lLookback=12):
+    dfSLOW = featSLOWK(dData, serie=serie, lLookback=lLookback)
+    dTmp = {}
+    dTmp['close'] = dfSLOW
+    return qstkfeat.featEMA(dTmp, lLookback=3, bRel=False)
+
+def featSLOWTradingRule
 
 def tradeRuleFAST(fastkt1, fastkt, fastd):
     if math.isnan(fastkt1) or math.isnan(fastkt) or math.isnan(fastd):
