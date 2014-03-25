@@ -19,10 +19,6 @@ lines = bseeq.get_all_equities()
 #22/12/2012"
 count = 0
 for equity in lines:
-    equity = equity.strip()
-    if (not equity or equity[0] == '#'):
-        continue
-
     url = "http://www.bse-sofia.bg/graphics/phpfiles/MYgethistoDeA.php?MonCode=" + equity + "&MonPays=BE&Periode=1&De=01/01/2009&A=" + datetime.date.today().strftime("%d/%m/%Y")
     print url
     if 'HTTP_PROXY_HOST' in os.environ:  

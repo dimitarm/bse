@@ -30,6 +30,7 @@ import utils.features.feats as bsefeats
 from utils.classes import *
 from utils import tools as bsetools
 import utils.tools as bsetools
+import utils.data as bsedata
 from sklearn import preprocessing
 from sklearn import svm
 from sklearn import metrics 
@@ -39,20 +40,35 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import AdaBoostClassifier
 
 
-def testLearner(d_dfData, s_symbol, t_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, fc_learnerFactory, i_lookback, i_trainPeriod, i_forwardlook, b_Plot = False):
+def testLearner(d_dfData, s_symbol, t_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, fc_learnerFactory, i_trainPeriod, i_forwardlook, b_Plot = False):
     l_fcFeatures = list(t_fcTestFeatures)
     l_fcFeatures.append(fc_ClassificationFeature)
+
+    for key in d_dfData.iterkeys():
+        #fill forward
+        tsutil.fillforward(d_dfData[key].values)
+        #fillbackward
+        tsutil.fillbackward(d_dfData[key].values)
+        if np.isnan(d_dfData[key].values.min()):
+            print "serious error"
+            return
 
     t1 = datetime.now()
     na_data = bsetools.calculateFeaturesNA(d_dfData, s_symbol, l_fcFeatures, ld_FeatureParameters)
     #print str(datetime.now() - t1) + " seconds"
     
-    #fill forward
-    tsutil.fillforward(na_data)
-    #fillbackward
-    tsutil.fillbackward(na_data)
+    #get lookbacks list without trend feature!
+    na_lookbacks = bsedata.get_highest_lookback(na_data[:,:-1])
+    #remove NaNs at beginning and at end of period
+    na_data = na_data[na_lookbacks.max():-i_forwardlook,:]
+    if np.isnan(na_data.min()):
+        for col in range(na_data.shape[1]):
+            for row in range(0, na_data.shape[0]):
+                if math.isnan(na_data[row, col]):
+                    print "nan in data " + s_symbol
+                    print "col: " + str(col)
+        return
     
-    na_data = na_data[i_lookback:-i_forwardlook,:]
     #test each combination
     success = float(0)
     success_up = float(0)
@@ -116,7 +132,6 @@ def findBestFeatCombinationLearner(na_train, na_class, fc_learnerFactory):
 
 if __name__ == '__main__':
     i_forwardlook = 5
-    i_lookback = 26
     lsSym = np.array(['3JR', '4CF', '6A6', '6C4', 'E4A', 'SOFIX', 'T57'])
     #lsSym = np.array(['SOFIX'])
     
@@ -140,7 +155,7 @@ if __name__ == '__main__':
     t1 = datetime.now()
     
     for symbol in lsSym:
-        testLearner(dData, symbol, lfc_TestFeatures, featTrend, ld_FeatureParameters, svmLearner, i_lookback = i_lookback, i_trainPeriod = 60, i_forwardlook = i_forwardlook)
+        testLearner(dData, symbol, lfc_TestFeatures, featTrend, ld_FeatureParameters, svmLearner, i_trainPeriod = 60, i_forwardlook = i_forwardlook)
     t2 = datetime.now()
     tdelta = t2 - t1
     print str(tdelta) + " seconds"

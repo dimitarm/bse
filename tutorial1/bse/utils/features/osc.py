@@ -29,7 +29,7 @@ def featSLOWD(dData, serie='close', lLookback=12):
     dTmp['close'] = dfSLOW
     return qstkfeat.featEMA(dTmp, lLookback=3, bRel=False)
 
-def featSLOWTradingRule
+#def featSLOWTradingRule
 
 def tradeRuleFAST(fastkt1, fastkt, fastd):
     if math.isnan(fastkt1) or math.isnan(fastkt) or math.isnan(fastd):

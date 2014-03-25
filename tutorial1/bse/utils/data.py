@@ -21,5 +21,17 @@ def get_random_data(l_keys, l_index, l_symbols, method = 'normal'):
         dData[key] = pand.DataFrame( index=l_index, columns=l_symbols, data=na_data )
     return dData
     
+def get_highest_lookback(na_data):
+    l_lookbacks = []
+    for col in range(na_data.shape[1]):
+        i_firstNan = -1
+        for row in range(0, na_data.shape[0]):
+            if math.isnan(na_data[row, col]):
+                i_firstNan = row + 1    
+            else:
+                break
+        l_lookbacks.append(i_firstNan)
+    return np.array(l_lookbacks, copy = False)
+    
 if __name__ == '__main__':
     pass
