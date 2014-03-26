@@ -55,7 +55,7 @@ def testLearner(d_dfData, s_symbol, t_fcTestFeatures, fc_ClassificationFeature, 
 
     t1 = datetime.now()
     na_data = bsetools.calculateFeaturesNA(d_dfData, s_symbol, l_fcFeatures, ld_FeatureParameters)
-    #print str(datetime.now() - t1) + " seconds"
+    #print "features calculated in " + str(datetime.now() - t1) + " seconds"
     
     #get lookbacks list without trend feature!
     na_lookbacks = bsedata.get_highest_lookback(na_data[:,:-1])

@@ -51,7 +51,7 @@ class Test(unittest.TestCase):
         dData = {}
         dData['close'] = pand.DataFrame(data=np.random.randn(100) + 10, columns=['aaaaaa'])
         dData['volume'] = pand.DataFrame(data=np.random.randn(100)*5 + 100, columns=['aaaaaa'])
-        print vol.featPriceVolumeTrend(dData)
+        #print vol.featPriceVolumeTrend(dData)
 
     def testNVI(self):
         dData = {}

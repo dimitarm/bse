@@ -21,7 +21,7 @@ def featFASTD(dData, serie='close', lLookback=12):
     return qstkfeat.featEMA(dTmp, lLookback=3, bRel=False)
 
 def featSLOWK(dData, serie='close', lLookback=12):
-    return featFASTK(dData, serie, lLookback)
+    return featFASTD(dData, serie, lLookback)
 
 def featSLOWD(dData, serie='close', lLookback=12):
     dfSLOW = featSLOWK(dData, serie=serie, lLookback=lLookback)
@@ -29,7 +29,21 @@ def featSLOWD(dData, serie='close', lLookback=12):
     dTmp['close'] = dfSLOW
     return qstkfeat.featEMA(dTmp, lLookback=3, bRel=False)
 
-#def featSLOWTradingRule
+def featSLOWTradingRule(dData, serie='close', lLookback=12):
+    dfSlowkt = featSLOWK(dData=dData, serie=serie, lLookback=lLookback)
+    dfSlowkt1 = dfSlowkt.shift(1)
+    dfSlowd = featSLOWD(dData=dData, serie=serie, lLookback=lLookback)
+    rule_func = np.vectorize(tradeRuleSLOW)
+    return pand.DataFrame(data=rule_func(dfSlowkt1, dfSlowkt, dfSlowd), index=dfSlowkt.index, columns=dfSlowkt.columns)
+
+def tradeRuleSLOW(slowkt1, slowkt, slowd):
+    if math.isnan(slowkt1) or math.isnan(slowkt) or math.isnan(slowd):
+        return np.nan
+    if slowkt1 <= slowd and slowkt > slowd:
+        return 1  # buy
+    if slowkt1 >= slowd and slowkt < slowd:
+        return -1  # sell
+    return 0  # hold
 
 def tradeRuleFAST(fastkt1, fastkt, fastd):
     if math.isnan(fastkt1) or math.isnan(fastkt) or math.isnan(fastd):
@@ -49,6 +63,9 @@ def featFASTTradingRule(dData, serie='close', lLookback=12):
     
 def featFastKFastD(dData, serie='close', lLookback=12):
     return featFASTK(dData, serie, lLookback) / featFASTD(dData, serie, lLookback)
+
+def featSlowKSlowD(dData, serie='close', lLookback=12):
+    return featSLOWK(dData, serie, lLookback) / featSLOWD(dData, serie, lLookback)
 
 def featWILL(dData, serie='close', lLookback=14):
     dfPrice = dData[serie]
