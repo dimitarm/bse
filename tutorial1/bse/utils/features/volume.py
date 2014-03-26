@@ -32,7 +32,9 @@ def featOBV(dData):
 
 def featADL(dData):
     dfCLV = (2 * dData['close'] - dData['low'] - dData['high']) / (dData['high'] - dData['low'])
-    return dfCLV * dData['volume']
+    dfADL = dfCLV * dData['volume']
+    dfADL.values[np.isnan(dfADL.values)]=0
+    return dfADL
 
 def featCHO(dData, lLookback1=3, lLookback2=10):
     dfADL = featADL(dData)

@@ -69,8 +69,8 @@ def calculateFeaturesNA(d_dfData, s_symbol, lfc_Features, ld_FeatureParameters):
     """
     
     na_features = np.empty((0, 0))
-    for fcFeature in lfc_Features:
-        ldFeatureData = fcFeature( d_dfData, **ld_FeatureParameters[fcFeature] )
+    for feat_ind in range(0, len(lfc_Features)):
+        ldFeatureData = lfc_Features[feat_ind]( d_dfData, **ld_FeatureParameters[lfc_Features[feat_ind]] )
         naShapedData = ldFeatureData[s_symbol].values.reshape(ldFeatureData[s_symbol].values.size, 1)
         if na_features.shape == (0,0):
             na_features = naShapedData

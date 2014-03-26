@@ -61,21 +61,18 @@ def testLearner(d_dfData, s_symbol, t_fcTestFeatures, fc_ClassificationFeature, 
     na_lookbacks = bsedata.get_highest_lookback(na_data[:,:-1])
     #remove NaNs at beginning and at end of period
     na_data = na_data[na_lookbacks.max():-i_forwardlook,:]
-    if np.isnan(na_data.min()):
-        for col in range(na_data.shape[1]):
-            for row in range(0, na_data.shape[0]):
-                if math.isnan(na_data[row, col]):
-                    print "nan in data " + s_symbol
-                    print "col: " + str(col)
-        return
+    #check data for correctness
+    for col in range(na_data.shape[1]):
+        for row in range(0, na_data.shape[0]):
+            if math.isnan(na_data[row, col]) or np.isinf(na_data[row, col]):
+                print "nan in data " + s_symbol
+                print "col: " + str(col) + " row: " + str(row) + " : " + str(na_data[row, col])
+                return
     
     #test each combination
     success = float(0)
     success_up = float(0)
     success_down = float(0)
-    for i in range(0, na_data.shape[1]):
-        if np.isfinite(na_data[:, i]).all() == False:
-            print i
     scaler = preprocessing.StandardScaler().fit(na_data[:,:-1])
     
     na_mainData = scaler.transform(na_data[:,:-1])
