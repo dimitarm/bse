@@ -3,7 +3,7 @@ Created on Oct 31, 2013
 
 @author: dimitar
 '''
-#kkk
+
 import math
 import datetime as dt
 import itertools
