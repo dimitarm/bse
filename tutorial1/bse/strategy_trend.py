@@ -40,6 +40,12 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import AdaBoostClassifier
 
 
+def print_full(data):
+    for row in range(0, data.shape[0]):
+        for col in range(data.shape[1]):
+            sys.stdout.write(str(data[row, col]) + " ")
+        sys.stdout.write("\r\n")
+
 def testLearner(d_dfData, s_symbol, t_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, fc_learnerFactory, i_trainPeriod, i_forwardlook, b_Plot = False):
     l_fcFeatures = list(t_fcTestFeatures)
     l_fcFeatures.append(fc_ClassificationFeature)
@@ -55,6 +61,7 @@ def testLearner(d_dfData, s_symbol, t_fcTestFeatures, fc_ClassificationFeature, 
 
     t1 = datetime.now()
     na_data = bsetools.calculateFeaturesNA(d_dfData, s_symbol, l_fcFeatures, ld_FeatureParameters)
+    print_full(na_data)
     #print "features calculated in " + str(datetime.now() - t1) + " seconds"
     
     #get lookbacks list without trend feature!
@@ -68,7 +75,7 @@ def testLearner(d_dfData, s_symbol, t_fcTestFeatures, fc_ClassificationFeature, 
                 print "nan in data " + s_symbol
                 print "col: " + str(col) + " row: " + str(row) + " : " + str(na_data[row, col])
                 return
-    
+
     #test each combination
     success = float(0)
     success_up = float(0)
@@ -129,8 +136,8 @@ def findBestFeatCombinationLearner(na_train, na_class, fc_learnerFactory):
 
 if __name__ == '__main__':
     i_forwardlook = 5
-    lsSym = np.array(['3JR', '4CF', '6A6', '6C4', 'E4A', 'SOFIX', 'T57'])
-    #lsSym = np.array(['SOFIX'])
+    lsSym = np.array(['3JR'])
+    #lsSym = np.array(['3JR', '4CF', '6A6', '6C4', 'E4A', 'SOFIX'])
     
     ''' Get data '''
     dtEnd = dt.datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0)

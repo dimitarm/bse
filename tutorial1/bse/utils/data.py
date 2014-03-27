@@ -26,7 +26,7 @@ def get_highest_lookback(na_data):
     for col in range(na_data.shape[1]):
         i_firstNan = -1
         for row in range(0, na_data.shape[0]):
-            if math.isnan(na_data[row, col]):
+            if math.isnan(na_data[row, col]) or math.isinf(na_data[row, col]):
                 i_firstNan = row + 1    
             else:
                 break

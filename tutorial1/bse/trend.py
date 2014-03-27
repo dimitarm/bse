@@ -31,7 +31,7 @@ if __name__ == '__main__':
     
     #get data
     dtEnd = dt.datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0)
-    dtStart = dtEnd - dt.timedelta(days = 180)
+    dtStart = dtEnd - dt.timedelta(days = 365)
     dataobj = da.DataAccess(da.DataSource.CUSTOM)      
 
     #get train data
