@@ -119,11 +119,11 @@ def featNVI2SMA(dData, lLookback=10):
     dfNVI = featNVI(dData)
     dfSMA = pand.rolling_mean(dfNVI, lLookback)
     dfResult = dfNVI / dfSMA
-    na_data = dfResult.values
-    for col in range(na_data.shape[1]):
-        for row in range(10, na_data.shape[0]):
-            if math.isnan(na_data[row, col]) or np.isinf(na_data[row, col]):
-                break #row=207
+#    na_data = dfResult.values
+#    for col in range(na_data.shape[1]):
+#        for row in range(10, na_data.shape[0]):
+#            if math.isnan(na_data[row, col]) or np.isinf(na_data[row, col]):
+#                break #row=207
     return dfResult    
 
 def featPVI2SMA(dData, lLookback=10):

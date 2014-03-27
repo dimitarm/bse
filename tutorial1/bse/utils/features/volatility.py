@@ -21,10 +21,9 @@ def featGK(dData):
     sigma = firstTerm - secondterm - thirdTerm - fourthTerm
     return 0.631578947 * (dData['open'] - dData['close']) + 1.086419753 * sigma 
 
-def featSharpeRatio(dData, risk_free_rate): 
-    return (dData['close'] - risk_free_rate) / dData['close'].std()
-    
-    
+def featSharpeRatio(dData, lLookback = 26): 
+    dfRet = dData['close'] - dData['close'].shift(lLookback)
+    return dfRet / pand.rolling_std(dData['close'], lLookback)
     
 if __name__ == '__main__':
     pass
