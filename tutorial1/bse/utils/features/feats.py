@@ -109,8 +109,8 @@ def get_feats():
         volume.featPVI,
         volume.featNVITradeRule,
         volume.featPVITradeRule,
-        volume.featNVI2SMA,
-        volume.featPVI2SMA,
+        #volume.featNVI2SMA,
+        #volume.featPVI2SMA,
         volume.featPriceVolumeTrend)
 
     ld_FeatureParameters = {}

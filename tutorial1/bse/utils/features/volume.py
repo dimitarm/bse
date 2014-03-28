@@ -8,6 +8,7 @@ import numpy as np
 import datetime
 import math
 import mom
+import sys
 
 def featOBV(dData):
     dfPt = dData['close']
@@ -119,17 +120,14 @@ def featNVI2SMA(dData, lLookback=10):
     dfNVI = featNVI(dData)
     dfSMA = pand.rolling_mean(dfNVI, lLookback)
     dfResult = dfNVI / dfSMA
-#    na_data = dfResult.values
-#    for col in range(na_data.shape[1]):
-#        for row in range(10, na_data.shape[0]):
-#            if math.isnan(na_data[row, col]) or np.isinf(na_data[row, col]):
-#                break #row=207
+    dfResult = dfResult.replace([np.inf, -np.inf], [sys.float_info.max, -sys.float_info.max])    
     return dfResult    
 
 def featPVI2SMA(dData, lLookback=10):
     dfPVI = featNVI(dData)
     dfSMA = pand.rolling_mean(dfPVI, lLookback)
-    return dfPVI / dfSMA
+    dfResult = dfPVI / dfSMA
+    return dfResult.replace([np.inf, -np.inf], [sys.float_info.max, -sys.float_info.max])
 
 def featPriceVolumeTrend(dData):
     dfROC = mom.featROC(dData, serie='close', lLookback = 1)

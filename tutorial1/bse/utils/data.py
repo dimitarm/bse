@@ -6,6 +6,7 @@ Created on Sep 26, 2013
 import numpy as np
 import pandas as pand
 import math
+import sys
 
 def get_random_data(l_keys, l_index, l_symbols, method = 'normal'):
     dData = {}
@@ -26,12 +27,20 @@ def get_highest_lookback(na_data):
     for col in range(na_data.shape[1]):
         i_firstNan = -1
         for row in range(0, na_data.shape[0]):
-            if math.isnan(na_data[row, col]) or math.isinf(na_data[row, col]):
+            if math.isnan(na_data[row, col]):
                 i_firstNan = row + 1    
             else:
                 break
         l_lookbacks.append(i_firstNan)
     return np.array(l_lookbacks, copy = False)
-    
+
+def check_data_for_correctness(data):
+    for col in range(data.shape[1]):
+        for row in range(0, data.shape[0]):
+            if math.isnan(data[row, col]) or math.isinf(data[row, col]):
+                sys.stderr.write("col: " + str(col) + " row: " + str(row) + " : " + str(data[row, col]))
+                return False
+    return True   
+
 if __name__ == '__main__':
     pass

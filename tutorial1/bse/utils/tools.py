@@ -7,7 +7,8 @@ import math
 import numpy as np
 import QSTK.qstkutil.tsutil as tsutil
 from sklearn import cross_validation
-from sklearn import metrics 
+from sklearn import metrics
+import pandas as pand 
 
 def getAllFeaturesCombinationsList(l_items):
     ll_retItems = list()
@@ -63,6 +64,26 @@ def calculateFeatures(d_dfData, s_symbol, lfc_Features, ld_FeatureParameters):
     dna_dataWithoutNans = removeNansInDict(ldfRet)
     return dna_dataWithoutNans
 
+def calculateSymbolFeatures(d_dfData, symbol, lfc_Features, ld_FeatureParameters):
+    """
+    @summary: Calculate features only for a given symbol preserving NANs
+    """
+    dData= {}
+    for serie in d_dfData.iterkeys():
+        dData[serie] = pand.DataFrame({symbol:d_dfData[serie][symbol]}) 
+    
+    na_features = np.empty((0, 0))
+    for feat_ind in range(0, len(lfc_Features)):
+        ldFeatureData = lfc_Features[feat_ind]( dData, **ld_FeatureParameters[lfc_Features[feat_ind]] )
+        naShapedData = ldFeatureData[symbol].values.reshape(ldFeatureData[symbol].values.size, 1)
+        if na_features.shape == (0,0):
+            na_features = naShapedData
+        else:
+            na_features =  np.hstack((na_features, naShapedData))
+    #na_dataWithoutNans = removeNans(na_features)
+    #return na_dataWithoutNans
+    return na_features
+
 def calculateFeaturesNA(d_dfData, s_symbol, lfc_Features, ld_FeatureParameters):
     """
     @summary: Calculate features preserving NANs
@@ -112,7 +133,7 @@ def getBestFeaturesCombinationBruteSearch(na_featData, na_class, l_featCombinati
             i_bestResult = success
             clf_bestCLF = clf
             l_bestFeatCombination = l_featCombination
-    print "best success: " + str(i_bestResult)
+    #print "best success: " + str(i_bestResult)
     return clf_bestCLF, l_bestFeatCombination
 
 def getBestFeaturesCombinationForwardSearch(na_featData, na_class, fc_learnerFactory):
