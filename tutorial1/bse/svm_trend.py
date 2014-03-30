@@ -12,20 +12,18 @@ import itertools
 import numpy as np
 import pandas as pand
 import matplotlib.pyplot as plt
-from datetime import datetime
-from datetime import timedelta
 
 ''' QSTK imports '''
 from QSTK.qstkutil import DataAccess as da
-
 from QSTK.qstkfeat.features import *
 import QSTK.qstkfeat.featutil as ftu
 
-import utils.dateutil as bsedateutil
-import utils.data as datautil
-
+import bse.utils.dateutil as bsedateutil
+import bse.utils.data as datautil
+import bse.utils.tools as bsetools
 from utils.features import *
-import utils.tools as bsetools
+from utils.classes import featTrend
+
 from sklearn import preprocessing
 from sklearn import svm
 from sklearn import metrics 
@@ -126,15 +124,14 @@ if __name__ == '__main__':
 #    plt.plot(ldtTimestamps, dData['close'])
 #    plt.show()     
     
-    lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featAroonDown, featVolumeDelta, featStochastic, featVolume, featBollinger)
-    #lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featVolumeDelta, featStochastic, featVolume)
+    #lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featAroon, featAroonDown, featVolumeDelta, featStochastic, featVolume, featBollinger)
+    lfc_TestFeatures = (featMomentum, featHiLow, featMA, featEMA, featSTD, featRSI, featDrawDown, featRunUp, featVolumeDelta, featStochastic, featVolume)
     
     #default parameters
     ld_FeatureParameters = {}
     for fc_feat in lfc_TestFeatures:
         ld_FeatureParameters[fc_feat] = {}
         
-    ld_FeatureParameters[featTrend] = {'lForwardlook':20}
     ld_FeatureParameters[featMomentum] = {'lLookback':20}  
     ld_FeatureParameters[featHiLow] = {'lLookback':20}
     ld_FeatureParameters[featMA] = {'lLookback':20}
@@ -149,13 +146,14 @@ if __name__ == '__main__':
     ld_FeatureParameters[featStochastic] = {'lLookback':20}
     ld_FeatureParameters[featBollinger] = {'lLookback':20}
     ld_FeatureParameters[featVolume] = {}
+    ld_FeatureParameters[featTrend] = {'lForwardlook':5}
          
 
-    t1 = datetime.now()
+    t1 = dt.datetime.now()
     
     findBestFeatCobination(dData, bsetools.getAllFeaturesCombinationsList(lfc_TestFeatures), lfc_TestFeatures, featTrend, ld_FeatureParameters)
     #findBestCombination(dData, itertools.combinations(lfc_TestFeatures, 1), lfc_TestFeatures, featTrend, ld_FeatureParameters, b_Plot = False)
-    t2 = datetime.now()
+    t2 = dt.datetime.now()
     tdelta = t2 - t1
     print "findBestCombination " + str(tdelta) + " seconds"
     #todo test data to be chosen randomly

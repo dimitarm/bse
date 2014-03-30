@@ -10,11 +10,10 @@ import datetime
 import shlex
 import os
 import utils.equities as bseeq
+import sys
 
 
 lines = bseeq.get_all_equities()
-
- 
 
 #22/12/2012"
 count = 0
@@ -36,6 +35,7 @@ for equity in lines:
         eqwriter = csv.writer(csvfile, delimiter=',')
         eqwriter.writerow(["Date" , "Open", "High", "Low", "Close", "Volumes"])
         trades = list()
+        trades_dict = {}
         for line in file_trades:
             #if line.strip():
                 #continue
@@ -47,16 +47,18 @@ for equity in lines:
             #if any trading for this day
             if trade[1] != 'N':
                 #split date
-                date_splitter = shlex.shlex(trade[0], posix=True)
-                date_splitter.whitespace += '/'
-                date_splitter.whitespace_split = True
-                date = list(date_splitter)
+                date = datetime.datetime.strptime(trade[0], '%d/%m/%Y')
                 #2012-12-21,10000,14046.26,1.423,1.4,1.4,1.423
-                trades.append([date[2] + "-" + date[1] + "-" + date[0],
-                                  float(trade[1])/100, float(trade[2])/100, float(trade[3])/100, float(trade[4])/100, trade[5]])
+                trade = (date.strftime('%Y-%m-%d'), float(trade[1])/100, float(trade[2])/100, float(trade[3])/100, float(trade[4])/100, trade[5])
+                if date in trades_dict:
+                    if trades_dict[date] != trade:
+                        print equity + " has repeating values: " + str(trade) + " " + str(trades_dict[date])
+                        sys.exit(1) 
+                else:
+                    trades_dict[date] = trade
+                    trades.append(trade)
         trades.reverse()
-        for trade in trades:
-            eqwriter.writerow(trade)
+        eqwriter.writerows(trades)
                 
     file_trades.close()
     count = count + 1

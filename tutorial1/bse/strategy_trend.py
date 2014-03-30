@@ -23,7 +23,7 @@ from QSTK.qstkutil import DataAccess as da
 from QSTK.qstkfeat.features import *
 import QSTK.qstkfeat.featutil as ftu
 import QSTK.qstkutil.tsutil as tsutil
-import utils.bsedateutil as bsedateutil
+import utils.dateutil as bsedateutil
 import utils.data as datautil
 import utils.features.feats as bsefeats
 
@@ -146,17 +146,18 @@ if __name__ == '__main__':
     #get train data
     ldtTimestamps = bsedateutil.getBSEdays( dtStart, dtEnd, dt.timedelta(hours=16))
     ldfData = dataobj.get_data( ldtTimestamps, lsSym, lsKeys, verbose=False )
-    dData = dict(zip(lsKeys, ldfData))
+    dFullData = dict(zip(lsKeys, ldfData))
     lfc_TestFeatures, ld_FeatureParameters = bsefeats.get_feats()
     #default parameters
     ld_FeatureParameters = {}
     for fc_feat in lfc_TestFeatures:
         ld_FeatureParameters[fc_feat] = {}
+    ld_FeatureParameters[featTrend] = {'lForwardlook':i_forwardlook}
 
     t1 = datetime.now()
     
     for symbol in lsSym:
-        testLearner(dData, symbol, lfc_TestFeatures, featTrend, ld_FeatureParameters, adaBoostBestFeatCombinationLearner, i_trainPeriod = 60, i_forwardlook = i_forwardlook)
+        testLearner(dFullData, symbol, lfc_TestFeatures, featTrend, ld_FeatureParameters, adaBoostLearner, i_trainPeriod = 60, i_forwardlook = i_forwardlook)
     t2 = datetime.now()
     tdelta = t2 - t1
     print str(tdelta) + " seconds"

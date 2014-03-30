@@ -68,13 +68,13 @@ def calculateSymbolFeatures(d_dfData, symbol, lfc_Features, ld_FeatureParameters
     """
     @summary: Calculate features only for a given symbol preserving NANs
     """
-    dData= {}
+    dFullData= {}
     for serie in d_dfData.iterkeys():
-        dData[serie] = pand.DataFrame({symbol:d_dfData[serie][symbol]}) 
+        dFullData[serie] = pand.DataFrame({symbol:d_dfData[serie][symbol]}) 
     
     na_features = np.empty((0, 0))
     for feat_ind in range(0, len(lfc_Features)):
-        ldFeatureData = lfc_Features[feat_ind]( dData, **ld_FeatureParameters[lfc_Features[feat_ind]] )
+        ldFeatureData = lfc_Features[feat_ind]( dFullData, **ld_FeatureParameters[lfc_Features[feat_ind]] )
         naShapedData = ldFeatureData[symbol].values.reshape(ldFeatureData[symbol].values.size, 1)
         if na_features.shape == (0,0):
             na_features = naShapedData

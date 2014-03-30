@@ -9,7 +9,7 @@ import math
 import sys
 
 def get_random_data(l_keys, l_index, l_symbols, method = 'normal'):
-    dData = {}
+    dFullData = {}
     if method == 'normal':
         na_data = (np.random.randint(low = 5, high = 500000, size = (len(l_index), len(l_symbols))) * 0.99 ) / 10000
     else:
@@ -19,8 +19,8 @@ def get_random_data(l_keys, l_index, l_symbols, method = 'normal'):
             for col in range(0, len(l_symbols)):
                 na_data[index][col] = y
     for key in l_keys:
-        dData[key] = pand.DataFrame( index=l_index, columns=l_symbols, data=na_data )
-    return dData
+        dFullData[key] = pand.DataFrame( index=l_index, columns=l_symbols, data=na_data )
+    return dFullData
     
 def get_highest_lookback(na_data):
     l_lookbacks = []

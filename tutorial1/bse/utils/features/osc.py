@@ -8,31 +8,31 @@ import numpy as np
 import QSTK.qstkfeat.features as qstkfeat
 import math 
 
-def featFASTK(dData, serie='close', lLookback=12):
-    dfPrice = dData[serie]
-    dfLowestLow = pand.rolling_min(dData['low'], lLookback)
-    dfHighestHigh = pand.rolling_max(dData['high'], lLookback)
+def featFASTK(dFullData, serie='close', lLookback=12):
+    dfPrice = dFullData[serie]
+    dfLowestLow = pand.rolling_min(dFullData['low'], lLookback)
+    dfHighestHigh = pand.rolling_max(dFullData['high'], lLookback)
     return 100 * (dfPrice - dfLowestLow) / (dfHighestHigh - dfLowestLow)
 
-def featFASTD(dData, serie='close', lLookback=12):
-    dfFAST = featFASTK(dData, serie=serie, lLookback=lLookback)
+def featFASTD(dFullData, serie='close', lLookback=12):
+    dfFAST = featFASTK(dFullData, serie=serie, lLookback=lLookback)
     dTmp = {}
     dTmp['close'] = dfFAST
     return qstkfeat.featEMA(dTmp, lLookback=3, bRel=False)
 
-def featSLOWK(dData, serie='close', lLookback=12):
-    return featFASTD(dData, serie, lLookback)
+def featSLOWK(dFullData, serie='close', lLookback=12):
+    return featFASTD(dFullData, serie, lLookback)
 
-def featSLOWD(dData, serie='close', lLookback=12):
-    dfSLOW = featSLOWK(dData, serie=serie, lLookback=lLookback)
+def featSLOWD(dFullData, serie='close', lLookback=12):
+    dfSLOW = featSLOWK(dFullData, serie=serie, lLookback=lLookback)
     dTmp = {}
     dTmp['close'] = dfSLOW
     return qstkfeat.featEMA(dTmp, lLookback=3, bRel=False)
 
-def featSLOWTradingRule(dData, serie='close', lLookback=12):
-    dfSlowkt = featSLOWK(dData=dData, serie=serie, lLookback=lLookback)
+def featSLOWTradingRule(dFullData, serie='close', lLookback=12):
+    dfSlowkt = featSLOWK(dFullData=dFullData, serie=serie, lLookback=lLookback)
     dfSlowkt1 = dfSlowkt.shift(1)
-    dfSlowd = featSLOWD(dData=dData, serie=serie, lLookback=lLookback)
+    dfSlowd = featSLOWD(dFullData=dFullData, serie=serie, lLookback=lLookback)
     rule_func = np.vectorize(tradeRuleSLOW)
     return pand.DataFrame(data=rule_func(dfSlowkt1, dfSlowkt, dfSlowd), index=dfSlowkt.index, columns=dfSlowkt.columns)
 
@@ -54,23 +54,23 @@ def tradeRuleFAST(fastkt1, fastkt, fastd):
         return -1  # sell
     return 0  # hold
 
-def featFASTTradingRule(dData, serie='close', lLookback=12):
-    dfFastkt = featFASTK(dData=dData, serie=serie, lLookback=lLookback)
+def featFASTTradingRule(dFullData, serie='close', lLookback=12):
+    dfFastkt = featFASTK(dFullData=dFullData, serie=serie, lLookback=lLookback)
     dfFastkt1 = dfFastkt.shift(1)
-    dfFastd = featFASTD(dData=dData, serie=serie, lLookback=lLookback)
+    dfFastd = featFASTD(dFullData=dFullData, serie=serie, lLookback=lLookback)
     rule_func = np.vectorize(tradeRuleFAST)
     return pand.DataFrame(data=rule_func(dfFastkt1, dfFastkt, dfFastd), index=dfFastkt.index, columns=dfFastkt.columns)
     
-def featFastKFastD(dData, serie='close', lLookback=12):
-    return featFASTK(dData, serie, lLookback) / featFASTD(dData, serie, lLookback)
+def featFastKFastD(dFullData, serie='close', lLookback=12):
+    return featFASTK(dFullData, serie, lLookback) / featFASTD(dFullData, serie, lLookback)
 
-def featSlowKSlowD(dData, serie='close', lLookback=12):
-    return featSLOWK(dData, serie, lLookback) / featSLOWD(dData, serie, lLookback)
+def featSlowKSlowD(dFullData, serie='close', lLookback=12):
+    return featSLOWK(dFullData, serie, lLookback) / featSLOWD(dFullData, serie, lLookback)
 
-def featWILL(dData, serie='close', lLookback=14):
-    dfPrice = dData[serie]
-    dfLowestLow = pand.rolling_min(dData['low'], lLookback)
-    dfHighestHigh = pand.rolling_max(dData['high'], lLookback)
+def featWILL(dFullData, serie='close', lLookback=14):
+    dfPrice = dFullData[serie]
+    dfLowestLow = pand.rolling_min(dFullData['low'], lLookback)
+    dfHighestHigh = pand.rolling_max(dFullData['high'], lLookback)
     return (dfHighestHigh - dfPrice) * -100 / (dfHighestHigh - dfLowestLow)
 
 def tradeRuleWILL(willt1, will):
@@ -82,18 +82,18 @@ def tradeRuleWILL(willt1, will):
         return -1  # sell
     return 0  # hold
 
-def featWILLTradingRule(dData, serie='close', lLookback=14):
-    dfWill = featWILL(dData, serie, lLookback)
+def featWILLTradingRule(dFullData, serie='close', lLookback=14):
+    dfWill = featWILL(dFullData, serie, lLookback)
     dfWillt1 = dfWill.shift(1)
     rule_func = np.vectorize(tradeRuleWILL)
     return pand.DataFrame(data=rule_func(dfWillt1, dfWill), index=dfWill.index, columns=dfWill.columns)
 
-def featTypicalPrice(dData):
-    return (dData['high'] + dData['low'] + dData['close']) / 3
+def featTypicalPrice(dFullData):
+    return (dFullData['high'] + dFullData['low'] + dFullData['close']) / 3
 
-def featMFI(dData, lLookback=14):
-    dfPriceTyp = featTypicalPrice(dData)
-    dfMF = dfPriceTyp * dData['volume']
+def featMFI(dFullData, lLookback=14):
+    dfPriceTyp = featTypicalPrice(dFullData)
+    dfMF = dfPriceTyp * dFullData['volume']
     dfPriceTypt1 = dfPriceTyp.shift(1)
     dfUptrend = dfPriceTyp > dfPriceTypt1
     dfPosMF = pand.DataFrame(data=np.zeros(dfPriceTyp.values.shape), index=dfPriceTyp.index, columns=dfPriceTyp.columns)
@@ -133,8 +133,8 @@ def tradeRuleMFI(mfit1, mfi):
         return -1 #sell
     return 0 #hold
 
-def featMFITradingRule(dData, lLookback = 14):
-    dfMFI = featMFI(dData, lLookback)
+def featMFITradingRule(dFullData, lLookback = 14):
+    dfMFI = featMFI(dFullData, lLookback)
     dfMFIt1 = dfMFI.shift(1)
     rule_func = np.vectorize(tradeRuleMFI)
     return pand.DataFrame(data=rule_func(dfMFIt1, dfMFI), index=dfMFI.index, columns=dfMFI.columns)    

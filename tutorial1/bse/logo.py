@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pand
 import utils.data as datautil
-import utils.dateutil as bsedateutil
+import utils.bsedateutil as bsedateutil
 import utils.features.feats as bsefeats
 import utils.tools as bsetools
 import matplotlib.ticker as ticker

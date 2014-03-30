@@ -10,8 +10,8 @@ import math
 import mom
 import sys
 
-def featOBV(dData):
-    dfPt = dData['close']
+def featOBV(dFullData):
+    dfPt = dFullData['close']
     dfPt1 = dfPt.shift(1)
     dfOBV = pand.DataFrame(data=np.zeros(dfPt.values.shape), index=dfPt.index, columns=dfPt.columns)
     for column in dfOBV:
@@ -22,35 +22,35 @@ def featOBV(dData):
                 first = False
                 continue
             if dfPt.get_value(row, column) > dfPt1.get_value(row, column):
-                last_obv = last_obv + dData['volume'].get_value(row, column)
+                last_obv = last_obv + dFullData['volume'].get_value(row, column)
             elif dfPt.get_value(row, column) < dfPt1.get_value(row, column):
-                last_obv = last_obv - dData['volume'].get_value(row, column)
+                last_obv = last_obv - dFullData['volume'].get_value(row, column)
             else:
                 last_obv = 0
             dfOBV.set_value(row, column, last_obv)
     dfOBV.values[0, :] = np.nan
     return dfOBV    
 
-def featADL(dData):
-    dfCLV = (2 * dData['close'] - dData['low'] - dData['high']) / (dData['high'] - dData['low'])
-    dfADL = dfCLV * dData['volume']
+def featADL(dFullData):
+    dfCLV = (2 * dFullData['close'] - dFullData['low'] - dFullData['high']) / (dFullData['high'] - dFullData['low'])
+    dfADL = dfCLV * dFullData['volume']
     dfADL.values[np.isnan(dfADL.values)]=0
     return dfADL
 
-def featCHO(dData, lLookback1=3, lLookback2=10):
-    dfADL = featADL(dData)
+def featCHO(dFullData, lLookback1=3, lLookback2=10):
+    dfADL = featADL(dFullData)
     return pand.ewma(dfADL, lLookback1) - pand.ewma(dfADL, lLookback2)
 
-def featChaikinTradeRule(dData, lLookback1=3, lLookback2=10):
+def featChaikinTradeRule(dFullData, lLookback1=3, lLookback2=10):
     rule_func = np.vectorize(lambda y: math.copysign(1, y))
-    dfCHO = featCHO(dData, lLookback1, lLookback2)
+    dfCHO = featCHO(dFullData, lLookback1, lLookback2)
     return pand.DataFrame(data=rule_func(dfCHO.values), index=dfCHO.index, columns=dfCHO.columns)
 
-def featNVI(dData, iInitValue=100):
-    dfROC = mom.featROC(dData, lLookback=1)
+def featNVI(dFullData, iInitValue=100):
+    dfROC = mom.featROC(dFullData, lLookback=1)
     dfNVI = pand.DataFrame(data=np.empty(dfROC.values.shape), index=dfROC.index, columns=dfROC.columns)
     dfNVI.values[:, :] = iInitValue
-    dfVOL = dData['volume']
+    dfVOL = dFullData['volume']
     dfVOLt1 = dfVOL.shift(1)
     
     for column in dfNVI:
@@ -65,11 +65,11 @@ def featNVI(dData, iInitValue=100):
             dfNVI.set_value(row, column, last_obv)
     return dfNVI
     
-def featPVI(dData, iInitValue=100):
-    dfROC = mom.featROC(dData, lLookback=1)
+def featPVI(dFullData, iInitValue=100):
+    dfROC = mom.featROC(dFullData, lLookback=1)
     dfPVI = pand.DataFrame(data=np.empty(dfROC.values.shape), index=dfROC.index, columns=dfROC.columns)
     dfPVI.values[:, :] = iInitValue
-    dfVOL = dData['volume']
+    dfVOL = dFullData['volume']
     dfVOLt1 = dfVOL.shift(1)
     
     for column in dfPVI:
@@ -92,8 +92,8 @@ def tradeRuleNVI(nvit1, nvi, sma):
     else:
         return 0  # hold 
 
-def featNVITradeRule(dData, lLookback=10):
-    dfNVI = featNVI(dData)
+def featNVITradeRule(dFullData, lLookback=10):
+    dfNVI = featNVI(dFullData)
     dfNVIt1 = dfNVI.shift(1)
     dfSMA = pand.rolling_mean(dfNVI, lLookback)
     rule_func = np.vectorize(tradeRuleNVI)
@@ -109,28 +109,28 @@ def tradeRulePVI(pvit1, pvi, sma):
     else:
         return 0  # hold 
 
-def featPVITradeRule(dData, lLookback=10):
-    dfPVI = featPVI(dData)
+def featPVITradeRule(dFullData, lLookback=10):
+    dfPVI = featPVI(dFullData)
     dfPVIt1 = dfPVI.shift(1)
     dfSMA = pand.rolling_mean(dfPVI, lLookback)
     rule_func = np.vectorize(tradeRulePVI)
     return pand.DataFrame(data=rule_func(dfPVIt1, dfPVI, dfSMA), index=dfPVI.index, columns=dfPVI.columns)
 
-def featNVI2SMA(dData, lLookback=10):
-    dfNVI = featNVI(dData)
+def featNVI2SMA(dFullData, lLookback=10):
+    dfNVI = featNVI(dFullData)
     dfSMA = pand.rolling_mean(dfNVI, lLookback)
     dfResult = dfNVI / dfSMA
     dfResult = dfResult.replace([np.inf, -np.inf], [sys.float_info.max, -sys.float_info.max])    
     return dfResult    
 
-def featPVI2SMA(dData, lLookback=10):
-    dfPVI = featNVI(dData)
+def featPVI2SMA(dFullData, lLookback=10):
+    dfPVI = featNVI(dFullData)
     dfSMA = pand.rolling_mean(dfPVI, lLookback)
     dfResult = dfPVI / dfSMA
     return dfResult.replace([np.inf, -np.inf], [sys.float_info.max, -sys.float_info.max])
 
-def featPriceVolumeTrend(dData):
-    dfROC = mom.featROC(dData, serie='close', lLookback = 1)
-    dfPV = dData['volume'] * dfROC
+def featPriceVolumeTrend(dFullData):
+    dfROC = mom.featROC(dFullData, serie='close', lLookback = 1)
+    dfPV = dFullData['volume'] * dfROC
     return pand.rolling_sum(dfPV, 1)
     
