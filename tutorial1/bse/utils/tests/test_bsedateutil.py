@@ -8,7 +8,7 @@ import pandas as pd
 import os
 import numpy as np
 import datetime as dt
-import bse.utils.bsedateutil as bsedate
+import bse.utils.dateutil as bsedate
 
 class Test(unittest.TestCase):
 

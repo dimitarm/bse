@@ -49,7 +49,7 @@ def isBSEDay(date):
         return WORK
 
 if __name__ == "__main__":
-    #get special_days for 2009-2013
+    #get special_days for 2009-2013 from SOFIX data
     import pandas as pd
     import os
     import sys

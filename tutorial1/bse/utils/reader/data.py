@@ -14,12 +14,13 @@ import types
 
 
 _processed_data = {}
-_series = ('Close', 'Open', 'High', 'Low', 'Volumes')
+_series = ('close', 'open', 'high', 'low', 'volumes')
 
-def _date_parser(date):
+def _date_parser(string):
     #2014-03-27
-    return dt.datetime.strptime(date, '%Y-%m-%d')
-
+    date = dt.datetime.strptime(string, '%Y-%m-%d')
+    date = date.replace(hour = 16)
+    return date
 
 def _read_data_init(symbol):
     if _processed_data.has_key(symbol) == False:
@@ -27,9 +28,9 @@ def _read_data_init(symbol):
         _processed_data[symbol] = pand.read_csv(local_file_name, index_col=0, parse_dates = True, date_parser = _date_parser).sort_index()
 
 def _get_series(serie, symbols):
-    series = []
+    series = {}
     for symbol in symbols:
-        series.append(_processed_data[symbol][serie])
+        series[symbol] = _processed_data[symbol][serie]
     return series
 
 def get_data(start, end, symbols):
@@ -42,7 +43,8 @@ def get_data(start, end, symbols):
     result = {}
     for serie_name in _series:
         series = _get_series(serie_name, symbols)
-        result[serie_name] = pand.DataFrame(series).ix[bsedates]
+        dfres = pand.DataFrame(series)
+        result[serie_name] = dfres.ix[bsedates]
     return result 
 
 if __name__ == '__main__':

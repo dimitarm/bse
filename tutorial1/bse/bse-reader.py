@@ -33,7 +33,7 @@ for equity in lines:
 
     with open(local_file_name, 'w+b') as csvfile:
         eqwriter = csv.writer(csvfile, delimiter=',')
-        eqwriter.writerow(["Date" , "Open", "High", "Low", "Close", "Volumes"])
+        eqwriter.writerow(["date" , "open", "high", "low", "close", "volumes"])
         trades = list()
         trades_dict = {}
         for line in file_trades:
