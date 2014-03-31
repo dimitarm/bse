@@ -25,7 +25,7 @@ def _date_parser(string):
 def _read_data_init(symbol):
     if _processed_data.has_key(symbol) == False:
         local_file_name = os.environ['QSDATA'] + "/Processed/Custom/" + symbol + '.csv' 
-        _processed_data[symbol] = pand.read_csv(local_file_name, index_col=0, parse_dates = True, date_parser = _date_parser).sort_index()
+        _processed_data[symbol] = pand.read_csv(local_file_name, index_col=0, parse_dates = True, date_parser = _date_parser).sort_index().astype(float)
 
 def _get_series(serie, symbols):
     series = {}
@@ -34,7 +34,7 @@ def _get_series(serie, symbols):
     return series
 
 def get_data(start, end, symbols):
-    bsedates = bsedateutil.getBSEdays(startday = start, endday = end)
+    bsedates = bsedateutil.getBSEdays(startday = start, endday = end, timeofday = dt.timedelta(hours = 16))
     if isinstance(symbols, types.StringTypes) == True:
         symbols = (symbols,)
     for symbol in symbols:
@@ -43,8 +43,11 @@ def get_data(start, end, symbols):
     result = {}
     for serie_name in _series:
         series = _get_series(serie_name, symbols)
-        dfres = pand.DataFrame(series)
-        result[serie_name] = dfres.ix[bsedates]
+        for symbol in symbols:
+            if serie_name in result:
+                result[serie_name][symbol] = series[symbol].ix[bsedates]
+            else:
+                result[serie_name] = pand.DataFrame(series[symbol].ix[bsedates], columns = (symbol,), dtype=float)
     return result 
 
 if __name__ == '__main__':

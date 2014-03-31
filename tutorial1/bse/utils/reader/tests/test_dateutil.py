@@ -29,7 +29,7 @@ class Test(unittest.TestCase):
         bse_data = bsereader.get_data(dtStart, dtEnd, bseeq.get_few_equities())
         self.assertEquals(dFullData.keys(), bse_data.keys(), "keys not equal: " + str(dFullData.keys()) + " " + str(bse_data.keys()))
         for serie in bse_data.keys():
-            pandtest.assert_almost_equal(bse_data[serie], dFullData[serie])
+            pandtest.assert_frame_equal(bse_data[serie], dFullData[serie])
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testSameDataWithDataAccess']
