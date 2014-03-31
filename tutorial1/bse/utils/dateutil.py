@@ -8,10 +8,12 @@ import datetime as dt
 HOLIDAY = 0
 WORK = 1
 
+_first_date = dt.date(2009,1,1)
+
 _special_days = {
 
    #2009-2013
-    dt.date(2009,1,1):HOLIDAY,dt.date(2009,1,2):HOLIDAY,dt.date(2009,3,2):HOLIDAY,dt.date(2009,3,3):HOLIDAY,dt.date(2009,4,10):HOLIDAY,dt.date(2009,4,13):HOLIDAY,dt.date(2009,4,20):HOLIDAY,
+    _first_date:HOLIDAY,dt.date(2009,1,2):HOLIDAY,dt.date(2009,3,2):HOLIDAY,dt.date(2009,3,3):HOLIDAY,dt.date(2009,4,10):HOLIDAY,dt.date(2009,4,13):HOLIDAY,dt.date(2009,4,20):HOLIDAY,
     dt.date(2009,5,1):HOLIDAY,dt.date(2009,5,4):HOLIDAY,dt.date(2009,5,5):HOLIDAY,dt.date(2009,5,6):HOLIDAY,dt.date(2009,8,4):HOLIDAY,dt.date(2009,9,21):HOLIDAY,dt.date(2009,9,22):HOLIDAY,
     dt.date(2009,12,24):HOLIDAY,dt.date(2009,12,25):HOLIDAY,dt.date(2009,12,29):HOLIDAY,dt.date(2009,12,30):HOLIDAY,dt.date(2009,12,31):HOLIDAY,dt.date(2010,1,1):HOLIDAY,dt.date(2010,3,3):HOLIDAY,
     dt.date(2010,4,2):HOLIDAY,dt.date(2010,4,5):HOLIDAY,dt.date(2010,5,6):HOLIDAY,dt.date(2010,5,7):HOLIDAY,dt.date(2010,5,24):HOLIDAY,dt.date(2010,9,6):HOLIDAY,dt.date(2010,9,22):HOLIDAY,
@@ -27,6 +29,8 @@ _special_days = {
     dt.date(2014, 5, 5): HOLIDAY, dt.date(2014, 5, 6): HOLIDAY, dt.date(2014, 9, 22): HOLIDAY, dt.date(2014, 12, 24): HOLIDAY,dt.date(2014, 12, 25): HOLIDAY,dt.date(2014, 12, 26): HOLIDAY,
     dt.date(2014, 12, 31): HOLIDAY
    }
+def getFirstDateOfData():
+    return _first_date
 
 def getBSEdays(startday, endday, timeofday = dt.timedelta(0)):
     start = startday

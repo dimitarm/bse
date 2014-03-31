@@ -23,10 +23,10 @@ class Test(unittest.TestCase):
         
         #get train data
         ldtTimestamps = bsedateutil.getBSEdays( dtStart, dtEnd, dt.timedelta(hours=16))
-        ldfData = dataobj.get_data( ldtTimestamps, bseeq.get_few_equities(), lsKeys, verbose=False )
+        ldfData = dataobj.get_data( ldtTimestamps, ('0KM',), lsKeys, verbose=False )
         dFullData = dict(zip(lsKeys, ldfData))
         
-        bse_data = bsereader.get_data(dtStart, dtEnd, bseeq.get_few_equities())
+        bse_data = bsereader.get_data(dtStart, dtEnd, ('0KM',))
         self.assertEquals(dFullData.keys(), bse_data.keys(), "keys not equal: " + str(dFullData.keys()) + " " + str(bse_data.keys()))
         for serie in bse_data.keys():
             pandtest.assert_frame_equal(bse_data[serie], dFullData[serie])
