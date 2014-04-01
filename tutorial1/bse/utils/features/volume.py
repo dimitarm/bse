@@ -22,9 +22,9 @@ def featOBV(dFullData):
                 first = False
                 continue
             if dfPt.get_value(row, column) > dfPt1.get_value(row, column):
-                last_obv = last_obv + dFullData['volume'].get_value(row, column)
+                last_obv = last_obv + dFullData['volumes'].get_value(row, column)
             elif dfPt.get_value(row, column) < dfPt1.get_value(row, column):
-                last_obv = last_obv - dFullData['volume'].get_value(row, column)
+                last_obv = last_obv - dFullData['volumes'].get_value(row, column)
             else:
                 last_obv = 0
             dfOBV.set_value(row, column, last_obv)
@@ -33,7 +33,7 @@ def featOBV(dFullData):
 
 def featADL(dFullData):
     dfCLV = (2 * dFullData['close'] - dFullData['low'] - dFullData['high']) / (dFullData['high'] - dFullData['low'])
-    dfADL = dfCLV * dFullData['volume']
+    dfADL = dfCLV * dFullData['volumes']
     dfADL.values[np.isnan(dfADL.values)]=0
     return dfADL
 
@@ -50,7 +50,7 @@ def featNVI(dFullData, iInitValue=100):
     dfROC = mom.featROC(dFullData, lLookback=1)
     dfNVI = pand.DataFrame(data=np.empty(dfROC.values.shape), index=dfROC.index, columns=dfROC.columns)
     dfNVI.values[:, :] = iInitValue
-    dfVOL = dFullData['volume']
+    dfVOL = dFullData['volumes']
     dfVOLt1 = dfVOL.shift(1)
     
     for column in dfNVI:
@@ -69,7 +69,7 @@ def featPVI(dFullData, iInitValue=100):
     dfROC = mom.featROC(dFullData, lLookback=1)
     dfPVI = pand.DataFrame(data=np.empty(dfROC.values.shape), index=dfROC.index, columns=dfROC.columns)
     dfPVI.values[:, :] = iInitValue
-    dfVOL = dFullData['volume']
+    dfVOL = dFullData['volumes']
     dfVOLt1 = dfVOL.shift(1)
     
     for column in dfPVI:
@@ -131,6 +131,6 @@ def featPVI2SMA(dFullData, lLookback=10):
 
 def featPriceVolumeTrend(dFullData):
     dfROC = mom.featROC(dFullData, serie='close', lLookback = 1)
-    dfPV = dFullData['volume'] * dfROC
+    dfPV = dFullData['volumes'] * dfROC
     return pand.rolling_sum(dfPV, 1)
     

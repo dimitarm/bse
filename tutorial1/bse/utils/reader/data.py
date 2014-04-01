@@ -29,15 +29,18 @@ def _read_data_init(symbol):
     if _processed_data.has_key(symbol) == False:
         local_file_name = os.environ['QSDATA'] + "/Processed/Custom/" + symbol + '.csv' 
         raw_data = pand.read_csv(local_file_name, index_col=0, parse_dates = True, date_parser = _date_parser).sort_index().astype(float)
-        _add_nans(raw_data)
-        _processed_data[symbol] = raw_data
+        df_with_nans = _add_nans(raw_data)
+        _processed_data[symbol] = df_with_nans 
 
 def _add_nans(data):
     bsedays = bsedateutil.getBSEdays(bsedateutil.getFirstDateOfData(), dt.date.today(), dt.timedelta(hours = _datetime_offset))
+    missing_days = []
+    
     for day in bsedays:
-        for serie in data:
-            if not day in data[serie].index:
-                data[serie] = data[serie].set_value(day, np.nan)
+        if not day in data[_series[0]].index:
+            missing_days.append(day)
+    df_missing = pand.DataFrame(data = np.NaN, columns = _series, index = missing_days)
+    return pand.concat((data, df_missing), verify_integrity = True)
 
 def _get_series(serie, symbols):
     series = {}
@@ -59,7 +62,9 @@ def get_data(start, end, symbols):
             if serie_name in result:
                 result[serie_name][symbol] = series[symbol].ix[bsedates]
             else:
-                result[serie_name] = pand.DataFrame(series[symbol].ix[bsedates], columns = (symbol,), dtype=float)
+                tmp_serie = series[symbol].ix[bsedates]
+                df_new = pand.DataFrame(tmp_serie.values, columns = (symbol,), index = tmp_serie.index)
+                result[serie_name] = df_new 
     return result 
 
 if __name__ == '__main__':

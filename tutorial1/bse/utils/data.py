@@ -34,11 +34,11 @@ def get_highest_lookback(na_data):
         l_lookbacks.append(i_firstNan)
     return np.array(l_lookbacks, copy = False)
 
-def check_data_for_correctness(data):
+def is_data_correct(data):
     for col in range(data.shape[1]):
         for row in range(0, data.shape[0]):
             if math.isnan(data[row, col]) or math.isinf(data[row, col]):
-                sys.stderr.write("col: " + str(col) + " row: " + str(row) + " : " + str(data[row, col]))
+                print "col: ", str(col), " row: ", str(row), " : ", str(data[row, col]) >> sys.stderr 
                 return False
     return True   
 

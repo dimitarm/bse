@@ -141,7 +141,7 @@ if __name__ == '__main__':
     dtEnd = dt.datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0)
     dtStart = dtEnd - dt.timedelta(days = 365)
     dataobj = da.DataAccess(da.DataSource.CUSTOM)      
-    lsKeys = ['open', 'high', 'low', 'close', 'volume']
+    lsKeys = ['open', 'high', 'low', 'close', 'volumes']
 
     #get train data
     ldtTimestamps = bsedateutil.getBSEdays( dtStart, dtEnd, dt.timedelta(hours=16))

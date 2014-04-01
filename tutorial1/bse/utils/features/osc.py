@@ -93,7 +93,7 @@ def featTypicalPrice(dFullData):
 
 def featMFI(dFullData, lLookback=14):
     dfPriceTyp = featTypicalPrice(dFullData)
-    dfMF = dfPriceTyp * dFullData['volume']
+    dfMF = dfPriceTyp * dFullData['volumes']
     dfPriceTypt1 = dfPriceTyp.shift(1)
     dfUptrend = dfPriceTyp > dfPriceTypt1
     dfPosMF = pand.DataFrame(data=np.zeros(dfPriceTyp.values.shape), index=dfPriceTyp.index, columns=dfPriceTyp.columns)

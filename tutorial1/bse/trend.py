@@ -24,7 +24,7 @@ import matplotlib.axes as ax
 
 from sklearn import preprocessing
 
-import utils.bsedateutil as bsedateutil
+import utils.dateutil as bsedateutil
 import utils.equities as bseeq
 import utils.data as datautil
 import utils.tools as bsetools
@@ -38,17 +38,22 @@ def get_prediction(data, symbols, trainperiod, forwardlook, predicting_feat, fea
     for symbol in symbols:
         na_full_data = bsetools.calculateSymbolFeatures(data, symbol, features, feature_parameters)
         na_full_class = bsetools.calculateSymbolFeatures(data, symbol, (predicting_feat,), feature_parameters)
-        # restrict data to train period
+        
+        #remove NaNs at beginning and at end of period
+        #so that we have exactly trainperiod data to learn from
+        lookbacks = bsedata.get_highest_lookback(na_full_data)
         na_traindata = na_full_data[-i_forwardlook - trainperiod:-i_forwardlook, :]
-        na_trainclass = na_full_class[-i_forwardlook - trainperiod:-i_forwardlook, :]
+        na_trainclass = na_full_class[-i_forwardlook - trainperiod:-i_forwardlook, :].reshape((trainperiod,))
         # check data for correctness
-        if bsedata.check_data_for_correctness(na_traindata):
-            sys.stderr.write(symbol)
+        if bsedata.is_data_correct(na_traindata) == False:
+            print symbol + " has incorrect data" >> sys.stderr
+            sys.exit(-1)
         # regularize
         scaler = preprocessing.StandardScaler().fit(na_traindata)
         na_traindata = scaler.transform(na_traindata)
-        if bsedata.check_data_for_correctness(na_traindata):
-            sys.stderr.write(symbol)        
+        if bsedata.is_data_correct(na_traindata) == False:
+            print symbol + " has incorrect data after regularization" >> sys.stderr
+            sys.exit(-1)       
         # make prediction for the last date in the data set
         prediction = learner_factory(na_traindata, na_trainclass, na_full_data[-1, :])
         result[symbol] = prediction
@@ -91,7 +96,7 @@ if __name__ == '__main__':
     
     # get data
     dtEnd = dt.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
-    dtStart = dtEnd - dt.timedelta(days=i_trainPeriod * 1.5)
+    dtStart = dtEnd - dt.timedelta(days=(i_trainPeriod + 40)*1.5) #fixed number of days which cover the biggest lookback period in all features + some coefficient for non working days
     dataobj = da.DataAccess(da.DataSource.CUSTOM)      
 
     # get train data
@@ -99,13 +104,13 @@ if __name__ == '__main__':
     # get data
     dFullData = {
              'close': dataobj.get_data(ldtTimestamps, bseeq.get_all_equities(), 'close'),
-             'volume': dataobj.get_data(ldtTimestamps, bseeq.get_all_equities(), 'volume'),
+             'volumes': dataobj.get_data(ldtTimestamps, bseeq.get_all_equities(), 'volumes'),
              'high': dataobj.get_data(ldtTimestamps, bseeq.get_all_equities(), 'high'),
              'low': dataobj.get_data(ldtTimestamps, bseeq.get_all_equities(), 'low'),
              'open': dataobj.get_data(ldtTimestamps, bseeq.get_all_equities(), 'open')   
              }
     # get symbols to be predicted
-    symbols = tsutil.stockFilter(dFullData['close'], dFullData['volume'], fNonNan=0.95, fPriceVolume=1)
+    symbols = tsutil.stockFilter(dFullData['close'], dFullData['volumes'], fNonNan=0.95, fPriceVolume=1)
     print "symbols to be predicted: " + str(symbols)
     # get only data for symbols we want to make prediction for
     dData = {}
@@ -118,7 +123,7 @@ if __name__ == '__main__':
         dData[serie] = dfSerie
     if bShowdata:
         show_data(dData['close'])    
-    dt_last_date = dData['close'].index[-1].replace(hour=0, minute=0, second=0, microsecond=0)
+    dt_last_date = dData['close'][symbols].index[-1].replace(hour=0, minute=0, second=0, microsecond=0)
     if dt_last_date != dtEnd:
         print "There is no data for: " + str(dtEnd)
         if raw_input("Would you like to make prediction for " + str(dt_last_date.isoweekday()) + " " + str(dt_last_date) + " (Y\N) ") != 'y':
@@ -126,9 +131,9 @@ if __name__ == '__main__':
             sys.exit(-1)
     prepare_data_for_prediction(dData)
     features, feature_parameters = bsefeats.get_feats()
-    feature_parameters[featTrend] = {}
-    dPredictions = get_prediction(data=dData, symbols=symbols, trainperiod=60, forwardlook=5, predicting_feat=featTrend, features=features, feature_parameters=feature_parameters, learner_factory=strategy_trend.adaBoostLearner) 
-
+    feature_parameters[featTrend] = {'lForwardlook':5}
+    predictions = get_prediction(data=dData, symbols=symbols, trainperiod=60, forwardlook=5, predicting_feat=featTrend, features=features, feature_parameters=feature_parameters, learner_factory=strategy_trend.adaBoostLearner) 
+    print predictions
     
     
     
