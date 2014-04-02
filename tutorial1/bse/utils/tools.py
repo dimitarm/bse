@@ -52,18 +52,6 @@ def removeNansInDict(d_Data, sDelNan='ALL', bShowRemoved=False):
         d_resultData[key] = arr
     return d_resultData
 
-def calculateFeatures(d_dfData, s_symbol, lfc_Features, ld_FeatureParameters):
-    """
-    @summary: calculates features and removes all NANs
-    """
-    ldfRet = dict()
-    for i, fcFeature in enumerate(lfc_Features):
-        ldFeatureData = fcFeature( d_dfData, **ld_FeatureParameters[fcFeature] )
-    
-        ldfRet[fcFeature] = ldFeatureData[s_symbol].values
-    dna_dataWithoutNans = removeNansInDict(ldfRet)
-    return dna_dataWithoutNans
-
 def calculateSymbolFeatures(d_dfData, symbol, lfc_Features, ld_FeatureParameters):
     """
     @summary: Calculate features only for a given symbol preserving NANs
@@ -74,25 +62,11 @@ def calculateSymbolFeatures(d_dfData, symbol, lfc_Features, ld_FeatureParameters
     
     na_features = np.empty((0, 0))
     for feat_ind in range(0, len(lfc_Features)):
-        ldFeatureData = lfc_Features[feat_ind]( dFullData, **ld_FeatureParameters[lfc_Features[feat_ind]] )
-        naShapedData = ldFeatureData[symbol].values.reshape(ldFeatureData[symbol].values.size, 1)
-        if na_features.shape == (0,0):
-            na_features = naShapedData
+        if lfc_Features[feat_ind] in ld_FeatureParameters:
+            ldFeatureData = lfc_Features[feat_ind]( dFullData, **ld_FeatureParameters[lfc_Features[feat_ind]] )
         else:
-            na_features =  np.hstack((na_features, naShapedData))
-    #na_dataWithoutNans = removeNans(na_features)
-    #return na_dataWithoutNans
-    return na_features
-
-def calculateFeaturesNA(d_dfData, s_symbol, lfc_Features, ld_FeatureParameters):
-    """
-    @summary: Calculate features preserving NANs
-    """
-    
-    na_features = np.empty((0, 0))
-    for feat_ind in range(0, len(lfc_Features)):
-        ldFeatureData = lfc_Features[feat_ind]( d_dfData, **ld_FeatureParameters[lfc_Features[feat_ind]] )
-        naShapedData = ldFeatureData[s_symbol].values.reshape(ldFeatureData[s_symbol].values.size, 1)
+            ldFeatureData = lfc_Features[feat_ind]( dFullData )
+        naShapedData = ldFeatureData[symbol].values.reshape(ldFeatureData[symbol].values.size, 1)
         if na_features.shape == (0,0):
             na_features = naShapedData
         else:

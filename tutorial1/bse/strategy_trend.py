@@ -59,7 +59,7 @@ def testLearner(d_dfData, s_symbol, t_fcTestFeatures, fc_ClassificationFeature, 
             return
 
     t1 = datetime.now()
-    na_data = bsetools.calculateFeaturesNA(d_dfData, s_symbol, l_fcFeatures, ld_FeatureParameters)
+    na_data = bsetools.calculateSymbolFeatures(d_dfData, s_symbol, l_fcFeatures, ld_FeatureParameters)
     #print_full(na_data)
     #print "features calculated in " + str(datetime.now() - t1) + " seconds"
     
@@ -147,17 +147,20 @@ if __name__ == '__main__':
     ldtTimestamps = bsedateutil.getBSEdays( dtStart, dtEnd, dt.timedelta(hours=16))
     ldfData = dataobj.get_data( ldtTimestamps, lsSym, lsKeys, verbose=False )
     dFullData = dict(zip(lsKeys, ldfData))
-    lfc_TestFeatures, ld_FeatureParameters = bsefeats.get_feats()
-    #default parameters
-    ld_FeatureParameters = {}
-    for fc_feat in lfc_TestFeatures:
-        ld_FeatureParameters[fc_feat] = {}
-    ld_FeatureParameters[featTrend] = {'lForwardlook':i_forwardlook}
+    lfc_TestFeatures = bsefeats.get_feats()
 
     t1 = datetime.now()
     
     for symbol in lsSym:
-        testLearner(dFullData, symbol, lfc_TestFeatures, featTrend, ld_FeatureParameters, adaBoostLearner, i_trainPeriod = 60, i_forwardlook = i_forwardlook)
+        testLearner(
+                    dFullData, 
+                    symbol, 
+                    lfc_TestFeatures, 
+                    lambda (dFullData): featTrend(dFullData, lForwardlook = i_forwardlook), 
+                    {}, 
+                    adaBoostLearner, 
+                    i_trainPeriod = 60, 
+                    i_forwardlook = i_forwardlook)
     t2 = datetime.now()
     tdelta = t2 - t1
     print str(tdelta) + " seconds"

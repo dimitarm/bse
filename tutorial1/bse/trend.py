@@ -42,8 +42,8 @@ def get_prediction(data, symbols, trainperiod, forwardlook, predicting_feat, fea
         #remove NaNs at beginning and at end of period
         #so that we have exactly trainperiod data to learn from
         lookbacks = bsedata.get_highest_lookback(na_full_data)
-        na_traindata = na_full_data[-i_forwardlook - trainperiod:-i_forwardlook, :]
-        na_trainclass = na_full_class[-i_forwardlook - trainperiod:-i_forwardlook, :].reshape((trainperiod,))
+        na_traindata = na_full_data[-forwardlook - trainperiod:-forwardlook, :]
+        na_trainclass = na_full_class[-forwardlook - trainperiod:-forwardlook, :].reshape((trainperiod,))
         # check data for correctness
         if bsedata.is_data_correct(na_traindata) == False:
             print symbol + " has incorrect data" >> sys.stderr
@@ -91,7 +91,7 @@ def show_data(dfData):
 if __name__ == '__main__':
     
     i_trainPeriod = 60
-    i_forwardlook = 5
+    forwardlook_days = 5
     bShowdata = False
     
     # get data
@@ -130,9 +130,17 @@ if __name__ == '__main__':
             print "bye!"
             sys.exit(-1)
     prepare_data_for_prediction(dData)
-    features, feature_parameters = bsefeats.get_feats()
-    feature_parameters[featTrend] = {'lForwardlook':5}
-    predictions = get_prediction(data=dData, symbols=symbols, trainperiod=60, forwardlook=5, predicting_feat=featTrend, features=features, feature_parameters=feature_parameters, learner_factory=strategy_trend.adaBoostLearner) 
+    
+    features = bsefeats.get_feats()
+    predictions = get_prediction(
+                                 data=dData, 
+                                 symbols=symbols, 
+                                 trainperiod=60, 
+                                 forwardlook=forwardlook_days, 
+                                 predicting_feat=lambda (dFullData): featTrend(dFullData, lForwardlook = forwardlook_days), 
+                                 features=features, 
+                                 feature_parameters={}, 
+                                 learner_factory=strategy_trend.adaBoostLearner) 
     print predictions
     
     

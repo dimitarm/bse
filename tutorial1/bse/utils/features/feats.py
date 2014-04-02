@@ -95,7 +95,6 @@ def get_feats():
         lambda (dFullData): price.featBollingerTradeRule(dFullData, lLookback = 20),
         lambda (dFullData): price.featBollingerTradeRule(dFullData, lLookback = 26),
         lambda (dFullData): price.featBollingerTradeRule(dFullData, lLookback = 32),
-
         lambda (dFullData): volatility.featCHV(dFullData, lLookback = 10),
 
 #        volatility.featGK,
@@ -113,8 +112,4 @@ def get_feats():
         #volume.featPVI2SMA,
         volume.featPriceVolumeTrend)
 
-    ld_FeatureParameters = {}
-    for fc_feat in lfc_TestFeatures:
-        ld_FeatureParameters[fc_feat] = {}
-
-    return lfc_TestFeatures, ld_FeatureParameters
+    return lfc_TestFeatures
