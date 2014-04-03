@@ -1,0 +1,22 @@
+	${prev_link} &nbsp; ${next_link} <br/>
+	
+	prediction for: ${date}
+
+<table>
+    % for pred in predictions:
+        ${makerow(pred)}
+    % endfor
+</table>
+
+<%def name="makerow(prediction)">
+    <tr>
+		<td>${prediction['str']}</td>
+		<td>
+		% if prediction['up'] == True:
+			UP
+		% else:
+			DOWN
+		% endif
+		</td>    
+    </tr>
+</%def>
