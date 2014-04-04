@@ -17,12 +17,10 @@ import numpy as np
 _processed_data = {}
 _series = ('close', 'open', 'high', 'low', 'volumes')
 
-_datetime_offset = 16 #hours
-
 def _date_parser(string):
     #2014-03-27
     date = dt.datetime.strptime(string, '%Y-%m-%d')
-    date = date.replace(hour = _datetime_offset)
+    date = dt.date(date.year, date.month, date.day)
     return date
 
 def _read_data_init(symbol):
@@ -33,7 +31,7 @@ def _read_data_init(symbol):
         _processed_data[symbol] = df_with_nans 
 
 def _add_nans(data):
-    bsedays = bsedateutil.getBSEdays(bsedateutil.getFirstDateOfData(), dt.date.today(), dt.timedelta(hours = _datetime_offset))
+    bsedays = bsedateutil.getBSEdays(bsedateutil.getFirstDateOfData(), dt.date.today())
     missing_days = []
     
     for day in bsedays:
@@ -49,7 +47,7 @@ def _get_series(serie, symbols):
     return series
 
 def get_data(start, end, symbols):
-    bsedates = bsedateutil.getBSEdays(startday = start, endday = end, timeofday = dt.timedelta(hours = _datetime_offset))
+    bsedates = bsedateutil.getBSEdays(startday = start, endday = end)
     if isinstance(symbols, types.StringTypes) == True:
         symbols = (symbols,)
     for symbol in symbols:

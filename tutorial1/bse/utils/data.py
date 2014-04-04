@@ -7,8 +7,20 @@ import numpy as np
 import pandas as pand
 import math
 import sys
+import QSTK.qstkutil.tsutil as tsutil
 
 def get_random_data(l_keys, l_index, l_symbols, method = 'normal'):
+    '''
+    @summary returns random data
+    @param l_keys: keys with series
+    @param l_index: index to be used when creating series
+    @param l_symbols: symbols to be create data for
+    @param method: could be normal or anything else
+    when normal data is generated as normal distribution if other data is generated using sinus function  
+    
+    
+    @return dict with dataframes for each l_keys
+    '''
     dFullData = {}
     if method == 'normal':
         na_data = (np.random.randint(low = 5, high = 500000, size = (len(l_index), len(l_symbols))) * 0.99 ) / 10000
@@ -34,11 +46,22 @@ def get_highest_lookback(na_data):
         l_lookbacks.append(i_firstNan)
     return np.array(l_lookbacks, copy = False)
 
+
+def prepare_data_for_prediction(dFullData):
+    '''
+    @summary prepares data for prediction. Replaces nans by filling forward and then filling backward values.
+    '''
+    for key in dFullData.iterkeys():
+        # fill forward
+        tsutil.fillforward(dFullData[key].values)
+        # fill backward
+        tsutil.fillbackward(dFullData[key].values)
+
 def is_data_correct(data):
     for col in range(data.shape[1]):
         for row in range(0, data.shape[0]):
             if math.isnan(data[row, col]) or math.isinf(data[row, col]):
-                print "col: ", str(col), " row: ", str(row), " : ", str(data[row, col]) >> sys.stderr 
+                sys.stderr.write("col: " + str(col) + " row: " + str(row) + " : " + str(data[row, col]) + "\n")  
                 return False
     return True   
 

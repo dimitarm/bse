@@ -3,8 +3,6 @@ Created on Mar 20, 2014
 
 @author: dimitar
 '''
-
-
 import math
 import datetime as dt
 import itertools
@@ -30,8 +28,10 @@ import utils.data as datautil
 import utils.tools as bsetools
 import utils.data as bsedata
 import utils.features.feats as bsefeats
+import bse.utils.reader.data as bsereader
 import strategy_trend
 import sys
+
 
 def get_prediction(data, symbols, trainperiod, forwardlook, predicting_feat, features, feature_parameters, learner_factory):
     result = {}
@@ -46,7 +46,7 @@ def get_prediction(data, symbols, trainperiod, forwardlook, predicting_feat, fea
         na_trainclass = na_full_class[-forwardlook - trainperiod:-forwardlook, :].reshape((trainperiod,))
         # check data for correctness
         if bsedata.is_data_correct(na_traindata) == False:
-            print symbol + " has incorrect data" >> sys.stderr
+            sys.stderr.write(symbol + " has incorrect data")
             sys.exit(-1)
         # regularize
         scaler = preprocessing.StandardScaler().fit(na_traindata)
@@ -59,24 +59,14 @@ def get_prediction(data, symbols, trainperiod, forwardlook, predicting_feat, fea
         result[symbol] = prediction
     return result
 
-def get_feature_value(l_symbols, date, i_forwardlook, predictig_feat):
-    # get data
-    dtEnd = date + dt.timedelta(days=i_forwardlook)
-    dataobj = da.DataAccess(da.DataSource.CUSTOM)      
+def get_symbols_for_prediction(date_end = dt.date.today(), days_period = 90):
+    # calculate limit dates
+    date_start = date_end - dt.timedelta(days=days_period) #fixed number of days which cover the biggest lookback period in all features + some coefficient for non working days
+    #get data
+    full_data = bsereader.get_data(date_start, date_end, symbols = bseeq.get_all_equities())
+    # get symbols to be predicted
+    return tsutil.stockFilter(full_data['close'], full_data['volumes'], fNonNan=0.95, fPriceVolume=1)
 
-    # get train data
-    ldtTimestamps = bsedateutil.getBSEdays(dtStart, dtEnd, dt.timedelta(hours=16))
-    # get data
-    dataobj.get_data(ldtTimestamps, bseeq.get_all_equities(), 'close')
-    
-    
-def prepare_data_for_prediction(dFullData):
-    for key in dFullData.iterkeys():
-        # fill forward
-        tsutil.fillforward(dFullData[key].values)
-        # fill backward
-        tsutil.fillbackward(dFullData[key].values)
-    
 def show_data(dfData):
     plt.clf()
     count_symbols = len(dfData.columns)
@@ -89,51 +79,27 @@ def show_data(dfData):
     plt.show()
     
 if __name__ == '__main__':
-    
     i_trainPeriod = 60
     forwardlook_days = 5
     bShowdata = False
     
-    # get data
-    dtEnd = dt.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
-    dtStart = dtEnd - dt.timedelta(days=(i_trainPeriod + 40)*1.5) #fixed number of days which cover the biggest lookback period in all features + some coefficient for non working days
-    dataobj = da.DataAccess(da.DataSource.CUSTOM)      
-
-    # get train data
-    ldtTimestamps = bsedateutil.getBSEdays(dtStart, dtEnd, dt.timedelta(hours=16))
-    # get data
-    dFullData = {
-             'close': dataobj.get_data(ldtTimestamps, bseeq.get_all_equities(), 'close'),
-             'volumes': dataobj.get_data(ldtTimestamps, bseeq.get_all_equities(), 'volumes'),
-             'high': dataobj.get_data(ldtTimestamps, bseeq.get_all_equities(), 'high'),
-             'low': dataobj.get_data(ldtTimestamps, bseeq.get_all_equities(), 'low'),
-             'open': dataobj.get_data(ldtTimestamps, bseeq.get_all_equities(), 'open')   
-             }
-    # get symbols to be predicted
-    symbols = tsutil.stockFilter(dFullData['close'], dFullData['volumes'], fNonNan=0.95, fPriceVolume=1)
+    date_prediction = dt.date.today() - dt.timedelta(days = 1) 
+    
+    symbols = get_symbols_for_prediction(date_end = date_prediction, days_period = (i_trainPeriod + 40)*1.5)#fixed number of days which cover the biggest lookback period in all features + some coefficient for non working days
     print "symbols to be predicted: " + str(symbols)
-    # get only data for symbols we want to make prediction for
-    dData = {}
-    for serie in dFullData.iterkeys():
-        dSerieData = {}
-        for symbol in dFullData[serie]:
-            if symbols.count(symbol) > 0:
-                dSerieData[symbol] = dFullData[serie][symbol]
-        dfSerie = pand.DataFrame(dSerieData)
-        dData[serie] = dfSerie
+    
+    #read data
+    symbols = ('5MB', 'SOFIX', '3JR') 
+    data = bsereader.get_data(date_prediction - dt.timedelta(days = (i_trainPeriod + 40)*1.5), date_prediction, symbols)
+    
     if bShowdata:
-        show_data(dData['close'])    
-    dt_last_date = dData['close'][symbols].index[-1].replace(hour=0, minute=0, second=0, microsecond=0)
-    if dt_last_date != dtEnd:
-        print "There is no data for: " + str(dtEnd)
-        if raw_input("Would you like to make prediction for " + str(dt_last_date.isoweekday()) + " " + str(dt_last_date) + " (Y\N) ") != 'y':
-            print "bye!"
-            sys.exit(-1)
-    prepare_data_for_prediction(dData)
+        show_data(data['close'])    
+    
+    datautil.prepare_data_for_prediction(data)
     
     features = bsefeats.get_feats()
     predictions = get_prediction(
-                                 data=dData, 
+                                 data=data, 
                                  symbols=symbols, 
                                  trainperiod=60, 
                                  forwardlook=forwardlook_days, 
