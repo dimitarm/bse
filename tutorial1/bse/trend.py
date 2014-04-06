@@ -70,44 +70,54 @@ def get_symbols_for_prediction(date_end = dt.date.today(), days_period = 90):
 def show_data(dfData):
     plt.clf()
     count_symbols = len(dfData.columns)
-    fig, axes = plt.subplots(nrows=count_symbols / 2 + count_symbols % 2, ncols=2)
+    #fig, axes = plt.subplots(nrows=count_symbols / 2 + count_symbols % 2, ncols=2)
     count = 0
     for symbol in dfData:
-        dfData[symbol].plot(ax=axes[count / 2, count % 2], subplots=False, grid=False, sharex=True)
-        axes[count / 2, count % 2].set_title(symbol)
+        #dfData[symbol].plot(ax=axes[count / 2, count % 2], subplots=False, grid=False, sharex=True)
+        dfData[symbol].plot()
+        #axes[count / 2, count % 2].set_title(symbol)
         count += 1
     plt.show()
     
 if __name__ == '__main__':
     i_trainPeriod = 60
-    forwardlook_days = 5
-    bShowdata = False
+    forwardlook_days = 6
+    bShowdata = True
     
     date_prediction = dt.date.today() - dt.timedelta(days = 1) 
     
-    symbols = get_symbols_for_prediction(date_end = date_prediction, days_period = (i_trainPeriod + 40)*1.5)#fixed number of days which cover the biggest lookback period in all features + some coefficient for non working days
-    print "symbols to be predicted: " + str(symbols)
+    #symbols = get_symbols_for_prediction(date_end = date_prediction, days_period = (i_trainPeriod + 40)*1.5)#fixed number of days which cover the biggest lookback period in all features + some coefficient for non working days
+    #print "symbols to be predicted: " + str(symbols)
     
     #read data
-    symbols = ('5MB', 'SOFIX', '3JR') 
-    data = bsereader.get_data(date_prediction - dt.timedelta(days = (i_trainPeriod + 40)*1.5), date_prediction, symbols)
+    symbols = ('5MB', 'SOFIX') 
+    #data = bsereader.get_data(date_prediction - dt.timedelta(days = (i_trainPeriod + 40)*1.5), date_prediction, symbols)
+    data = bsereader.get_data(date_prediction - dt.timedelta(days = 5), date_prediction, symbols)
     
     if bShowdata:
-        show_data(data['close'])    
+        show_data(data['close'])
+    del data['high']    
+    del data['open']    
+    del data['low']    
+    del data['volumes']    
     
     datautil.prepare_data_for_prediction(data)
     
+    #features = (bsefeats.get_feats()[2],)
     features = bsefeats.get_feats()
-    predictions = get_prediction(
-                                 data=data, 
-                                 symbols=symbols, 
-                                 trainperiod=60, 
-                                 forwardlook=forwardlook_days, 
-                                 predicting_feat=lambda (dFullData): featTrend(dFullData, lForwardlook = forwardlook_days), 
-                                 features=features, 
-                                 feature_parameters={}, 
-                                 learner_factory=strategy_trend.adaBoostLearner) 
-    print predictions
+    dd = data['close']['5MB']
+    print dd
+    
+#    predictions = get_prediction(
+#                                 data=data, 
+#                                 symbols=symbols, 
+#                                 trainperiod=60, 
+#                                 forwardlook=forwardlook_days, 
+#                                 predicting_feat=lambda (dFullData): featTrend(dFullData, lForwardlook = forwardlook_days), 
+#                                 features=features, 
+#                                 feature_parameters={}, 
+#                                 learner_factory=strategy_trend.adaBoostLearner) 
+#    print predictions
     
     
     

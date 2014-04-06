@@ -58,11 +58,13 @@ def get_data(start, end, symbols):
         series = _get_series(serie_name, symbols)
         for symbol in symbols:
             if serie_name in result:
-                result[serie_name][symbol] = series[symbol].ix[bsedates]
+                result[serie_name][symbol] = pand.Series(series[symbol].ix[bsedates])
             else:
                 tmp_serie = series[symbol].ix[bsedates]
                 df_new = pand.DataFrame(tmp_serie.values, columns = (symbol,), index = tmp_serie.index)
                 result[serie_name] = df_new 
+#    for serie in _series:
+#        result[serie] = pand.DataFrame(result[serie], copy = True)
     return result 
 
 if __name__ == '__main__':
