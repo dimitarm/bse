@@ -60,7 +60,7 @@ def get_data(start, end, symbols):
             if serie_name in result:
                 result[serie_name][symbol] = pand.Series(series[symbol].ix[bsedates])
             else:
-                tmp_serie = series[symbol].ix[bsedates]
+                tmp_serie = series[symbol].loc[bsedates]
                 df_new = pand.DataFrame(tmp_serie.values, columns = (symbol,), index = tmp_serie.index)
                 result[serie_name] = df_new 
 #    for serie in _series:

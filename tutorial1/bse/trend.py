@@ -32,7 +32,6 @@ import bse.utils.reader.data as bsereader
 import strategy_trend
 import sys
 
-
 def get_prediction(data, symbols, trainperiod, forwardlook, predicting_feat, features, feature_parameters, learner_factory):
     result = {}
     for symbol in symbols:
@@ -80,19 +79,20 @@ def show_data(dfData):
     plt.show()
     
 if __name__ == '__main__':
+    pand.set_option('mode.chained_assignment','warn')   
+ 
     i_trainPeriod = 60
     forwardlook_days = 6
     bShowdata = True
     
-    date_prediction = dt.date.today() - dt.timedelta(days = 1) 
+    date_prediction = dt.date.today() 
     
     #symbols = get_symbols_for_prediction(date_end = date_prediction, days_period = (i_trainPeriod + 40)*1.5)#fixed number of days which cover the biggest lookback period in all features + some coefficient for non working days
     #print "symbols to be predicted: " + str(symbols)
     
     #read data
     symbols = ('5MB', 'SOFIX') 
-    #data = bsereader.get_data(date_prediction - dt.timedelta(days = (i_trainPeriod + 40)*1.5), date_prediction, symbols)
-    data = bsereader.get_data(date_prediction - dt.timedelta(days = 5), date_prediction, symbols)
+    data = bsereader.get_data(date_prediction - dt.timedelta(days = (i_trainPeriod + 40)*1.5), date_prediction, symbols)
     
     if bShowdata:
         show_data(data['close'])

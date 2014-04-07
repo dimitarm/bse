@@ -46,6 +46,30 @@ def get_highest_lookback(na_data):
         l_lookbacks.append(i_firstNan)
     return np.array(l_lookbacks, copy = False)
 
+def fillforward(df):
+    """
+    @summary Removes NaNs from a 2D array by scanning forward in the 
+    1st dimension.  If a cell is NaN, the value above it is carried forward.
+    @param nds: the array to fill forward
+    @return the array is revised in place
+    """
+    for col in df:
+        for row in df[col].index:
+            if math.isnan(df.loc[row, col]):
+                df[row, col] = df[row-1, col]
+
+def fillbackward(nds):
+    """
+    @summary Removes NaNs from a 2D array by scanning backward in the 
+    1st dimension.  If a cell is NaN, the value above it is carried backward.
+    @param nds: the array to fill backward
+    @return the array is revised in place
+    """
+    for col in range(nds.shape[1]):
+        for row in range(nds.shape[0] - 2, -1, -1):
+            if math.isnan(nds[row, col]):
+                nds[row, col] = nds[row+1, col]
+
 
 def prepare_data_for_prediction(dFullData):
     '''
