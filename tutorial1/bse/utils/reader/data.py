@@ -13,7 +13,7 @@ import types
 import numpy as np
 
 
-
+pand.set_option('mode.chained_assignment','raise')   
 _processed_data = {}
 _series = ('close', 'open', 'high', 'low', 'volumes')
 
@@ -63,8 +63,8 @@ def get_data(start, end, symbols):
                 tmp_serie = series[symbol].loc[bsedates]
                 df_new = pand.DataFrame(tmp_serie.values, columns = (symbol,), index = tmp_serie.index)
                 result[serie_name] = df_new 
-#    for serie in _series:
-#        result[serie] = pand.DataFrame(result[serie], copy = True)
+    for serie in _series:
+        result[serie] = pand.DataFrame(result[serie], copy = True).sort_index()
     return result 
 
 if __name__ == '__main__':

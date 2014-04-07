@@ -79,7 +79,6 @@ def show_data(dfData):
     plt.show()
     
 if __name__ == '__main__':
-    pand.set_option('mode.chained_assignment','warn')   
  
     i_trainPeriod = 60
     forwardlook_days = 6

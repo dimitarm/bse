@@ -50,25 +50,37 @@ def fillforward(df):
     """
     @summary Removes NaNs from a 2D array by scanning forward in the 
     1st dimension.  If a cell is NaN, the value above it is carried forward.
-    @param nds: the array to fill forward
-    @return the array is revised in place
+    @param df: dataframe to fill forward
+    @return the dataframe is revised in place
     """
     for col in df:
+        first = True
         for row in df[col].index:
-            if math.isnan(df.loc[row, col]):
-                df[row, col] = df[row-1, col]
+            if first == True:
+                last_value = df.loc[row, col]
+            else:
+                if math.isnan(df.loc[row, col]):
+                    df.loc[row, col] = last_value
+                last_value = df.loc[row, col]
+            first = False
 
-def fillbackward(nds):
+def fillbackward(df):
     """
     @summary Removes NaNs from a 2D array by scanning backward in the 
     1st dimension.  If a cell is NaN, the value above it is carried backward.
     @param nds: the array to fill backward
     @return the array is revised in place
     """
-    for col in range(nds.shape[1]):
-        for row in range(nds.shape[0] - 2, -1, -1):
-            if math.isnan(nds[row, col]):
-                nds[row, col] = nds[row+1, col]
+    for col in df:
+        first = True
+        for row in df[col].index.reverse:
+            if first == True:
+                last_value = df.loc[row, col]
+            else:
+                if math.isnan(df.loc[row, col]):
+                    df.loc[row, col] = last_value
+                last_value = df.loc[row, col]
+            first = False
 
 
 def prepare_data_for_prediction(dFullData):
