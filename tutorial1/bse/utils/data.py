@@ -73,7 +73,11 @@ def fillbackward(df):
     """
     for col in df:
         first = True
-        for row in df[col].index.reverse:
+        rows = []
+        for row in df[col].index:
+            rows.append(row)
+        rows.reverse()
+        for row in rows:
             if first == True:
                 last_value = df.loc[row, col]
             else:
@@ -89,9 +93,9 @@ def prepare_data_for_prediction(dFullData):
     '''
     for key in dFullData.iterkeys():
         # fill forward
-        tsutil.fillforward(dFullData[key].values)
+        fillforward(dFullData[key])
         # fill backward
-        tsutil.fillbackward(dFullData[key].values)
+        fillbackward(dFullData[key])
 
 def is_data_correct(data):
     for col in range(data.shape[1]):
