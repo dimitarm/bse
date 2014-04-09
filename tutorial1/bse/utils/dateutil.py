@@ -33,6 +33,9 @@ def getFirstDateOfData():
     return _first_date
 
 def getBSEdays(startday, endday, timeofday = dt.timedelta(0)):
+    '''
+    @summary returns list of bse days that belong to period startday end endday including them
+    '''
     start = startday
     end = endday
     dates = list()
