@@ -21,6 +21,19 @@ def get_next_prediction_date(current_prediction_date):
 if __name__ == '__main__':
     pass
 
+'''
+Things to be saved in persistent file:
+current_prediction_date
+forecast_symbols
+'''
+
+
+#update data
+
+#get list of latest predicted symbols
+#get their closing data
+#calculate forecast success rate for each one of them
+#update index.html 
 
 #get current prediction date
 

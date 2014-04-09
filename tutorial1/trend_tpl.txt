@@ -20,3 +20,37 @@
 		</td>    
     </tr>
 </%def>
+
+
+<table class="navigation"><tr><td class="arrow">
+<img height="30px" src="picts/arrow1.png">
+</td><td class="period">
+02.10.2012 - 09.10.2012
+</td><td class="arrow"><img height="30px" src="picts/arrow.png"> 
+</td></tr></table>
+
+
+
+
+
+
+
+<!-- START CONTENT -->
+<table class="fullwidth"><tr><td class="td-left td-top just">
+
+<div id="maintable">
+<table id="maintable" summary="Submitted table designs"><thead><tr><th scope="col">Symbol</th><th scope="col">30.05.2014 closing price</th><th scope="col">Forecast for 06.06.2014 </th><th scope="col">06.06.2014 closing price</th><th scope="col">Sucess rate last 6 months[%]</th><th scope="col">Sucess rate last 12 months[%]</th></tr></thead>
+
+<tbody>
+<tr><th id="r100" scope="row"><a title="SOFIX" href="http://www.bse-sofia.bg/">SOFIX</a></th><td>1334.15</td><td><img src="picts/arrow_up.png"></td><td style="background-color:#ff4422">1340.15</td><td>69</td><td>73</td></tr>
+<tr><th id="r100" scope="row"><a title="3JR" href="http://www.bse-sofia.bg/">3JR</a></th><td>1334.15</td><td><img src="picts/arrow_down.png"></td><td style="background-color:#33ff11">1340.15</td><td>69</td><td>73</td></tr>
+<tr><th id="r100" scope="row"><a title="SOFIX" href="http://www.bse-sofia.bg/">SOFIX</a></th><td>1334.15</td><td><img src="picts/arrow_up.png"></td><td>1340.15</td><td>69</td><td>73</td></tr>
+<tr><th id="r100" scope="row"><a title="SOFIX" href="http://www.bse-sofia.bg/">SOFIX</a></th><td>1334.15</td><td><img src="picts/arrow_up.png"></td><td>1340.15</td><td>69</td><td>73</td></tr>
+<tr><th id="r100" scope="row"><a title="SOFIX" href="http://www.bse-sofia.bg/">SOFIX</a></th><td>1334.15</td><td><img src="picts/arrow_up.png"></td><td>1340.15</td><td>69</td><td>73</td></tr>
+<tr><th id="r100" scope="row"><a title="SOFIX" href="http://www.bse-sofia.bg/">SOFIX</a></th><td>1334.15</td><td><img src="picts/arrow_down.png"></td><td>1340.15</td><td>69</td><td>73</td></tr>
+<tr><th id="r100" scope="row"><a title="SOFIX" href="http://www.bse-sofia.bg/">SOFIX</a></th><td>1334.15</td><td><img src="picts/arrow_up.png"></td><td>1340.15</td><td>69</td><td>73</td></tr>
+<tr><th id="r100" scope="row"><a title="SOFIX" href="http://www.bse-sofia.bg/">SOFIX</a></th><td>1334.15</td><td><img src="picts/arrow_up.png"></td><td>1340.15</td><td>69</td><td>73</td></tr>
+<tr><th id="r100" scope="row"><a title="SOFIX" href="http://www.bse-sofia.bg/">SOFIX</a></th><td>1334.15</td><td><img src="picts/arrow_up.png"></td><td>1340.15</td><td>69</td><td>73</td></tr>
+
+</tbody>
+</table>
