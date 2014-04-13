@@ -3,26 +3,16 @@ Created on Mar 20, 2014
 
 @author: dimitar
 '''
-import math
 import datetime as dt
-import itertools
 import sys
 from bse.utils.classes import featTrend
-''' 3rd party imports '''
-import numpy as np
-import pandas as pand
-from datetime import datetime
-from datetime import timedelta
 ''' QSTK imports '''
-from QSTK.qstkutil import DataAccess as da
 import QSTK.qstkutil.tsutil as tsutil
 
 import matplotlib.pyplot as plt
-import matplotlib.axes as ax
 
 from sklearn import preprocessing
 
-import utils.dateutil as bsedateutil
 import utils.equities as bseeq
 import utils.data as datautil
 import utils.tools as bsetools
@@ -30,7 +20,6 @@ import utils.data as bsedata
 import utils.features.feats as bsefeats
 import bse.utils.reader.data as bsereader
 import strategy_trend
-import sys
 
 def get_prediction(data, symbols, trainperiod, forwardlook, predicting_feat, features, feature_parameters, learner_factory):
     result = {}
@@ -77,11 +66,13 @@ def show_data(dfData):
         axes[count / 2, count % 2].set_title(symbol)
         count += 1
     plt.show()
+
+
     
 if __name__ == '__main__':
  
     i_trainPeriod = 60
-    forwardlook_days = 6
+    forwardlook_days = 5
     bShowdata = True
     
     date_prediction = dt.date.today() 

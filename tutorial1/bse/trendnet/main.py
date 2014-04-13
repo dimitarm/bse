@@ -5,25 +5,49 @@ Created on Apr 9, 2014
 '''
 
 import bse.utils.dateutil as bsedateutl
+import bse.utils.reader.data as bsereader
+import bse.utils.classes as bseclass 
+import bse.utils.equities as bseeq
 import datetime as dt
+import QSTK.qstkutil.tsutil as tsutil
 
 _prediction_period = 5 #days
+_train_period = 60
 
-def get_next_prediction_date(current_prediction_date):
+def get_symbols_for_prediction(date_end = dt.date.today(), days_period = 90):
+    # calculate limit dates
+    date_start = date_end - dt.timedelta(days=days_period) #fixed number of days which cover the biggest lookback period in all features + some coefficient for non working days
+    #get data
+    full_data = bsereader.get_data(date_start, date_end, symbols = bseeq.get_all_equities())
+    # get symbols to be predicted
+    return tsutil.stockFilter(full_data['close'], full_data['volumes'], fNonNan=0.95, fPriceVolume=1)
+
+def get_next_prediction_PERIOD(current_start, cur_end):
     count = _prediction_period 
-    curr = current_prediction_date
+    new_end = cur_end
     while count > 0:
-        if bsedateutl.isBSEDay(curr) == bsedateutl.WORK:
+        if bsedateutl.isBSEDay(new_end) == bsedateutl.WORK:
             count -= 1
-        curr = curr + dt.timedelta(days = 1)
+        new_end = new_end + dt.timedelta(days = 1)
+    return (cur_end, new_end)
+    
+def get_trend(symbols, start_date, trend_days):
+    data = bsereader.get_data(start_date, start_date + dt.timedelta(days = trend_days * 2), symbols)
+    feat = bseclass.featTrend(data, trend_days)
+    trends = {}
+    for symbol in symbols:
+        trends[symbol] = feat[symbol][start_date]
+    return trends
     
 
 if __name__ == '__main__':
+    print get_trend(['SOFIX', '3JR'], dt.date(year = 2014, month = 4, day = 1), 5)
     pass
 
 '''
 Things to be saved in persistent file:
-current_prediction_date
+prediction_period_start
+prediction_period_end
 forecast_symbols
 '''
 
@@ -33,6 +57,7 @@ forecast_symbols
 #get list of latest predicted symbols
 #get their closing data
 #calculate forecast success rate for each one of them
+#store list of latest prediction symbols with forecast success in DB
 #update index.html 
 
 #get current prediction date
