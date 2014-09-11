@@ -38,9 +38,13 @@ def get_trend(symbols, start_date, trend_days):
     for symbol in symbols:
         trends[symbol] = feat[symbol][start_date]
     return trends
+
+
     
 
 if __name__ == '__main__':
+    import bse.utils.reader.data as bsereader1
+    bsereader1.get_data(dt.date(year = 2014, month = 1, day = 1), dt.date(year = 2014, month = 4, day = 1), ['SOFIX'])
     print get_trend(['SOFIX', '3JR'], dt.date(year = 2014, month = 4, day = 1), 5)
     pass
 
