@@ -47,9 +47,6 @@ def get_feats():
         lambda (dFullData): mom.featRSITradingRule(dFullData, lLookback = 9), 
         lambda (dFullData): mom.featRSITradingRule(dFullData, lLookback = 14), 
         lambda (dFullData): mom.featRSITradingRule(dFullData, lLookback = 25), 
-        lambda (dFullData): qstkfeat.featRSI(dFullData, lLookback = 9, b_human = False), 
-        lambda (dFullData): qstkfeat.featRSI(dFullData, lLookback = 14, b_human = False), 
-        lambda (dFullData): qstkfeat.featRSI(dFullData, lLookback = 25, b_human = False), 
         lambda (dFullData): osc.featFASTK(dFullData, lLookback = 12),
         lambda (dFullData): osc.featFASTK(dFullData, lLookback = 18),
         lambda (dFullData): osc.featFASTK(dFullData, lLookback = 24),
@@ -110,6 +107,25 @@ def get_feats():
         volume.featPVITradeRule,
         #volume.featNVI2SMA,
         #volume.featPVI2SMA,
-        volume.featPriceVolumeTrend)
+        volume.featPriceVolumeTrend,
+        
+        lambda (dFullData): qstkfeat.featBeta(dFullData, sMarket = "SOFIX", lLookback = 10),
+        lambda (dFullData): qstkfeat.featCorrelation(dFullData, sRel = "SOFIX", lLookback = 10),
+        lambda (dFullData): qstkfeat.featRSI(dFullData, lLookback = 9, b_human = False), 
+        lambda (dFullData): qstkfeat.featRSI(dFullData, lLookback = 14, b_human = False), 
+        lambda (dFullData): qstkfeat.featRSI(dFullData, lLookback = 25, b_human = False), 
+
+        qstkfeat.featHiLow,
+        qstkfeat.featAroon,
+        qstkfeat.featAroonDown,
+        qstkfeat.featDrawDown,
+        qstkfeat.featDate,
+        qstkfeat.featSTD,
+        qstkfeat.featRunUp,
+        qstkfeat.featStochastic,
+        qstkfeat.featPrice,
+#        qstkfeat.featVolume,
+#        qstkfeat.featVolumeDelta
+        )
 
     return lfc_TestFeatures

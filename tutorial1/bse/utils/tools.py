@@ -75,6 +75,27 @@ def calculateSymbolFeatures(d_dfData, symbol, lfc_Features, ld_FeatureParameters
     #return na_dataWithoutNans
     return na_features
 
+def calculateSymbolFeatures1(d_dfData, symbol, lfc_Features, ld_FeatureParameters):
+    """
+    @summary: Calculate features only for a given symbol preserving NANs
+    TODO: Implement more optimal algorithm
+    """
+    
+    na_features = np.empty((0, 0))
+    for feat_ind in range(0, len(lfc_Features)):
+        if lfc_Features[feat_ind] in ld_FeatureParameters:
+            ldFeatureData = lfc_Features[feat_ind]( d_dfData, **ld_FeatureParameters[lfc_Features[feat_ind]] )
+        else:
+            ldFeatureData = lfc_Features[feat_ind]( d_dfData )
+        naShapedData = ldFeatureData[symbol].values.reshape(ldFeatureData[symbol].values.size, 1)
+        if na_features.shape == (0,0):
+            na_features = naShapedData
+        else:
+            na_features =  np.hstack((na_features, naShapedData))
+    #na_dataWithoutNans = removeNans(na_features)
+    #return na_dataWithoutNans
+    return na_features
+
 def getFeaturesCombination(na_featData, l_featCombination):
     na_data = np.empty((na_featData.shape[0], 0))
     #stack feat data from combination

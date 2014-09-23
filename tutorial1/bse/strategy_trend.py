@@ -32,9 +32,7 @@ import utils.tools as bsetools
 import utils.data as bsedata
 from sklearn import preprocessing
 from sklearn import svm
-from sklearn import metrics 
-from sklearn import cross_validation
-from sklearn import datasets
+from sklearn import decomposition
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import AdaBoostClassifier
 
@@ -45,7 +43,7 @@ def print_full(data):
             sys.stdout.write(str(data[row, col]) + " ")
         sys.stdout.write("\r\n")
 
-def testLearner(d_dfData, s_symbol, t_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, fc_learnerFactory, i_trainPeriod, i_forwardlook, b_Plot = False):
+def testLearner(d_dfData, s_symbol, t_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, b_scaling, b_pca, fc_learnerFactory, i_trainPeriod, i_forwardlook, b_Plot = False):
     l_fcFeatures = list(t_fcTestFeatures)
     l_fcFeatures.append(fc_ClassificationFeature)
 
@@ -59,7 +57,7 @@ def testLearner(d_dfData, s_symbol, t_fcTestFeatures, fc_ClassificationFeature, 
             return
 
     t1 = datetime.now()
-    na_data = bsetools.calculateSymbolFeatures(d_dfData, s_symbol, l_fcFeatures, ld_FeatureParameters)
+    na_data = bsetools.calculateSymbolFeatures1(d_dfData, s_symbol, l_fcFeatures, ld_FeatureParameters)
     #print_full(na_data)
     #print "features calculated in " + str(datetime.now() - t1) + " seconds"
     
@@ -81,12 +79,26 @@ def testLearner(d_dfData, s_symbol, t_fcTestFeatures, fc_ClassificationFeature, 
     success_down = float(0)
     scaler = preprocessing.StandardScaler().fit(na_data[:,:-1])
     
-    na_mainData = scaler.transform(na_data[:,:-1])
+    if b_scaling == True:
+        na_mainData = scaler.transform(na_data[:,:-1])
+    else:
+        na_mainData = na_data[:,:-1]
     na_classData = na_data[:,-1]#.reshape(na_data.shape[0], 1)
+    
     count = 0
     all_count = na_data.shape[0] - i_forwardlook + 1 - i_trainPeriod
     for i in range(i_trainPeriod, na_data.shape[0] - i_forwardlook + 1):
-        i_prediction = fc_learnerFactory(na_mainData[i - i_trainPeriod:i,:], na_classData[i - i_trainPeriod:i], na_mainData[i,:])
+        
+        x_train = na_mainData[i - i_trainPeriod:i,:]
+        y_train = na_classData[i - i_trainPeriod:i]
+        x_predict = na_mainData[i,:]
+        if b_pca == True:
+            pca = decomposition.PCA(n_components = 40)
+            pca.fit(x_train)
+            x_train = pca.transform(x_train)
+            x_predict = pca.transform(x_predict)
+        
+        i_prediction = fc_learnerFactory(x_train, y_train, x_predict)
         if (i_prediction == na_classData[i]):
             success += 1
             if (i_prediction == 1):
@@ -103,10 +115,10 @@ def svmLearner(na_train, na_class, na_data):
     return clf.predict(na_data)
 
 def adaBoostLearner(na_train, na_class, na_data):
-    #baseClf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='rbf', probability=True, shrinking=True, tol=0.001, verbose=False)
-    #clf = AdaBoostClassifier(base_estimator = baseClf, n_estimators=50)
-    clf = AdaBoostClassifier(n_estimators=50)
-    clf.fit(na_train, na_class)    
+    baseClf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='rbf', probability=True, shrinking=True, tol=0.001, verbose=False)
+    clf = AdaBoostClassifier(base_estimator = baseClf, n_estimators=50)
+    #clf = AdaBoostClassifier(n_estimators=50)
+    #clf.fit(na_train, na_class)    
     return clf.predict(na_data)
 
 def knnLearner(na_train, na_class, na_data):
@@ -138,7 +150,7 @@ if __name__ == '__main__':
     lsSym = np.array(['3JR', '4CF', '6A6', '6C4', 'E4A', 'SOFIX'])
     
     ''' Get data '''
-    dtEnd = dt.datetime.today().replace(hour = 0, minute = 0, second = 0, microsecond = 0)
+    dtEnd = dt.datetime(2014,9,23). replace(hour = 0, minute = 0, second = 0, microsecond = 0)
     dtStart = dtEnd - dt.timedelta(days = 365)
     dataobj = da.DataAccess(da.DataSource.CUSTOM)      
     lsKeys = ['open', 'high', 'low', 'close', 'volumes']
@@ -158,7 +170,9 @@ if __name__ == '__main__':
                     lfc_TestFeatures, 
                     lambda (dFullData): featTrend(dFullData, lForwardlook = i_forwardlook), 
                     {}, 
-                    adaBoostLearner, 
+                    True,   #scaling
+                    True,  #pca
+                    knnLearner, 
                     i_trainPeriod = 60, 
                     i_forwardlook = i_forwardlook)
     t2 = datetime.now()

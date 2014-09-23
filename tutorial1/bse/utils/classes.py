@@ -7,7 +7,6 @@ Created on Jun 25, 2013
 # ''' 3rd Party Imports '''
 import pandas as pand
 import numpy as np
-import datetime as dt
 import math
 
 # ''' QSTK Imports '''
@@ -48,3 +47,16 @@ def trends(ret):
         else:
             na_res[pos] = -1
     return na_res
+
+def featNegativeEvent(dData, lForwardlook = 5):
+    dfPrice = dData['close']
+    
+    trds = np.array(map(trends, (dfPrice.values[lForwardlook:, :] - dfPrice.values[0:-lForwardlook, :])))
+    nans = np.empty((lForwardlook, dfPrice.values.shape[1]))
+    nans[0:lForwardlook,:] = np.nan
+    
+    trds2 = np.vstack((trds, nans))
+    
+    dfRet = pand.DataFrame(index=dfPrice.index, columns=dfPrice.columns, data=trds2)
+    
+    return dfRet

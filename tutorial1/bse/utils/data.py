@@ -57,11 +57,11 @@ def fillforward(df):
         first = True
         for row in df[col].index:
             if first == True:
-                last_value = df.loc[row, col]
+                last_value = df.at[row, col]
             else:
-                if math.isnan(df.loc[row, col]):
-                    df.loc[row, col] = last_value
-                last_value = df.loc[row, col]
+                if math.isnan(df.at[row, col]):
+                    df.at[row, col] = last_value
+                last_value = df.at[row, col]
             first = False
 
 def fillbackward(df):
@@ -79,11 +79,11 @@ def fillbackward(df):
         rows.reverse()
         for row in rows:
             if first == True:
-                last_value = df.loc[row, col]
+                last_value = df.at[row, col]
             else:
-                if math.isnan(df.loc[row, col]):
-                    df.loc[row, col] = last_value
-                last_value = df.loc[row, col]
+                if math.isnan(df.at[row, col]):
+                    df.at[row, col] = last_value
+                last_value = df.at[row, col]
             first = False
 
 

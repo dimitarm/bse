@@ -19,31 +19,26 @@ from datetime import timedelta
 from QSTK.qstkutil import DataAccess as da
 import QSTK.qstkutil.tsutil as tsutil
 
-
-
-
-import utils.bsedateutil as bsedateutil
+import utils.dateutil as bsedateutil
 import utils.equities as bseeq
 import utils.data as datautil
-
-
+import bse.utils.reader.data as bsereader1
 
 if __name__ == '__main__':
     
     lsSym = np.array(bseeq.get_all_equities())
     
     #get data
-    dtStart = dt.datetime(2010,2,18)
-    dtEnd = dt.datetime(2014,2,17)
-    dataobj = da.DataAccess(da.DataSource.CUSTOM)      
+    dtStart = dt.datetime(2013,9,24)
+    dtEnd = dt.datetime(2014,9,23)
+
+    #dataobj = da.DataAccess(da.DataSource.CUSTOM)      
 
     #get train data
-    ldtTimestamps = bsedateutil.getBSEdays( dtStart, dtEnd, dt.timedelta(hours=16) )
-    
-    dmPrice = dataobj.get_data( ldtTimestamps, lsSym, 'close')
-    dmVolume = dataobj.get_data( ldtTimestamps, lsSym, 'volume' )
+    dData = bsereader1.get_data( dtStart, dtEnd, bseeq.get_all_equities())
+    #dmVolume = bsereader1.get_data( ldtTimestamps, bseeq.get_all_equities(), 'volume' )
     
     
-    print tsutil.stockFilter(dmPrice, dmVolume, fNonNan = 0.9, fPriceVolume = 1)
+    print tsutil.stockFilter(dData['close'], dData['volumes'], fNonNan = 0.9, fPriceVolume = 1)
     
     
