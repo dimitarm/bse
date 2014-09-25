@@ -14,19 +14,29 @@ def simulate_trades(dAlloc, dPrices, iCash):
             if symbol2trade in portfolio:
                 if trans_type == True: #buy
                     #buy stock if free cash available
-                    shares2buy = cash / dPrices['close'][symbol2trade][day]
+                    shares2buy = cash / dPrices['open'][symbol2trade][day]
                     if shares2buy == 0:
                         continue
+                    portfolio[symbol2trade] += shares2buy
+                    cash -= shares2buy * cash / dPrices['open'][symbol2trade][day]
+                    print "{0}: Buying {1} shares of {2} for {3}".format(day, shares2buy, symbol2trade, dPrices['open'][symbol2trade][day])
                 else:
                     #sell stock 
-                    pass
+                    shares2sell = portfolio.pop(symbol2trade)
+                    cash += shares2sell * dPrices['close'][symbol2trade][day] 
+                    print "{0}: Selling {1} shares of {2} for {3}".format(day, shares2sell, symbol2trade, dPrices['close'][symbol2trade][day])
             else:
                 if trans_type == True:
                     #buy stock if free cash available
-                    pass
+                    shares2buy = cash / dPrices['open'][symbol2trade][day]
+                    if shares2buy == 0:
+                        continue
+                    portfolio[symbol2trade] = shares2buy
+                    cash -= shares2buy * cash / dPrices['open'][symbol2trade][day]
+                    print "{0}: Buying {1} shares of {2} for {3}".format(day, shares2buy, symbol2trade, dPrices['open'][symbol2trade][day])
                 else:
                     #sell something that is not in a portfolio?
-                    print("Cannot sell " + symbol2trade + " no such stock in my portfolio!")
+                    print "Cannot sell {0} no such stock in my portfolio!".format(symbol2trade)
     pass
 
 
