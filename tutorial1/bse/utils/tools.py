@@ -5,6 +5,7 @@ Created on Jun 28, 2013
 '''
 import math
 import numpy as np
+import pandas as pd
 import QSTK.qstkutil.tsutil as tsutil
 from sklearn import cross_validation
 from sklearn import metrics
@@ -82,12 +83,16 @@ def calculateSymbolFeatures1(d_dfData, symbol, lfc_Features, ld_FeatureParameter
     """
     
     na_features = np.empty((0, 0))
+    d_data = {}
+    for serie in d_dfData.iterkeys():
+        d_data[serie] = d_dfData[serie][symbol]
+    
     for feat_ind in range(0, len(lfc_Features)):
         if lfc_Features[feat_ind] in ld_FeatureParameters:
-            ldFeatureData = lfc_Features[feat_ind]( d_dfData, **ld_FeatureParameters[lfc_Features[feat_ind]] )
+            ldFeatureData = lfc_Features[feat_ind]( d_data, **ld_FeatureParameters[lfc_Features[feat_ind]] )
         else:
-            ldFeatureData = lfc_Features[feat_ind]( d_dfData )
-        naShapedData = ldFeatureData[symbol].values.reshape(ldFeatureData[symbol].values.size, 1)
+            ldFeatureData = lfc_Features[feat_ind]( d_data )
+        naShapedData = ldFeatureData.values.reshape(ldFeatureData.values.size, 1)
         if na_features.shape == (0,0):
             na_features = naShapedData
         else:
@@ -169,5 +174,28 @@ def getBestFeaturesCombinationForwardSearch(na_featData, na_class, fc_learnerFac
     #print "success: " + str(i_bestIntResult) + " " + str(l_featBestSet)
     return clf_bestCLF, l_featBestSet
         
-        
+def calculateFeatures(d_dfData, lfc_Features, ld_FeatureParameters):
+    """
+    @summary: Calculate features only for a given symbol preserving NANs
+    @requires: list of data frames. one for each feature 
+    """
+    ldfRet = []
+    
+    for feat_ind in range(0, len(lfc_Features)):
+        if lfc_Features[feat_ind] in ld_FeatureParameters:
+            dfFeatureData = lfc_Features[feat_ind]( d_dfData, **ld_FeatureParameters[lfc_Features[feat_ind]] )
+        else:
+            dfFeatureData = lfc_Features[feat_ind]( d_dfData )
+        ldfRet.append(dfFeatureData)
+    return ldfRet
+
+def extractSymbolFeatures(ldfFeatures):
+    ddfFeatures = {}
+    for symbol in ldfFeatures[0].columns:
+        dSymFeatures = {}
+        for feat in range(0, len(ldfFeatures)):
+            dSymFeatures[feat] = ldfFeatures[feat][symbol]
+        ddfFeatures[symbol] = pd.DataFrame(data = dSymFeatures)
+    return ddfFeatures
+                
         

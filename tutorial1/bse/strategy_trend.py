@@ -66,12 +66,8 @@ def testLearner(d_dfData, s_symbol, t_fcTestFeatures, fc_ClassificationFeature, 
     #remove NaNs at beginning and at end of period
     na_data = na_data[na_lookbacks.max():-i_forwardlook,:]
     #check data for correctness
-    for col in range(na_data.shape[1]):
-        for row in range(0, na_data.shape[0]):
-            if math.isnan(na_data[row, col]) or math.isinf(na_data[row, col]):
-                print "nan in data " + s_symbol
-                print "col: " + str(col) + " row: " + str(row) + " : " + str(na_data[row, col])
-                return
+    if bsedata.is_data_correct(na_data) == False:
+        return
 
     #test each combination
     success = float(0)
@@ -86,7 +82,7 @@ def testLearner(d_dfData, s_symbol, t_fcTestFeatures, fc_ClassificationFeature, 
     na_classData = na_data[:,-1]#.reshape(na_data.shape[0], 1)
     
     count = 0
-    all_count = na_data.shape[0] - i_forwardlook + 1 - i_trainPeriod
+    #all_count = na_data.shape[0] - i_forwardlook + 1 - i_trainPeriod
     for i in range(i_trainPeriod, na_data.shape[0] - i_forwardlook + 1):
         
         x_train = na_mainData[i - i_trainPeriod:i,:]
