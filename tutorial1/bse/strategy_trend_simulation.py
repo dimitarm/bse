@@ -28,6 +28,7 @@ if __name__ == '__main__':
     i_forwardlook = 5
     i_trainPeriod = 60
     lsSym = np.array(['3JR', '4CF', '6A6', '6C4', 'E4A', 'SOFIX'])
+    lsSym = np.array(['E4A', 'SOFIX'])
     
     ''' Get data '''
     dtStart = dt.datetime(2013,1,11).replace(hour = 0, minute = 0, second = 0, microsecond = 0)
@@ -35,7 +36,7 @@ if __name__ == '__main__':
     dPrices = bsereader.get_data(dtStart, dtEnd, lsSym)
     #fill forward
     for sym in dPrices.iterkeys():
-        dPrices[sym].fillna(method='ffill')
+        dPrices[sym].fillna(method='ffill', inplace=True)
     
     #calculate features
     lfc_TestFeatures = bsefeats.get_feats()
@@ -50,16 +51,19 @@ if __name__ == '__main__':
     #get loopback
     loopback = bsedata.get_highest_lookback(ddfFeatures[lsSym[0]])
     
-    for day_index in range(i_trainPeriod + i_forwardlook.max(), dPrices.index.size - i_forwardlook - 1, i_forwardlook):
-        day = dPrices.index[day_index]
+    for day_index in range(i_trainPeriod + loopback.max(), dPrices['close'].index.size - i_forwardlook - 1, i_forwardlook):
+        day = dPrices['close'].index[day_index]
         lPortfolio = []
         #calculate new portfolio symbols
         for symbol in lsSym:
             predictor = AdaBoostClassifier(n_estimators=50)
-            train_data = ddfFeatures[symbol][day_index - i_trainPeriod:day_index,:]
-            class_data = ddfClass[symbol][day_index - i_trainPeriod:day_index]
+            train_data = ddfFeatures[symbol].values[day_index - i_trainPeriod:day_index,:]
+            class_data = ddfClass[symbol].values[day_index - i_trainPeriod:day_index].ravel()
+            if bsedata.is_data_correct(train_data) == False:
+                print 'nana in data'
+                quit()
             predictor.fit(train_data, class_data)
-            if predictor.predict(ddfFeatures[symbol][day_index, :-1]) == 1:
+            if predictor.predict(ddfFeatures[symbol].values[day_index]) == 1:
                 lPortfolio.append(symbol)
         #calclate portfolio structure
         dDayAllocation = {} 
