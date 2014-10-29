@@ -16,23 +16,18 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 from datetime import timedelta
 
-''' QSTK imports '''
-from QSTK.qstkutil import DataAccess as da
 
 
-from QSTK.qstkfeat.features import *
-import QSTK.qstkfeat.featutil as ftu
-import QSTK.qstkutil.tsutil as tsutil
 import utils.dateutil as bsedateutil
-import utils.data as datautil
 import utils.features.feats as bsefeats
+import bse.utils.reader.data as bsereader
 
 from utils.classes import *
 import utils.tools as bsetools
-import utils.data as bsedata
 from sklearn import preprocessing
 from sklearn import svm
 from sklearn import decomposition
+from sklearn.utils import assert_all_finite
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import AdaBoostClassifier
 
@@ -43,51 +38,34 @@ def print_full(data):
             sys.stdout.write(str(data[row, col]) + " ")
         sys.stdout.write("\r\n")
 
-def testLearner(d_dfData, s_symbol, t_fcTestFeatures, fc_ClassificationFeature, ld_FeatureParameters, b_scaling, b_pca, fc_learnerFactory, i_trainPeriod, i_forwardlook, b_Plot = False):
-    l_fcFeatures = list(t_fcTestFeatures)
-    l_fcFeatures.append(fc_ClassificationFeature)
-
-    for key in d_dfData.iterkeys():
-        #fill forward
-        tsutil.fillforward(d_dfData[key].values)
-        #fillbackward
-        tsutil.fillbackward(d_dfData[key].values)
-        if np.isnan(d_dfData[key].values.min()):
-            print "serious error"
-            return
-
+def testLearner(d_dfData, s_symbol, d_dfFeatures, d_dfClass, b_scaling, b_pca, fc_learnerFactory, i_trainPeriod, b_Plot = False):
     t1 = datetime.now()
-    na_data = bsetools.calculateSymbolFeatures1(d_dfData, s_symbol, l_fcFeatures, ld_FeatureParameters)
-    #print_full(na_data)
-    #print "features calculated in " + str(datetime.now() - t1) + " seconds"
     
-    #get lookbacks list without trend feature!
-    na_lookbacks = bsedata.get_highest_lookback(na_data[:,:-1])
-    #remove NaNs at beginning and at end of period
-    na_data = na_data[na_lookbacks.max():-i_forwardlook,:]
-    #check data for correctness
-    if bsedata.is_data_correct(na_data) == False:
-        return
-
+    df_data = d_dfFeatures[s_symbol]
+    df_classData = d_dfClass[s_symbol]
     #test each combination
     success = float(0)
     success_up = float(0)
     success_down = float(0)
-    scaler = preprocessing.StandardScaler().fit(na_data[:,:-1])
-    
-    if b_scaling == True:
-        na_mainData = scaler.transform(na_data[:,:-1])
-    else:
-        na_mainData = na_data[:,:-1]
-    na_classData = na_data[:,-1]#.reshape(na_data.shape[0], 1)
     
     count = 0
     #all_count = na_data.shape[0] - i_forwardlook + 1 - i_trainPeriod
-    for i in range(i_trainPeriod, na_data.shape[0] - i_forwardlook + 1):
+    for i in range(i_trainPeriod, df_data.index.size - i_forwardlook + 1):
+        day = df_data.index[i]
+        na_data = df_data.iloc[i - i_trainPeriod:i].values
+        y_train = df_classData.iloc[i - i_trainPeriod:i].values.ravel()
+        try:
+            assert_all_finite(na_data)
+            assert_all_finite(y_train)
+        except ValueError:
+            continue
+        if b_scaling == True:
+            scaler = preprocessing.StandardScaler().fit(na_data)
+            x_train = scaler.transform(na_data)
+        else:
+            x_train = na_data
         
-        x_train = na_mainData[i - i_trainPeriod:i,:]
-        y_train = na_classData[i - i_trainPeriod:i]
-        x_predict = na_mainData[i,:]
+        x_predict = df_data.iloc[i].values
         if b_pca == True:
             pca = decomposition.PCA(n_components = 40)
             pca.fit(x_train)
@@ -95,7 +73,7 @@ def testLearner(d_dfData, s_symbol, t_fcTestFeatures, fc_ClassificationFeature, 
             x_predict = pca.transform(x_predict)
         
         i_prediction = fc_learnerFactory(x_train, y_train, x_predict)
-        if (i_prediction == na_classData[i]):
+        if (i_prediction == df_classData.iloc[i]):
             success += 1
             if (i_prediction == 1):
                 success_up += 1
@@ -148,29 +126,33 @@ if __name__ == '__main__':
     ''' Get data '''
     dtEnd = dt.datetime(2014,9,23). replace(hour = 0, minute = 0, second = 0, microsecond = 0)
     dtStart = dtEnd - dt.timedelta(days = 365)
-    dataobj = da.DataAccess(da.DataSource.CUSTOM)      
     lsKeys = ['open', 'high', 'low', 'close', 'volumes']
 
     #get train data
-    ldtTimestamps = bsedateutil.getBSEdays( dtStart, dtEnd, dt.timedelta(hours=16))
-    ldfData = dataobj.get_data( ldtTimestamps, lsSym, lsKeys, verbose=False )
-    dFullData = dict(zip(lsKeys, ldfData))
+    dPrices = bsereader.get_data(dtStart, dtEnd, lsSym)
+
     lfc_TestFeatures = bsefeats.get_feats()
 
     t1 = datetime.now()
+
+    #calculate features
+    ldfFeatures = bsetools.calculateFeatures(dPrices, lfc_TestFeatures, {})
+    ddfFeatures = bsetools.extractSymbolFeatures(ldfFeatures)
+    #calculate class
+    fcClassificationFeature = lambda (dFullData): featTrend(dFullData, lForwardlook = i_forwardlook), 
+    ldfClass = bsetools.calculateFeatures(dPrices, (fcClassificationFeature), {})
+    ddfClass = bsetools.extractSymbolFeatures(ldfClass) 
     
     for symbol in lsSym:
         testLearner(
-                    dFullData, 
+                    dPrices, 
                     symbol, 
-                    lfc_TestFeatures, 
-                    lambda (dFullData): featTrend(dFullData, lForwardlook = i_forwardlook), 
-                    {}, 
+                    ddfFeatures, 
+                    ddfClass, 
                     True,   #scaling
                     True,  #pca
                     knnLearner, 
-                    i_trainPeriod = 60, 
-                    i_forwardlook = i_forwardlook)
+                    i_trainPeriod = 60)
     t2 = datetime.now()
     tdelta = t2 - t1
     print str(tdelta) + " seconds"

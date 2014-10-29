@@ -174,22 +174,30 @@ def getBestFeaturesCombinationForwardSearch(na_featData, na_class, fc_learnerFac
     #print "success: " + str(i_bestIntResult) + " " + str(l_featBestSet)
     return clf_bestCLF, l_featBestSet
         
-def calculateFeatures(d_dfData, lfc_Features, ld_FeatureParameters):
+def calculateFeatures(d_dfData, lfc_Features, d_FeatureParameters):
     """
-    @summary: Calculate features only for a given symbol preserving NANs
-    @requires: list of data frames. one for each feature 
+    @summary: Calculate features 
+    @param d_dfData: dict with series
+    @param l_fcFeatures: list of functions that calculate features
+    @param d_FeatureParameters: dict with function parameters. keys are same values passed in lfc_Features
+    @return: list of DataFrame object for each feature 
+     
     """
     ldfRet = []
     
     for feat_ind in range(0, len(lfc_Features)):
-        if lfc_Features[feat_ind] in ld_FeatureParameters:
-            dfFeatureData = lfc_Features[feat_ind]( d_dfData, **ld_FeatureParameters[lfc_Features[feat_ind]] )
+        if lfc_Features[feat_ind] in d_FeatureParameters:
+            dfFeatureData = lfc_Features[feat_ind]( d_dfData, **d_FeatureParameters[lfc_Features[feat_ind]] )
         else:
             dfFeatureData = lfc_Features[feat_ind]( d_dfData )
         ldfRet.append(dfFeatureData)
     return ldfRet
 
 def extractSymbolFeatures(ldfFeatures):
+    """
+    @summary extract symbol features from list of DataFrame objects containing features values
+    @return dict {symbol:DataFrame} data frame contains features values
+    """
     ddfFeatures = {}
     for symbol in ldfFeatures[0].columns:
         dSymFeatures = {}
