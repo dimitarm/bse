@@ -39,6 +39,7 @@ def print_full(data):
         sys.stdout.write("\r\n")
 
 def testLearner(d_dfData, s_symbol, d_dfFeatures, d_dfClass, b_scaling, b_pca, fc_learnerFactory, i_trainPeriod, b_Plot = False):
+    print s_symbol
     t1 = datetime.now()
     
     df_data = d_dfFeatures[s_symbol]
@@ -54,9 +55,11 @@ def testLearner(d_dfData, s_symbol, d_dfFeatures, d_dfClass, b_scaling, b_pca, f
         day = df_data.index[i]
         na_data = df_data.iloc[i - i_trainPeriod:i].values
         y_train = df_classData.iloc[i - i_trainPeriod:i].values.ravel()
+        x_predict = df_data.iloc[i].values
         try:
             assert_all_finite(na_data)
             assert_all_finite(y_train)
+            assert_all_finite(x_predict)
         except ValueError:
             continue
         if b_scaling == True:
@@ -65,7 +68,7 @@ def testLearner(d_dfData, s_symbol, d_dfFeatures, d_dfClass, b_scaling, b_pca, f
         else:
             x_train = na_data
         
-        x_predict = df_data.iloc[i].values
+        
         if b_pca == True:
             pca = decomposition.PCA(n_components = 40)
             pca.fit(x_train)
@@ -73,7 +76,7 @@ def testLearner(d_dfData, s_symbol, d_dfFeatures, d_dfClass, b_scaling, b_pca, f
             x_predict = pca.transform(x_predict)
         
         i_prediction = fc_learnerFactory(x_train, y_train, x_predict)
-        if (i_prediction == df_classData.iloc[i]):
+        if (i_prediction == df_classData.iloc[i][0]):
             success += 1
             if (i_prediction == 1):
                 success_up += 1
@@ -81,7 +84,10 @@ def testLearner(d_dfData, s_symbol, d_dfFeatures, d_dfClass, b_scaling, b_pca, f
                 success_down += 1
         count += 1
         #sys.stdout.write(str(all_count - count) + " to go\r")
-    print s_symbol + " success rate: " + str(success/count) + " up: " + str(success_up/count) + " down: " + str(success_down/count)
+    if count == 0:
+        print "no prediction"
+    else:
+        print "success rate: " + str(success/count) + " up: " + str(success_up/count) + " down: " + str(success_down/count) + " count: " + str(count)
 
 def svmLearner(na_train, na_class, na_data):
     clf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='rbf', probability=False, shrinking=True, tol=0.001, verbose=False)
@@ -89,10 +95,10 @@ def svmLearner(na_train, na_class, na_data):
     return clf.predict(na_data)
 
 def adaBoostLearner(na_train, na_class, na_data):
-    baseClf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='rbf', probability=True, shrinking=True, tol=0.001, verbose=False)
-    clf = AdaBoostClassifier(base_estimator = baseClf, n_estimators=50)
-    #clf = AdaBoostClassifier(n_estimators=50)
-    #clf.fit(na_train, na_class)    
+    #baseClf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='rbf', probability=True, shrinking=True, tol=0.001, verbose=False)
+    #clf = AdaBoostClassifier(base_estimator = baseClf, n_estimators=50)
+    clf = AdaBoostClassifier(n_estimators=50)
+    clf.fit(na_train, na_class)    
     return clf.predict(na_data)
 
 def knnLearner(na_train, na_class, na_data):
@@ -125,7 +131,7 @@ if __name__ == '__main__':
     
     ''' Get data '''
     dtEnd = dt.datetime(2014,9,23). replace(hour = 0, minute = 0, second = 0, microsecond = 0)
-    dtStart = dtEnd - dt.timedelta(days = 365)
+    dtStart = dtEnd - dt.timedelta(days = 365*2)
     lsKeys = ['open', 'high', 'low', 'close', 'volumes']
 
     #get train data
@@ -137,6 +143,7 @@ if __name__ == '__main__':
 
     #calculate features
     ldfFeatures = bsetools.calculateFeatures(dPrices, lfc_TestFeatures, {})
+    print "features calculated in {0} seconds".format(datetime.now() - t1)
     ddfFeatures = bsetools.extractSymbolFeatures(ldfFeatures)
     #calculate class
     fcClassificationFeature = lambda (dFullData): featTrend(dFullData, lForwardlook = i_forwardlook), 
@@ -149,9 +156,9 @@ if __name__ == '__main__':
                     symbol, 
                     ddfFeatures, 
                     ddfClass, 
-                    True,   #scaling
-                    True,  #pca
-                    knnLearner, 
+                    False,   #scaling
+                    False,  #pca
+                    adaBoostLearner, 
                     i_trainPeriod = 60)
     t2 = datetime.now()
     tdelta = t2 - t1
