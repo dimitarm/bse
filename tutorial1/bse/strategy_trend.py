@@ -39,7 +39,6 @@ def print_full(data):
         sys.stdout.write("\r\n")
 
 def testLearner(d_dfData, s_symbol, d_dfFeatures, d_dfClass, b_scaling, b_pca, fc_learnerFactory, i_trainPeriod, b_Plot = False):
-    print s_symbol
     t1 = datetime.now()
     
     df_data = d_dfFeatures[s_symbol]
@@ -85,9 +84,9 @@ def testLearner(d_dfData, s_symbol, d_dfFeatures, d_dfClass, b_scaling, b_pca, f
         count += 1
         #sys.stdout.write(str(all_count - count) + " to go\r")
     if count == 0:
-        print "no prediction"
+        print symbol + " no prediction"
     else:
-        print "success rate: " + str(success/count) + " up: " + str(success_up/count) + " down: " + str(success_down/count) + " count: " + str(count)
+        print symbol + " success rate: " + str(success/count) + " up: " + str(success_up/count) + " down: " + str(success_down/count) + " count: " + str(count)
 
 def svmLearner(na_train, na_class, na_data):
     clf = svm.SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0, degree=8, gamma=0.0, kernel='rbf', probability=False, shrinking=True, tol=0.001, verbose=False)
@@ -128,10 +127,11 @@ def findBestFeatCombinationLearner(na_train, na_class, fc_learnerFactory):
 if __name__ == '__main__':
     i_forwardlook = 5
     lsSym = np.array(['3JR', '4CF', '6A6', '6C4', 'E4A', 'SOFIX'])
+    #lsSym = np.array(['6C4', 'SOFIX'])
     
     ''' Get data '''
     dtEnd = dt.datetime(2014,9,23). replace(hour = 0, minute = 0, second = 0, microsecond = 0)
-    dtStart = dtEnd - dt.timedelta(days = 365*2)
+    dtStart = dtEnd - dt.timedelta(days = 365*4)
     lsKeys = ['open', 'high', 'low', 'close', 'volumes']
 
     #get train data

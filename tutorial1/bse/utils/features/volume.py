@@ -61,7 +61,7 @@ def featNVI(dFullData, iInitValue=100):
                 first = False
                 continue
             if dfVOL.get_value(row, column) < dfVOLt1.get_value(row, column):
-                last_obv = last_obv + last_obv * dfROC.get_value(row, column)
+                last_obv = last_obv + dfROC.get_value(row, column)
             dfNVI.set_value(row, column, last_obv)
     return dfNVI
     
@@ -80,7 +80,7 @@ def featPVI(dFullData, iInitValue=100):
                 first = False
                 continue
             if dfVOL.get_value(row, column) >= dfVOLt1.get_value(row, column):
-                last_obv = last_obv + last_obv * dfROC.get_value(row, column)
+                last_obv = last_obv + dfROC.get_value(row, column)
             dfPVI.set_value(row, column, last_obv)
     return dfPVI
 
