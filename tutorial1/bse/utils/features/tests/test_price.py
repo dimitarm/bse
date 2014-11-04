@@ -9,6 +9,7 @@ import pandas as pand
 import pandas.util.testing as pandtest
 import numpy as np
 import matplotlib.pyplot as plt
+import talib as ta
 
 class Test(unittest.TestCase):
 
@@ -39,8 +40,14 @@ class Test(unittest.TestCase):
         
         pandtest.assert_frame_equal(dfBollUp, dfResultUp)        
         pandtest.assert_frame_equal(dfBollDown, dfResultDown)        
+
+    def testEMA(self):
+        npData = np.random.random(100)
+        bse = pand.ewma(npData, span = 12)
+        ema = ta.EMA(real = npData, timeperiod = 12)
+        np.testing.assert_array_almost_equal(bse, ema, err_msg = "values not equal", verbose = True)
         
-        
+        #pand.ewma
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testBollingerUp']
