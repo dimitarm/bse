@@ -6,7 +6,6 @@ Created on Jun 28, 2013
 import math
 import numpy as np
 import pandas as pd
-import QSTK.qstkutil.tsutil as tsutil
 from sklearn import cross_validation
 from sklearn import metrics
 import pandas as pand 

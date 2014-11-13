@@ -6,6 +6,25 @@ Created on Nov 5, 2013
 import pandas as pand
 import numpy as np
 import math
+import QSTK.qstkutil.tsutil as tsu
+
+def featSTDReturn( dFullData, lLookback=20, bRel=True ):
+    '''
+    @summary: Calculate standard deviation
+    @param dFullData: Dictionary of data to use
+    @param lLookback: Number of days to look in the past
+    @param b_human: if true return dataframe to plot
+    @return: DataFrame array containing values
+    '''
+    
+    dfPrice = dFullData['close'].copy()
+    
+    tsu.returnize1(dfPrice.values)
+    dfRet = pand.rolling_std(dfPrice, lLookback)
+    
+    if bRel:
+        dfRet = dfRet / dfPrice
+    return dfRet
 
 def featEMAlambda( dFullData, serie='close', lambd = 0.9, bRel = False ):
     '''
@@ -26,11 +45,11 @@ def featEMAlambda( dFullData, serie='close', lambd = 0.9, bRel = False ):
     return dfRet
 
 
-def featBollinger( dFullData, serie = 'close', lLookback = 20):
-    dfPrice = dFullData[serie]
-    #''' Loop through stocks '''
-    dfAvg = pand.rolling_mean(dfPrice, lLookback)
-    return dfAvg
+#def featBollinger( dFullData, serie = 'close', lLookback = 20):
+#    dfPrice = dFullData[serie]
+#    #''' Loop through stocks '''
+#    dfAvg = pand.rolling_mean(dfPrice, lLookback)
+#    return dfAvg
     
 def featBollingerUp( dFullData, serie = 'close', lLookback = 20):
     dfPrice = dFullData[serie]
