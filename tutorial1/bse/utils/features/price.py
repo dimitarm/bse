@@ -7,6 +7,7 @@ import pandas as pand
 import numpy as np
 import math
 import QSTK.qstkutil.tsutil as tsu
+import warnings
 
 def featSTDReturn( dFullData, lLookback=20, bRel=True ):
     '''
@@ -26,7 +27,9 @@ def featSTDReturn( dFullData, lLookback=20, bRel=True ):
         dfRet = dfRet / dfPrice
     return dfRet
 
-def featEMAlambda( dFullData, serie='close', lambd = 0.9, bRel = False ):
+EMA_MIN_DATA_COUNT = 8
+
+def featEMA( dFullData, serie='close', lLookback = 20, bRel = False ):
     '''
     @summary: Calculate exponential moving average
     @param dFullData: Dictionary of data to use
@@ -34,14 +37,19 @@ def featEMAlambda( dFullData, serie='close', lambd = 0.9, bRel = False ):
     @param b_human: if true return dataframe to plot
     @return: DataFrame array containing values
     '''
-    
     dfPrice = dFullData[serie]
-    
-    dfRet = pand.ewma(dfPrice, span=(2/lambd) - 1)
+    for serie in dfPrice:
+        if dfPrice[serie].size <= lLookback * EMA_MIN_DATA_COUNT:
+            raise Exception('data is not sufficient for EMA')
+        
+    dfRet = pand.ewma(dfPrice, span=lLookback)
     
     if bRel:
         dfRet = dfRet / dfPrice;
          
+    for serie in dfRet:
+        for i in range(0, lLookback * EMA_MIN_DATA_COUNT):
+            dfRet[serie].iat[i] = np.nan
     return dfRet
 
 

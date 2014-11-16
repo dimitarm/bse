@@ -22,15 +22,15 @@ def get_random_data(l_keys, l_index, l_symbols, method = 'normal'):
     @return dict with dataframes for each l_keys
     '''
     dFullData = {}
-    if method == 'normal':
-        na_data = (np.random.randint(low = 5, high = 500000, size = (len(l_index), len(l_symbols))) * 0.99 ) / 10000
-    else:
-        na_data = np.empty((len(l_index), len(l_symbols)))
-        for index in range(0, len(l_index)):
-            y = math.sin( float(index) * 62.83/len(l_index) )
-            for col in range(0, len(l_symbols)):
-                na_data[index][col] = y
     for key in l_keys:
+        if method == 'normal':
+            na_data = np.random.rand(len(l_index), len(l_symbols)) * 100 + 5
+        else:
+            na_data = np.empty((len(l_index), len(l_symbols)))
+            for index in range(0, len(l_index)):
+                y = math.sin( float(index) * 62.83/len(l_index) )
+                for col in range(0, len(l_symbols)):
+                    na_data[index][col] = y
         dFullData[key] = pand.DataFrame( index=l_index, columns=l_symbols, data=na_data )
     return dFullData
     
@@ -49,57 +49,6 @@ def get_highest_lookback(data):
                 break
         l_lookbacks.append(i_firstNan)
     return np.array(l_lookbacks, copy = False)
-
-def fillforward(df):
-    """
-    @summary Removes NaNs from a 2D array by scanning forward in the 
-    1st dimension.  If a cell is NaN, the value above it is carried forward.
-    @param df: dataframe to fill forward
-    @return the dataframe is revised in place
-    """
-    for col in df:
-        first = True
-        for row in df[col].index:
-            if first == True:
-                last_value = df.at[row, col]
-            else:
-                if math.isnan(df.at[row, col]):
-                    df.at[row, col] = last_value
-                last_value = df.at[row, col]
-            first = False
-
-def fillbackward(df):
-    """
-    @summary Removes NaNs from a 2D array by scanning backward in the 
-    1st dimension.  If a cell is NaN, the value above it is carried backward.
-    @param nds: the array to fill backward
-    @return the array is revised in place
-    """
-    for col in df:
-        first = True
-        rows = []
-        for row in df[col].index:
-            rows.append(row)
-        rows.reverse()
-        for row in rows:
-            if first == True:
-                last_value = df.at[row, col]
-            else:
-                if math.isnan(df.at[row, col]):
-                    df.at[row, col] = last_value
-                last_value = df.at[row, col]
-            first = False
-
-
-def prepare_data_for_prediction(dFullData):
-    '''
-    @summary prepares data for prediction. Replaces nans by filling forward and then filling backward values.
-    '''
-    for key in dFullData.iterkeys():
-        # fill forward
-        fillforward(dFullData[key])
-        # fill backward
-        fillbackward(dFullData[key])
 
 def is_data_correct(data):
     for col in range(data.shape[1]):

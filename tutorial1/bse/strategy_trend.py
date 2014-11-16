@@ -19,6 +19,7 @@ from datetime import timedelta
 
 
 import utils.dateutil as bsedateutil
+import utils.data as bsedatautil
 import utils.features.feats as bsefeats
 import bse.utils.reader.data as bsereader
 
@@ -126,7 +127,7 @@ def findBestFeatCombinationLearner(na_train, na_class, fc_learnerFactory):
 
 if __name__ == '__main__':
     i_forwardlook = 5
-    lsSym = np.array(['3JR', '4CF', '6A6', '6C4', 'E4A', 'SOFIX'])
+    lsSym = np.array(['3JR', '4CF', '6A6', '6C4', 'SOFIX'])
     #lsSym = np.array(['6C4', 'SOFIX'])
     
     ''' Get data '''
@@ -136,6 +137,7 @@ if __name__ == '__main__':
 
     #get train data
     dPrices = bsereader.get_data(dtStart, dtEnd, lsSym)
+    #dPrices = bsedatautil.get_random_data(lsKeys, bsedateutil.getBSEdays(dtStart, dtEnd), lsSym)
 
     lfc_TestFeatures = bsefeats.get_feats()
 
@@ -156,9 +158,9 @@ if __name__ == '__main__':
                     symbol, 
                     ddfFeatures, 
                     ddfClass, 
-                    False,   #scaling
+                    True,   #scaling
                     False,  #pca
-                    adaBoostLearner, 
+                    svmLearner, 
                     i_trainPeriod = 60)
     t2 = datetime.now()
     tdelta = t2 - t1

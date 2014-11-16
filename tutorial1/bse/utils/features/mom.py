@@ -6,8 +6,8 @@ Created on Nov 6, 2013
 import pandas as pand
 import numpy as np
 import bse.utils.features.price as pricefeat
-import QSTK.qstkfeat.features as qstkfeat
 import math
+import price as price
 
 
 def featMomentum(dFullData, serie='close', lLookback=12):
@@ -17,20 +17,20 @@ def featMomentum(dFullData, serie='close', lLookback=12):
     dfPtn = dFullData[serie].shift(lLookback)
     return dFullData[serie] - dfPtn
 
-def featMomentum2Ema(dFullData, serie='close', lambd=0.75, lLookback=12):
+def featMomentum2Ema(dFullData, serie='close', slow=6, lLookback=12):
     dfMomentum = featMomentum(dFullData, serie, lLookback)
     dDataMOM = {}
     dDataMOM[serie] = dfMomentum
-    dfEmaMom = pricefeat.featEMAlambda(dDataMOM, serie=serie, lambd=lambd)
+    dfEmaMom = pricefeat.featEMA(dDataMOM, serie=serie, lLookback=slow)
     return dfMomentum / dfEmaMom
 
-def featMomentumTradeRule(dFullData, serie='close', lambd=0.75, lLookback=20):
+def featMomentumTradeRule(dFullData, serie='close', slow=10, lLookback=20):
     dfMomentum = featMomentum(dFullData, serie, lLookback)
     dfMomentum1 = dfMomentum.shift(1)
     
     dDataMOM = {}
     dDataMOM[serie] = dfMomentum
-    dfEmaMom = pricefeat.featEMAlambda(dDataMOM, serie=serie, lambd=lambd)
+    dfEmaMom = pricefeat.featEMA(dDataMOM, serie=serie, lLookback=slow)
 
     ruleFunc = np.vectorize(tradeRuleMomentum)
     return pand.DataFrame(data=ruleFunc(dfMomentum, dfMomentum1, dfEmaMom), index=dfMomentum.index, columns=dfMomentum.columns)
@@ -69,7 +69,7 @@ def featROC(dFullData, serie='close', lLookback=10):
     dfPriceTn = dfPrice.shift(lLookback)
     return ((dfPrice - dfPriceTn) * 100) / dfPriceTn
 
-def featRateOfChangeTradingRule(dFullData, serie='close', lLookback=10):
+def featROCTradingRule(dFullData, serie='close', lLookback=10):
     dfRoc = featROC(dFullData, serie, lLookback)
     dfRoc1 = dfRoc.shift(1)
     ruleFunc = np.vectorize(tradeRuleRoc)
@@ -85,15 +85,25 @@ def tradeRuleRoc(roc, roc1):
     return 0  # hold
 
 def featMACD(dFullData, slow=26, fast=12):
-    dfSlow = qstkfeat.featEMA(dFullData, lLookback=slow, bRel=False)
-    dfFast = qstkfeat.featEMA(dFullData, lLookback=fast, bRel=False) 
-    return dfSlow - dfFast
+    dfSlow = price.featEMA(dFullData, lLookback=slow, bRel=False)
+    dfFast = price.featEMA(dFullData, lLookback=fast, bRel=False) 
+    return dfFast - dfSlow
     
-def featMACDS(dFullData, slow=26, fast=12, lLookback=9):    
+def featMACDS(dFullData, slow=26, fast=12, lLookback=9):
+    if slow <= fast:
+        raise Exception("slow must be bigger that fast")
+    dPrice = dFullData['close']
+    for serie in dPrice:
+        if dPrice[serie].size <= (slow + lLookback) * price.EMA_MIN_DATA_COUNT:
+            raise Exception('data is not sufficient for MACDS')
     dfMacd = featMACD(dFullData, slow=slow, fast=fast)
     dTmp = {}
     dTmp['close'] = dfMacd
-    return qstkfeat.featEMA(dTmp, lLookback=lLookback, bRel=False)
+    dfMacds = price.featEMA(dTmp, lLookback=lLookback, bRel=False)
+    for serie in dfMacds:
+        for i in range(0, (slow + lLookback) * price.EMA_MIN_DATA_COUNT):
+            dfMacds[serie].iat[i] = np.nan    
+    return dfMacds
     
 def featMACDTradingRule(dFullData, slow=26, fast=12, lLookback=9):
     dfMacd = featMACD(dFullData, slow=slow, fast=fast)
@@ -116,8 +126,43 @@ def featMACDR(dFullData, slow=26, fast=12, lLookback=9):
     dfMACDS = featMACDS(dFullData, slow = slow, fast = fast, lLookback = lLookback)
     return dfMACD/dfMACDS   
 
+def featRSI( dFullData, lLookback=14):
+    '''
+    @summary: Calculate RSI
+    @param dFullData: Dictionary of data to use
+    @param lLookback: Number of days to look in the past, 14 is standard
+    @param b_human: if true return dataframe to plot
+    @return: DataFrame array containing values
+    '''
+
+    # create deltas per day
+    dfDelta = dFullData['close'].copy()
+    dfDelta.iloc[1:,:] -= dfDelta.iloc[:-1,:].values
+    dfDelta.iloc[0,:] = np.NAN
+
+    dfDeltaUp = dfDelta
+    dfDeltaDown = dfDelta.copy()
+    
+    # seperate data into positive and negative for easy calculations
+    for sColumn in dfDeltaUp.columns:
+        tsColDown = dfDeltaDown[sColumn]
+        tsColDown[tsColDown >= 0] = 0 
+        
+        tsColUp = dfDeltaUp[sColumn]
+        tsColUp[tsColUp <= 0] = 0
+    
+    # Note we take abs() of negative values, all should be positive now
+    dfRolUp = pand.rolling_mean(dfDeltaUp, lLookback, min_periods=1)
+    dfRolDown = pand.rolling_mean(dfDeltaDown, lLookback, min_periods=1).abs()
+    
+    # relative strength
+    dfRS = dfRolUp / dfRolDown
+    dfRSI = 100.0 - (100.0 / (1.0 + dfRS))
+    return dfRSI
+
+
 def featRSITradingRule(dFullData, lLookback=9):
-    dfRSI = qstkfeat.featRSI(dFullData, lLookback=lLookback)
+    dfRSI = featRSI(dFullData, lLookback=lLookback)
     dfRSIt1 = dfRSI.shift(1)
     ruleFunc = np.vectorize(tradeRuleRSI)
     return pand.DataFrame(data=ruleFunc(dfRSIt1, dfRSI), index=dfRSI.index, columns=dfRSI.columns)
