@@ -8,6 +8,7 @@ import numpy as np
 import bse.utils.features.price as pricefeat
 import math
 import price as price
+import talib as ta
 
 
 def featMomentum(dFullData, serie='close', lLookback=12):
@@ -126,38 +127,18 @@ def featMACDR(dFullData, slow=26, fast=12, lLookback=9):
     dfMACDS = featMACDS(dFullData, slow = slow, fast = fast, lLookback = lLookback)
     return dfMACD/dfMACDS   
 
-def featRSI( dFullData, lLookback=14):
+def featRSI( dData, lLookback=14):
     '''
     @summary: Calculate RSI
     @param dFullData: Dictionary of data to use
     @param lLookback: Number of days to look in the past, 14 is standard
-    @param b_human: if true return dataframe to plot
     @return: DataFrame array containing values
     '''
 
-    # create deltas per day
-    dfDelta = dFullData['close'].copy()
-    dfDelta.iloc[1:,:] -= dfDelta.iloc[:-1,:].values
-    dfDelta.iloc[0,:] = np.NAN
-
-    dfDeltaUp = dfDelta
-    dfDeltaDown = dfDelta.copy()
-    
-    # seperate data into positive and negative for easy calculations
-    for sColumn in dfDeltaUp.columns:
-        tsColDown = dfDeltaDown[sColumn]
-        tsColDown[tsColDown >= 0] = 0 
-        
-        tsColUp = dfDeltaUp[sColumn]
-        tsColUp[tsColUp <= 0] = 0
-    
-    # Note we take abs() of negative values, all should be positive now
-    dfRolUp = pand.rolling_mean(dfDeltaUp, lLookback, min_periods=1)
-    dfRolDown = pand.rolling_mean(dfDeltaDown, lLookback, min_periods=1).abs()
-    
-    # relative strength
-    dfRS = dfRolUp / dfRolDown
-    dfRSI = 100.0 - (100.0 / (1.0 + dfRS))
+    dfPrice = dData['close']
+    dfRSI = pand.DataFrame(np.NAN, dfPrice.index, dfPrice.columns)
+    for column in dfPrice:
+        dfRSI[column] = ta.RSI(real = dfPrice[column].values, timeperiod = lLookback)
     return dfRSI
 
 

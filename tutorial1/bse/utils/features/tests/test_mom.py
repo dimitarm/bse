@@ -9,7 +9,6 @@ import pandas as pd
 import bse.utils.features.mom as mom
 import numpy as np
 import talib as ta
-import matplotlib.pyplot as plt
 import bse.utils.features.price as price
 
 class Test(unittest.TestCase):
@@ -56,16 +55,20 @@ class Test(unittest.TestCase):
         np.testing.assert_array_almost_equal(bse.values.ravel()[price.EMA_MIN_DATA_COUNT * (26 + 6):], macdsignal[price.EMA_MIN_DATA_COUNT * (26 + 6):])
         
     def testRSI(self):
-        npData = np.random.random(1000)
-        dfData = pd.DataFrame(npData)
+        size = 1000
+        dfData = pd.DataFrame(np.NAN, index = range(0, size), columns = ['a', 'b'])
+        npData_a = np.random.random(1000) 
+        dfData['a'] = npData_a
+        npData_b = np.random.random(1000)
+        dfData['b'] = npData_b
+        
         dData = {}
         dData['close'] = dfData
         bse = mom.featRSI(dData, lLookback = 14)
-        rsi = ta.RSI(real = npData, timeperiod = 14)
-        plt.clf()
-        plt.plot(bse.values.ravel() - rsi, 'b')
-        plt.show()
-        np.testing.assert_array_almost_equal(bse.values.ravel(), rsi)
+        rsi = ta.RSI(real = npData_a, timeperiod = 14)
+        np.testing.assert_array_almost_equal(bse['a'].values.ravel(), rsi)
+        rsi = ta.RSI(real = npData_b, timeperiod = 14)
+        np.testing.assert_array_almost_equal(bse['b'].values.ravel(), rsi)
         
     def tearDown(self):
         pass
