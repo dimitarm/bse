@@ -13,7 +13,6 @@ import bse.utils.features.price as price
 
 class Test(unittest.TestCase):
 
-
     def setUp(self):
         pass
     

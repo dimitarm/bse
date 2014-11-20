@@ -5,8 +5,8 @@ Created on Nov 7, 2013
 '''
 import pandas as pand
 import numpy as np
-import QSTK.qstkfeat.features as qstkfeat
 import math 
+import price as price
 
 def featFASTK(dFullData, serie='close', lLookback=12):
     dfPrice = dFullData[serie]
@@ -18,7 +18,7 @@ def featFASTD(dFullData, serie='close', lLookback=12):
     dfFAST = featFASTK(dFullData, serie=serie, lLookback=lLookback)
     dTmp = {}
     dTmp['close'] = dfFAST
-    return qstkfeat.featEMA(dTmp, lLookback=3, bRel=False)
+    return price.featEMA(dTmp, lLookback=3, bRel=False)
 
 def featSLOWK(dFullData, serie='close', lLookback=12):
     return featFASTD(dFullData, serie, lLookback)
@@ -27,7 +27,7 @@ def featSLOWD(dFullData, serie='close', lLookback=12):
     dfSLOW = featSLOWK(dFullData, serie=serie, lLookback=lLookback)
     dTmp = {}
     dTmp['close'] = dfSLOW
-    return qstkfeat.featEMA(dTmp, lLookback=3, bRel=False)
+    return price.featEMA(dTmp, lLookback=3, bRel=False)
 
 def featSLOWTradingRule(dFullData, serie='close', lLookback=12):
     dfSlowkt = featSLOWK(dFullData=dFullData, serie=serie, lLookback=lLookback)

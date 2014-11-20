@@ -8,6 +8,7 @@ import pandas as pand
 import bse.utils.features.osc as osc
 import pandas.util.testing as pandtest
 import numpy as np
+import talib as ta
 
 class Test(unittest.TestCase):
 
@@ -48,6 +49,24 @@ class Test(unittest.TestCase):
                                                            49.4663108282,45.109744933,36.272153727,28.4066474923,31.5280573421,33.8681514976,41.3001006079,42.8033707555,31.8304833642,23.7601201016,
                                                            26.5061813287,24.0726611636,22.3832923429,22.1787457859,21.5340496579,30.8361838885)}) 
         pandtest.assert_frame_equal(dfResult, dfExpectedResult)
+
+
+    def testMFI2(self):
+        npClose = np.random.random(100) + 1.5
+        npHigh = npClose + np.random.random(100)
+        npLow = npClose - np.random.random(100)
+        npVol = np.array(np.random.randint(1, 100, 100), dtype = float)
+        
+        dData = {}
+        dData['close'] = pand.DataFrame(npClose)
+        dData['volumes'] = pand.DataFrame(npVol)
+        dData['high'] = pand.DataFrame(npHigh)
+        dData['low'] = pand.DataFrame(npLow)
+        
+        bseMfi = osc.featMFI(dData, lLookback = 10)
+        taMfi = ta.MFI(high = npHigh, low = npLow, close = npClose, volume = npVol, timeperiod = 10)
+        np.testing.assert_almost_equal(bseMfi.values.ravel(), taMfi.ravel(), verbose = True)
+
         
     def testWILL(self):
         dData = {}
@@ -64,6 +83,7 @@ class Test(unittest.TestCase):
                                                            -26.9439092661,-26.5822094587,-38.7687097127,-39.0437289765,-59.6138977481,-59.6138977481,-33.171450662,-43.2685802648)}) 
         pandtest.assert_frame_equal(dfResult, dfExpectedResult)
         
+    
 
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testMFI']
