@@ -107,9 +107,8 @@ def get_feats():
         lambda (dFullData): price.featBollingerTradeRule(dFullData, lLookback = 32),
         lambda (dFullData): volatility.featCHV(dFullData, lLookback = 10),
 
-#        volatility.featGK,
-#        volatility.featSharpeRatio
-
+        volatility.featSharpeRatio,
+        
         volume.featOBV,
         volume.featADL,
         volume.featCHO,

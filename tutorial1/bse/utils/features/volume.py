@@ -33,8 +33,10 @@ def featOBV(dFullData):
 
 def featADL(dFullData):
     dfCLV = (2 * dFullData['close'] - dFullData['low'] - dFullData['high']) / (dFullData['high'] - dFullData['low'])
-    dfADL = dfCLV * dFullData['volumes']
-    dfADL.values[np.isnan(dfADL.values)]=0
+    dfTmp = dfCLV * dFullData['volumes']
+    dfADL = pand.DataFrame(np.NAN, index = dFullData['close'].index, columns = dFullData['close'].columns, copy = True)
+    
+    dfADL = pand.rolling_sum(dfTmp, window = 1, min_periods=1)
     return dfADL
 
 def featCHO(dFullData, lLookback1=3, lLookback2=10):

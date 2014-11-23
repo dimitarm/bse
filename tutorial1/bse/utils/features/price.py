@@ -27,7 +27,7 @@ def featSTDReturn( dFullData, lLookback=20, bRel=True ):
         dfRet = dfRet / dfPrice
     return dfRet
 
-EMA_MIN_DATA_COUNT = 8
+EMA_MIN_DATA_COUNT_MULTIPLIER = 8
 
 def featEMA( dFullData, serie='close', lLookback = 20, bRel = False ):
     '''
@@ -38,20 +38,22 @@ def featEMA( dFullData, serie='close', lLookback = 20, bRel = False ):
     @return: DataFrame array containing values
     '''
     dfPrice = dFullData[serie]
-    for serie in dfPrice:
-        if dfPrice[serie].size <= lLookback * EMA_MIN_DATA_COUNT:
-            raise Exception('data is not sufficient for EMA')
-        
-    dfRet = pand.ewma(dfPrice, span=lLookback)
-    
+    dfRet = EMA(dfPrice, lLookback)
     if bRel:
         dfRet = dfRet / dfPrice;
          
-    for serie in dfRet:
-        for i in range(0, lLookback * EMA_MIN_DATA_COUNT):
-            dfRet[serie].iat[i] = np.nan
     return dfRet
 
+def EMA(dfPrice, lLookback = 20):
+    for serie in dfPrice:
+        if dfPrice[serie].size <= lLookback * EMA_MIN_DATA_COUNT_MULTIPLIER:
+            raise Exception('data is not sufficient for EMA')
+    dfRet = pand.ewma(dfPrice, span=lLookback)
+    for serie in dfRet:
+        for i in range(0, lLookback * EMA_MIN_DATA_COUNT_MULTIPLIER):
+            dfRet[serie].iat[i] = np.nan
+    return dfRet
+    
 
 #def featBollinger( dFullData, serie = 'close', lLookback = 20):
 #    dfPrice = dFullData[serie]

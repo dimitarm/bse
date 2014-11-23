@@ -6,8 +6,6 @@ Created on Nov 19, 2013
 import unittest
 import bse.utils.features.price as price
 import pandas as pand
-import matplotlib.pyplot as plt
-import pandas.util.testing as pandtest
 import numpy as np
 import talib as ta
 
@@ -38,7 +36,7 @@ class Test(unittest.TestCase):
         dData['close'] = pand.DataFrame(npData)
         feat = price.featEMA(dData, lLookback = 3).values.ravel()
         ema = ta.EMA(real = npData, timeperiod = 3)
-        np.testing.assert_array_almost_equal(feat[25:], ema[25:], err_msg = "values not equal", verbose = True)
+        np.testing.assert_array_almost_equal(feat[3*price.EMA_MIN_DATA_COUNT_MULTIPLIER:], ema[3*price.EMA_MIN_DATA_COUNT_MULTIPLIER:], err_msg = "values not equal", verbose = True)
 
     def testBollinger(self):
         dFullData = {}
