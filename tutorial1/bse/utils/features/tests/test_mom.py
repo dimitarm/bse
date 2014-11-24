@@ -41,7 +41,7 @@ class Test(unittest.TestCase):
         dData['close'] = dfData
         bse = mom.featMACD(dData, slow = 26, fast = 12)
         macd, macdsignal, macdhist = ta.MACD(real = npData, fastperiod = 12, slowperiod = 26, signalperiod = 9)
-        np.testing.assert_array_almost_equal(bse.values.ravel()[price.EMA_MIN_DATA_COUNT * 26:], macd.ravel()[price.EMA_MIN_DATA_COUNT * 26:], verbose = True)
+        np.testing.assert_array_almost_equal(bse.values.ravel()[price.EMA_MIN_DATA_COUNT_MULTIPLIER * 26:], macd.ravel()[price.EMA_MIN_DATA_COUNT_MULTIPLIER * 26:], verbose = True)
         
         
     def testMACDS(self):
@@ -51,7 +51,7 @@ class Test(unittest.TestCase):
         dData['close'] = dfData
         bse = mom.featMACDS(dData, slow = 26, fast = 12, lLookback = 6)
         macd, macdsignal, macdhist = ta.MACD(real = npData, fastperiod = 12, slowperiod = 26, signalperiod = 6)
-        np.testing.assert_array_almost_equal(bse.values.ravel()[price.EMA_MIN_DATA_COUNT * (26 + 6):], macdsignal[price.EMA_MIN_DATA_COUNT * (26 + 6):])
+        np.testing.assert_array_almost_equal(bse.values.ravel()[price.EMA_MIN_DATA_COUNT_MULTIPLIER * (26 + 6):], macdsignal[price.EMA_MIN_DATA_COUNT_MULTIPLIER * (26 + 6):])
         
     def testRSI(self):
         size = 1000

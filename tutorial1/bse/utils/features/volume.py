@@ -9,6 +9,7 @@ import datetime
 import math
 import mom
 import sys
+import bse.utils.features.price as price
 
 def featOBV(dFullData):
     dfPt = dFullData['close']
@@ -34,14 +35,15 @@ def featOBV(dFullData):
 def featADL(dFullData):
     dfCLV = (2 * dFullData['close'] - dFullData['low'] - dFullData['high']) / (dFullData['high'] - dFullData['low'])
     dfTmp = dfCLV * dFullData['volumes']
-    dfADL = pand.DataFrame(np.NAN, index = dFullData['close'].index, columns = dFullData['close'].columns, copy = True)
-    
-    dfADL = pand.rolling_sum(dfTmp, window = 1, min_periods=1)
+    npADL = np.copy(dfTmp.values)
+    for row in range(1, npADL.shape[0]):
+        npADL[row] = npADL[row] + npADL[row-1]
+    dfADL = pand.DataFrame(npADL, index = dFullData['close'].index, columns = dFullData['close'].columns, copy = True)
     return dfADL
 
-def featCHO(dFullData, lLookback1=3, lLookback2=10):
+def featCHO(dFullData, fast=3, slow=10):
     dfADL = featADL(dFullData)
-    return pand.ewma(dfADL, lLookback1) - pand.ewma(dfADL, lLookback2)
+    return price.EMA(dfADL, fast) - price.EMA(dfADL, slow)
 
 def featChaikinTradeRule(dFullData, lLookback1=3, lLookback2=10):
     rule_func = np.vectorize(lambda y: math.copysign(1, y))

@@ -95,14 +95,14 @@ def featMACDS(dFullData, slow=26, fast=12, lLookback=9):
         raise Exception("slow must be bigger that fast")
     dPrice = dFullData['close']
     for serie in dPrice:
-        if dPrice[serie].size <= (slow + lLookback) * price.EMA_MIN_DATA_COUNT:
+        if dPrice[serie].size <= (slow + lLookback) * price.EMA_MIN_DATA_COUNT_MULTIPLIER:
             raise Exception('data is not sufficient for MACDS')
     dfMacd = featMACD(dFullData, slow=slow, fast=fast)
     dTmp = {}
     dTmp['close'] = dfMacd
     dfMacds = price.featEMA(dTmp, lLookback=lLookback, bRel=False)
     for serie in dfMacds:
-        for i in range(0, (slow + lLookback) * price.EMA_MIN_DATA_COUNT):
+        for i in range(0, (slow + lLookback) * price.EMA_MIN_DATA_COUNT_MULTIPLIER):
             dfMacds[serie].iat[i] = np.nan    
     return dfMacds
     
