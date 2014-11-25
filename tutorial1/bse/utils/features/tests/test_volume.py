@@ -61,10 +61,10 @@ class Test(unittest.TestCase):
         dfADL = vol.featADL(dFullData)
         np.testing.assert_array_almost_equal(dfADL.values.ravel(), npADL, verbose = True)
         #two series
-        npClose = np.random.rand(10000,2) + 1
+        npClose = np.random.rand(100,2) + 1
         npHigh = npClose + 1
         npLow = npClose - 0.5
-        npVol = np.random.rand(10000,2) * 1000
+        npVol = np.random.rand(100,2) * 1000
         dFullData['close'] = pand.DataFrame(npClose)
         dFullData['high'] = pand.DataFrame(npHigh)
         dFullData['low'] = pand.DataFrame(npLow)
@@ -76,19 +76,19 @@ class Test(unittest.TestCase):
         
     def testCHO(self):
         dFullData = {}
-        npClose = np.random.rand(10000,2) + 1
+        npClose = np.random.rand(100,2) + 1
         npHigh = npClose + 1
         npLow = npClose - 0.5
-        npVol = np.random.rand(10000,2) * 1000
+        npVol = np.random.rand(100,2) * 1000 + 1
         dFullData['close'] = pand.DataFrame(npClose)
         dFullData['high'] = pand.DataFrame(npHigh)
         dFullData['low'] = pand.DataFrame(npLow)
         dFullData['volumes'] = pand.DataFrame(npVol)
-        dfCHO = vol.featCHO(dFullData, fast = 3, slow = 10)        
+        dfCHO = vol.featCHO(dFullData, fast = 3, slow = 10)  
+        np.set_printoptions(threshold=1000)      
         for serie in dFullData['close']:
             taADOSC = ta.ADOSC(dFullData['high'][serie].values, dFullData['low'][serie].values, dFullData['close'][serie].values, dFullData['volumes'][serie].values, fastperiod = 3, slowperiod = 10)
             np.testing.assert_array_almost_equal(dfCHO[serie].values.ravel()[price.EMA_MIN_DATA_COUNT_MULTIPLIER * 10:], taADOSC[price.EMA_MIN_DATA_COUNT_MULTIPLIER * 10:], verbose = True)        
-        
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
