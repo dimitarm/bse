@@ -32,30 +32,24 @@ from sklearn.utils import assert_all_finite
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import AdaBoostClassifier
 
-
-def print_full(data):
-    for row in range(0, data.shape[0]):
-        for col in range(data.shape[1]):
-            sys.stdout.write(str(data[row, col]) + " ")
-        sys.stdout.write("\r\n")
-
 def testLearner(d_dfData, s_symbol, d_dfFeatures, d_dfClass, b_scaling, b_pca, fc_learnerFactory, i_trainPeriod, b_Plot = False):
     t1 = datetime.now()
     
     df_data = d_dfFeatures[s_symbol]
+    #print df_data.to_csv()
     df_classData = d_dfClass[s_symbol]
-    #test each combination
+    #print df_classData.to_csv()
     success = float(0)
     success_up = float(0)
     success_down = float(0)
     
     count = 0
-    #all_count = na_data.shape[0] - i_forwardlook + 1 - i_trainPeriod
     for i in range(i_trainPeriod, df_data.index.size - i_forwardlook + 1):
         day = df_data.index[i]
         na_data = df_data.iloc[i - i_trainPeriod:i].values
         y_train = df_classData.iloc[i - i_trainPeriod:i].values.ravel()
         x_predict = df_data.iloc[i].values
+        #print "{} - nans: data:{} class:{} x_predict:{} price:{}".format(day, np.count_nonzero(np.isnan(na_data)), np.count_nonzero(np.isnan(y_train)), np.count_nonzero(np.isnan(x_predict)), d_dfData['close'][s_symbol][day])
         try:
             assert_all_finite(na_data)
             assert_all_finite(y_train)
@@ -127,18 +121,18 @@ def findBestFeatCombinationLearner(na_train, na_class, fc_learnerFactory):
 
 if __name__ == '__main__':
     i_forwardlook = 5
-    lsSym = np.array(['3JR', '4CF', '6A6', '6C4', 'SOFIX'])
-    #lsSym = np.array(['6C4', 'SOFIX'])
+    #lsSym = np.array(['3JR', '4CF', '6C4', 'SOFIX'])
+    lsSym = np.array(['3JR', 'SOFIX'])
     
     ''' Get data '''
     dtEnd = dt.datetime(2014,9,23). replace(hour = 0, minute = 0, second = 0, microsecond = 0)
-    dtStart = dtEnd - dt.timedelta(days = 365*4)
+    dtStart = dtEnd - dt.timedelta(days = 365*2)
     lsKeys = ['open', 'high', 'low', 'close', 'volumes']
 
     #get train data
     dPrices = bsereader.get_data(dtStart, dtEnd, lsSym)
     #dPrices = bsedatautil.get_random_data(lsKeys, bsedateutil.getBSEdays(dtStart, dtEnd), lsSym)
-
+    #fill forward values
     lfc_TestFeatures = bsefeats.get_feats()
 
     t1 = datetime.now()
@@ -147,10 +141,27 @@ if __name__ == '__main__':
     ldfFeatures = bsetools.calculateFeatures(dPrices, lfc_TestFeatures, {})
     print "features calculated in {0} seconds".format(datetime.now() - t1)
     ddfFeatures = bsetools.extractSymbolFeatures(ldfFeatures)
+    off = 0
+    for symbol in ddfFeatures.iterkeys():
+        dfFeatures = ddfFeatures[symbol]
+        plt.plot(bsedatautil.get_highest_lookback(dfFeatures) + off, label = symbol)
+        nans = []
+        off += 1
+        for serie in dfFeatures:
+            nans.append(np.count_nonzero(np.isnan(dfFeatures[serie])))
+        nans = np.array(nans)
+        plt.plot(nans + off, label = '{}_nans'.format(symbol))    
+        off += 1
+    plt.legend()
+    plt.show()
     #calculate class
     fcClassificationFeature = lambda (dFullData): featTrend(dFullData, lForwardlook = i_forwardlook), 
     ldfClass = bsetools.calculateFeatures(dPrices, (fcClassificationFeature), {})
     ddfClass = bsetools.extractSymbolFeatures(ldfClass) 
+    
+    for symbol in ddfClass.iterkeys():
+        dfFeatures = ddfClass[symbol]
+        print "{}: {} nans in class".format(symbol, np.count_nonzero(np.isnan(dfFeatures.values))) 
     
     for symbol in lsSym:
         testLearner(

@@ -32,17 +32,25 @@ def featOBV(dFullData):
     dfOBV.values[0, :] = np.nan
     return dfOBV    
 
-def featADL(dFullData):
-    dfCLV = (2 * dFullData['close'] - dFullData['low'] - dFullData['high']) / (dFullData['high'] - dFullData['low'])
+def featADL(dFullData, bAdjustForMissing = True):
+    dfHL = dFullData['high'] - dFullData['low']
+    dfCLV = (2 * dFullData['close'] - dFullData['low'] - dFullData['high']) / dfHL
+    dfCLV[dfHL == 0] = 0
     dfTmp = dfCLV * dFullData['volumes']
     npADL = np.copy(dfTmp.values)
     for row in range(1, npADL.shape[0]):
-        npADL[row] = npADL[row] + npADL[row-1]
-    dfADL = pand.DataFrame(npADL, index = dFullData['close'].index, columns = dFullData['close'].columns, copy = True)
+        for col in range(0, npADL.shape[1]):
+            value = npADL[row,col] + npADL[row-1,col]
+            if bAdjustForMissing:
+                if not np.isnan(value):
+                    npADL[row,col] = value
+            else:
+                npADL[row,col] = value
+    dfADL = pand.DataFrame(npADL, index = dFullData['close'].index, columns = dFullData['close'].columns)
     return dfADL
 
-def featCHO(dFullData, fast=3, slow=10):
-    dfADL = featADL(dFullData)
+def featCHO(dFullData, fast=3, slow=10, bAdjustForMissing = True):
+    dfADL = featADL(dFullData, bAdjustForMissing)
     return price.EMA(dfADL, fast) - price.EMA(dfADL, slow)
 
 def featChaikinTradeRule(dFullData, lLookback1=3, lLookback2=10):

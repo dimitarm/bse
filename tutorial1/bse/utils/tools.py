@@ -205,4 +205,3 @@ def extractSymbolFeatures(ldfFeatures):
         ddfFeatures[symbol] = pd.DataFrame(data = dSymFeatures)
     return ddfFeatures
                 
-        

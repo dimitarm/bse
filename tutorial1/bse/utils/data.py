@@ -40,14 +40,23 @@ def get_highest_lookback(data):
     else:
         na_data = data
     l_lookbacks = []
-    for col in range(na_data.shape[1]):
+    if len(na_data.shape) == 1:
         i_firstNan = 0
         for row in range(0, na_data.shape[0]):
-            if math.isnan(na_data[row, col]):
+            if math.isnan(na_data[row]):
                 i_firstNan = row + 1    
             else:
                 break
         l_lookbacks.append(i_firstNan)
+    else:
+        for col in range(na_data.shape[1]):
+            i_firstNan = 0
+            for row in range(0, na_data.shape[0]):
+                if math.isnan(na_data[row, col]):
+                    i_firstNan = row + 1    
+                else:
+                    break
+            l_lookbacks.append(i_firstNan)
     return np.array(l_lookbacks, copy = False)
 
 def is_data_correct(data):

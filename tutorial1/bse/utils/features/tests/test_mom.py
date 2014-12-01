@@ -54,20 +54,22 @@ class Test(unittest.TestCase):
         np.testing.assert_array_almost_equal(bse.values.ravel()[price.EMA_MIN_DATA_COUNT_MULTIPLIER * (26 + 6):], macdsignal[price.EMA_MIN_DATA_COUNT_MULTIPLIER * (26 + 6):])
         
     def testRSI(self):
-        size = 1000
-        dfData = pd.DataFrame(np.NAN, index = range(0, size), columns = ['a', 'b'])
-        npData_a = np.random.random(1000) 
-        dfData['a'] = npData_a
-        npData_b = np.random.random(1000)
-        dfData['b'] = npData_b
-        
-        dData = {}
-        dData['close'] = dfData
-        bse = mom.featRSI(dData, lLookback = 14)
-        rsi = ta.RSI(real = npData_a, timeperiod = 14)
-        np.testing.assert_array_almost_equal(bse['a'].values.ravel(), rsi)
-        rsi = ta.RSI(real = npData_b, timeperiod = 14)
-        np.testing.assert_array_almost_equal(bse['b'].values.ravel(), rsi)
+        dFullData = {}
+        npClose = np.array([44.3389,44.0902,44.1497,43.6124,44.3278,44.8264,45.0955,45.4245,45.8433,46.0826,45.8931,46.0328,45.614,46.282,46.282,46.0028,46.0328,46.4116,46.2222,45.6439,46.2122,46.2521,45.7137,46.4515,45.7835,45.3548,44.0288,44.1783,44.2181,44.5672,43.4205,42.6628,43.1314])
+        npRSI = np.array([np.NAN,np.NAN,np.NAN,np.NAN,np.NAN,np.NAN,np.NAN,np.NAN,np.NAN,np.NAN,np.NAN,np.NAN,np.NAN,np.NAN,70.5327894837,66.3185618052,66.5498299355,69.4063053388,66.3551690563,57.9748557143,62.9296067546,63.2571475625,56.0592987153,62.3770714432,54.7075730813,50.4227744115,39.9898231454,41.4604819757,41.8689160925,45.4632124453,37.3040420899,33.0795229944,37.7729521144])
+        dFullData['close'] = pd.DataFrame(npClose)
+        dfRSI = mom.featRSI(dFullData, lLookback=14)
+        np.testing.assert_array_almost_equal(dfRSI.values.ravel(), npRSI)
+    
+    def testRSI2(self):
+        dFullData = {}
+        npClose = np.random.random(100)
+        npClose[7] = np.NAN
+        dFullData['close'] = pd.DataFrame(npClose)
+        dfZeroNAN = dFullData['close'].fillna(method='ffill')
+        dfRSI = mom.featRSI(dFullData, lLookback=5)
+        taRSI = ta.RSI(real = dfZeroNAN.values.ravel(), timeperiod = 5)
+        np.testing.assert_array_almost_equal(dfRSI.values.ravel(), taRSI)        
         
     def tearDown(self):
         pass

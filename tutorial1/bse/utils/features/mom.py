@@ -9,7 +9,7 @@ import bse.utils.features.price as pricefeat
 import math
 import price as price
 import talib as ta
-
+from QSTK.qstkfeat import features
 
 def featMomentum(dFullData, serie='close', lLookback=12):
     '''
@@ -134,11 +134,43 @@ def featRSI( dData, lLookback=14):
     @param lLookback: Number of days to look in the past, 14 is standard
     @return: DataFrame array containing values
     '''
+    # create deltas per day
+    dfDelta = dData['close'].copy()
+    dfDelta.fillna(method='ffill', inplace = True)
+    dfDelta.iloc[1:,:] -= dfDelta.iloc[:-1,:].values
 
-    dfPrice = dData['close']
-    dfRSI = pand.DataFrame(np.NAN, dfPrice.index, dfPrice.columns)
-    for column in dfPrice:
-        dfRSI[column] = ta.RSI(real = dfPrice[column].values, timeperiod = lLookback)
+    dfDeltaUp = dfDelta
+    dfDeltaDown = dfDelta.copy()
+    
+    # seperate data into positive and negative for easy calculations
+    for sColumn in dfDeltaUp.columns:
+        tsColDown = dfDeltaDown[sColumn]
+        tsColDown[tsColDown >= 0] = 0 
+        
+        tsColUp = dfDeltaUp[sColumn]
+        tsColUp[tsColUp <= 0] = 0
+    
+    # Note we take abs() of negative values, all should be positive now
+    for column in dfDeltaUp.columns:
+        serie = dfDeltaUp[column]
+        serie.iat[lLookback] = np.average(dfDeltaUp[column].values[1:lLookback+1])
+        for row in range(lLookback+1, dfDelta.values.shape[0]):
+            value = (serie.iat[row - 1] * (lLookback - 1) + serie.iat[row])/lLookback
+            serie.iat[row] = value
+        serie[0:lLookback] = np.NAN
+
+    for column in dfDeltaDown.columns:
+        serie = dfDeltaDown[column]
+        serie.iat[lLookback] = np.average(dfDeltaDown[column].values[1:lLookback+1])
+        for row in range(lLookback+1, dfDelta.values.shape[0]):
+            value = (serie.iat[row - 1] * (lLookback - 1) + serie.iat[row])/lLookback
+            serie.iat[row] = value
+        serie[0:lLookback] = np.NAN
+            
+    # relative strength
+    dfRS = dfDeltaUp / dfDeltaDown.abs()
+    dfRSI = 100.0 - (100.0 / (1.0 + dfRS))
+    
     return dfRSI
 
 

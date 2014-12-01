@@ -88,7 +88,7 @@ class Test(unittest.TestCase):
         np.set_printoptions(threshold=1000)      
         for serie in dFullData['close']:
             taADOSC = ta.ADOSC(dFullData['high'][serie].values, dFullData['low'][serie].values, dFullData['close'][serie].values, dFullData['volumes'][serie].values, fastperiod = 3, slowperiod = 10)
-            np.testing.assert_array_almost_equal(dfCHO[serie].values.ravel()[price.EMA_MIN_DATA_COUNT_MULTIPLIER * 10:], taADOSC[price.EMA_MIN_DATA_COUNT_MULTIPLIER * 10:], verbose = True)        
+            np.testing.assert_array_almost_equal(dfCHO[serie].values.ravel()[price.EMA_MIN_DATA_COUNT_MULTIPLIER * 10:], taADOSC[price.EMA_MIN_DATA_COUNT_MULTIPLIER * 10:], decimal =3, verbose = True)        
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
