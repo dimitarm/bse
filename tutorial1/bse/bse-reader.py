@@ -20,12 +20,6 @@ count = 0
 for equity in lines:
     url = "http://www.bse-sofia.bg/graphics/phpfiles/MYgethistoDeA.php?MonCode=" + equity + "&MonPays=BE&Periode=1&De=01/01/2009&A=" + datetime.date.today().strftime("%d/%m/%Y")
     #print url
-    if 'HTTP_PROXY_HOST' in os.environ:  
-        urllib2.install_opener(
-            urllib2.build_opener(
-                urllib2.ProxyHandler({'http': 'http://proxy:8080'})
-            )
-        ) 
     file_trades = urllib2.urlopen(url)
     tradedays = file_trades.readline()
 
